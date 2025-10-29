@@ -19,9 +19,18 @@ from app.agent.tools.files import (
     update_lines,
 )
 
+from app.agent.tools.commands import (
+    init_nextjs_app,
+    install_dependencies,
+    run_dev_server,
+    run_npm_command,
+    lint_project,
+)
+
 load_dotenv()
 
 tools = [
+    # File tools
     list_files,
     create_file,
     read_file,
@@ -30,9 +39,15 @@ tools = [
     remove_lines,
     insert_lines,
     update_lines,
+    # Command tools
+    init_nextjs_app,
+    install_dependencies,
+    run_dev_server,
+    run_npm_command,
+    lint_project,
 ]
 
-_coder_llm_ = ChatOpenAI(model="gpt-5-mini").bind_tools(tools)
+_coder_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
 
 
 def coder(state: BuilderState) -> BuilderState:

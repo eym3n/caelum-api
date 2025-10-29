@@ -40,19 +40,38 @@ def _get_session_from_config(config: RunnableConfig) -> str:
 
 @tool
 def list_files(config: Annotated[RunnableConfig, InjectedToolArg]) -> list[str]:
-    """List all files in the session directory."""
+    """List all files in the session directory, including nested folders.
+
+    Returns relative paths from the session root (e.g., 'src/app/page.tsx', 'package.json').
+    """
     session_id = _get_session_from_config(config)
     session_dir = get_session_dir(session_id)
-    files = [f.name for f in session_dir.iterdir() if f.is_file()]
-    print(f"[FILES] list_files → Found {len(files)} files: {files}")
-    return files
+    files = []
+
+    # Walk through all directories recursively
+    for root, dirs, filenames in os.walk(session_dir):
+        # Skip node_modules and .next directories
+        dirs[:] = [d for d in dirs if d not in ["node_modules", ".next", ".git"]]
+
+        for filename in filenames:
+            full_path = Path(root) / filename
+            # Get relative path from session_dir
+            relative_path = full_path.relative_to(session_dir)
+            files.append(str(relative_path))
+
+    print(f"[FILES] list_files → Found {len(files)} files")
+    return sorted(files)
 
 
 @tool
 def create_file(
     name: str, content: str, config: Annotated[RunnableConfig, InjectedToolArg]
 ) -> str:
-    """Create a new file in the session directory."""
+    """Create a new file in the session directory.
+
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
+    Parent directories will be created automatically if they don't exist.
+    """
     session_id = _get_session_from_config(config)
     session_dir = get_session_dir(session_id)
     file_path = session_dir / name
@@ -60,6 +79,9 @@ def create_file(
     if file_path.exists():
         print(f"[FILES] create_file → ERROR: {name} already exists")
         return f"Error: File {name} already exists. Use update_file to modify it."
+
+    # Create parent directories if they don't exist
+    file_path.parent.mkdir(parents=True, exist_ok=True)
 
     file_path.write_text(content)
     print(f"[FILES] create_file → Created {name} ({len(content)} chars) at {file_path}")
@@ -70,7 +92,8 @@ def create_file(
 def read_file(name: str, config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     """Read a file from the session directory with line numbers for easy reference.
 
-    Returns the file content with line numbers prepended to each line (e.g., '1: content').
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
+    Returns the file content with line numbers prepended to each line (e.g., '0: content').
     This helps when using update_lines, insert_lines, or remove_lines tools.
     """
     session_id = _get_session_from_config(config)
@@ -98,7 +121,10 @@ def read_file(name: str, config: Annotated[RunnableConfig, InjectedToolArg]) -> 
 def update_file(
     name: str, content: str, config: Annotated[RunnableConfig, InjectedToolArg]
 ) -> str:
-    """Update a file in the session directory."""
+    """Update a file in the session directory.
+
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
+    """
     session_id = _get_session_from_config(config)
     session_dir = get_session_dir(session_id)
     file_path = session_dir / name
@@ -114,7 +140,10 @@ def update_file(
 
 @tool
 def delete_file(name: str, config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
-    """Delete a file from the session directory."""
+    """Delete a file from the session directory.
+
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
+    """
     session_id = _get_session_from_config(config)
     session_dir = get_session_dir(session_id)
     file_path = session_dir / name
@@ -132,7 +161,10 @@ def delete_file(name: str, config: Annotated[RunnableConfig, InjectedToolArg]) -
 def remove_lines(
     name: str, indices: list[int], config: Annotated[RunnableConfig, InjectedToolArg]
 ) -> str:
-    """Remove lines from a file in the session directory."""
+    """Remove lines from a file in the session directory.
+
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
+    """
     session_id = _get_session_from_config(config)
     session_dir = get_session_dir(session_id)
     file_path = session_dir / name
@@ -165,7 +197,10 @@ def insert_lines(
     lines: list[InsertedLines],
     config: Annotated[RunnableConfig, InjectedToolArg],
 ) -> str:
-    """Insert lines at specific indices in a file in the session directory."""
+    """Insert lines at specific indices in a file in the session directory.
+
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
+    """
     session_id = _get_session_from_config(config)
     session_dir = get_session_dir(session_id)
     file_path = session_dir / name
@@ -196,6 +231,7 @@ def update_lines(
 ) -> str:
     """Update/replace specific line ranges in a file in the session directory.
 
+    Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
     Each update specifies a start_index, end_index (inclusive), and replacement_lines.
     The lines from start_index to end_index will be replaced with replacement_lines.
     """

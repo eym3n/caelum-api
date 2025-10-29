@@ -68,7 +68,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                 "thread_id": session_id,
                 "session_id": session_id,  # Pass session_id to tools
             },
-            "recursion_limit": 50,
+            "recursion_limit": 100,
         },
     ):
         for node, update in event.items():
@@ -214,7 +214,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         "thread_id": session_id,
                         "session_id": session_id,  # Pass session_id to tools
                     },
-                    "recursion_limit": 50,
+                    "recursion_limit": 100,
                 },
             ):
                 for node, update in event.items():
@@ -382,6 +382,36 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                                     print(
                                         f"[STREAM] remove_lines: No tool_call found, using fallback"
                                     )
+
+                            # Command tools
+                            elif tool_name == "init_nextjs_app":
+                                text_to_send = "Initializing Next.js app with TypeScript and Tailwind..."
+                                print(f"[STREAM] init_nextjs_app")
+
+                            elif tool_name == "install_dependencies":
+                                text_to_send = "Installing npm dependencies..."
+                                print(f"[STREAM] install_dependencies")
+
+                            elif tool_name == "run_dev_server":
+                                text_to_send = "Starting Next.js dev server..."
+                                print(f"[STREAM] run_dev_server")
+
+                            elif tool_name == "run_npm_command":
+                                if tool_call:
+                                    args = tool_call.get("args", {})
+                                    command = args.get("command", "")
+                                    text_to_send = f"Running npm {command}..."
+                                    print(f"[STREAM] run_npm_command: {command}")
+                                else:
+                                    text_to_send = "Running npm command..."
+                                    print(
+                                        f"[STREAM] run_npm_command: No tool_call found"
+                                    )
+
+                            elif tool_name == "lint_project":
+                                text_to_send = "Running ESLint to check for errors..."
+                                print(f"[STREAM] lint_project")
+
                             else:
                                 text_to_send = format_tool_summary(msg)
                         else:

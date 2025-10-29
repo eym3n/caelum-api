@@ -1,23 +1,26 @@
 # LangGraph App Builder API
 
-A FastAPI-based application powered by LangGraph and Groq for building interactive AI agents with code generation capabilities.
+A FastAPI-based application powered by LangGraph and OpenAI for building interactive AI agents with **Next.js + React + TypeScript + Tailwind** code generation capabilities.
 
 ## Features
 
+- ⚛️ **Next.js App Generation** - Full-stack React apps with TypeScript and Tailwind CSS
 - 🤖 AI-powered code generation and planning
 - 🔄 Multi-node agent workflow (Router, Planner, Coder, Clarifier)
-- 🛠️ File manipulation tools (create, read, update, delete)
-- 💾 Session-specific file directories (automatically cleared on new chat)
-- 💬 Streaming chat responses
+- 🛠️ File manipulation tools (create, read, update, delete lines)
+- 📦 Command execution tools (npm install, run dev server, init Next.js app)
+- 💾 Session-specific project directories (automatically cleared on new chat)
+- 💬 Streaming chat responses with real-time feedback
 - 📝 Session management and conversation history
 - 🚀 Production-ready with Docker support
 
 ## Prerequisites
 
 - Python 3.11+
+- Node.js 18+ and npm (for Next.js app generation)
 - uv (recommended) or pip
 - Docker & Docker Compose (for containerized deployment)
-- Groq API key
+- OpenAI API key (for GPT models)
 
 ## Quick Start
 
@@ -31,7 +34,7 @@ A FastAPI-based application powered by LangGraph and Groq for building interacti
 2. **Create a `.env` file with your API keys:**
    ```bash
    cat > .env << EOF
-   GROQ_API_KEY=your_groq_api_key_here
+   OPENAI_API_KEY=your_openai_api_key_here
    LOG_LEVEL=INFO
    EOF
    ```
@@ -104,7 +107,7 @@ Non-streaming chat endpoint.
 **Request:**
 ```json
 {
-  "message": "Create a simple HTML page"
+  "message": "Create a dashboard app with Next.js"
 }
 ```
 
@@ -129,7 +132,7 @@ curl --location 'http://localhost:8080/v1/agent/chat/stream' \
 --header 'Content-Type: application/json' \
 --header 'x-session-id: test-session' \
 --data '{
-    "message": "Create a simple HTML page"
+    "message": "Create a todo app with Next.js and Tailwind"
 }'
 ```
 
@@ -137,9 +140,13 @@ curl --location 'http://localhost:8080/v1/agent/chat/stream' \
 ```
 data: {"type": "message", "node": "router", "text": "..."}
 
-data: {"type": "message", "node": "planner", "text": "- Create index.html\n- Add basic structure"}
+data: {"type": "message", "node": "planner", "text": "1. Initialize Next.js app\n2. Create TodoList component\n3. Style with Tailwind"}
 
-data: {"type": "message", "node": "coder", "text": "Creating the HTML file..."}
+data: {"type": "message", "node": "tools", "text": "Initializing Next.js app with TypeScript and Tailwind..."}
+
+data: {"type": "message", "node": "coder", "text": "Creating the TodoList component..."}
+
+data: {"type": "message", "node": "tools", "text": "Created src/components/TodoList.tsx (+45)"}
 
 data: {"type": "done"}
 ```
@@ -194,13 +201,18 @@ x-session-id: your-session-id
   "session_id": "test-session",
   "files": [
     {
-      "name": "index.html",
-      "size": 1234,
-      "content": "<!DOCTYPE html>..." // only if include_content=true
+      "name": "package.json",
+      "size": 456,
+      "content": "{...}" // only if include_content=true
     },
     {
-      "name": "styles.css",
-      "size": 567,
+      "name": "src/app/page.tsx",
+      "size": 1234,
+      "content": null
+    },
+    {
+      "name": "src/components/TodoList.tsx",
+      "size": 2341,
       "content": null
     }
   ]
@@ -217,15 +229,16 @@ x-session-id: your-session-id
 
 **Response:**
 Returns the file content with appropriate content-type header:
-- `.html` → `text/html`
-- `.css` → `text/css`
-- `.js` → `application/javascript`
+- `.tsx`, `.ts` → `text/plain` (TypeScript)
+- `.jsx`, `.js` → `application/javascript`
 - `.json` → `application/json`
+- `.css` → `text/css`
+- `.html` → `text/html`
 - Others → `text/plain`
 
 **Example:**
 ```bash
-curl --location 'http://localhost:8080/v1/agent/files/index.html' \
+curl --location 'http://localhost:8080/v1/agent/files/src/app/page.tsx' \
 --header 'x-session-id: test-session'
 ```
 
@@ -241,37 +254,59 @@ api/
 ├── app/
 │   ├── agent/
 │   │   ├── nodes/           # Agent nodes (router, planner, coder, clarify)
-│   │   ├── tools/           # File manipulation tools
+│   │   ├── tools/
+│   │   │   ├── files.py     # File manipulation tools
+│   │   │   └── commands.py  # Command execution tools (npm, Next.js init)
 │   │   ├── graph.py         # LangGraph workflow definition
 │   │   ├── state.py         # State management
-│   │   └── prompts.py       # System prompts
+│   │   └── prompts.py       # System prompts (Next.js-specific)
 │   ├── routers/
 │   │   └── agent.py         # FastAPI routes
 │   ├── deps.py              # Dependencies
 │   └── main.py              # FastAPI application
+├── scripts/
+│   ├── init_app.sh          # Initialize Next.js app
+│   ├── install.sh           # Run npm install
+│   ├── run_app.sh           # Start dev server
+│   └── run_npm_command.sh   # Run arbitrary npm commands
+├── __out__/                 # Session-specific Next.js projects
 ├── Dockerfile
-├── docker-compose.yml
 ├── pyproject.toml
 └── README.md
 ```
 
-## File System
+## File System & Next.js Projects
 
-The application uses a **session-specific file system** that stores all generated files in dedicated directories. This means:
+The application uses a **session-specific file system** that stores complete Next.js projects in dedicated directories. This means:
 
+- ⚛️ **Full Next.js Projects** - Each session creates a complete Next.js app with proper structure
 - ✅ **Session isolation** - Each session has its own subdirectory under `__out__/`
 - ✅ **Auto-cleanup** - Session directory is cleared automatically when starting a new chat
-- ✅ **Direct access** - Files can be accessed directly from the `__out__/{session-id}/` directory
-- ✅ **Persistence** - Files persist on disk throughout the conversation session
-- ✅ **Easy debugging** - Generated files are accessible for inspection
+- ✅ **Direct access** - Projects can be accessed directly from the `__out__/{session-id}/` directory
+- ✅ **Runnable apps** - Generated Next.js apps can be run locally with `npm run dev`
+- ✅ **Persistence** - Projects persist on disk throughout the conversation session
+- ✅ **Easy debugging** - All source files are accessible for inspection and modification
 
 ### How It Works
 
 1. Each session gets its own directory: `__out__/{session-id}/`
 2. On the first message of a new chat, the session directory is automatically cleared
-3. All file operations (create, read, update, delete) work with files on disk
-4. Tools use `InjectedToolArg` to get the session_id from the request config
-5. Files can be retrieved via the `/v1/agent/files` endpoints or directly from disk
+3. The agent initializes a Next.js app using `create-next-app` with TypeScript, Tailwind, and App Router
+4. All file operations (create, read, update, delete) work with files in the Next.js project
+5. Command tools allow running npm commands and starting the dev server
+6. Tools use `InjectedToolArg` to get the session_id from the request config
+7. Files can be retrieved via the `/v1/agent/files` endpoints or directly from disk
+
+### Running Generated Apps
+
+Once the agent creates a Next.js app, you can run it locally:
+
+```bash
+cd __out__/{your-session-id}
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`
 
 ### Accessing Generated Files
 
@@ -299,17 +334,27 @@ curl 'http://localhost:8080/v1/agent/files?include_content=true' \
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `GROQ_API_KEY` | Groq API key (required) | - |
-| `OPENAI_API_KEY` | OpenAI API key (optional) | - |
+| `OPENAI_API_KEY` | OpenAI API key (required) | - |
 | `LOG_LEVEL` | Logging level | `INFO` |
 
 ### Agent Configuration
 
-The agent uses the following LLM models:
-- **Router**: `llama-3.3-70b-versatile`
-- **Planner**: `llama-3.3-70b-versatile`
-- **Coder**: `llama-3.3-70b-versatile` (with tool binding)
-- **Clarifier**: `llama-3.3-70b-versatile`
+The agent uses the following OpenAI models:
+- **Router**: `gpt-4o-mini` (for intent classification)
+- **Planner**: `gpt-4.1` (for strategic planning with file access)
+- **Coder**: `gpt-5-mini` (with file + command tools for Next.js development)
+- **Clarifier**: `gpt-4.1-mini-2025-04-14` (with file reading tools)
+
+### Command Tools
+
+The agent has access to shell scripts for managing Next.js projects:
+
+| Tool | Description | Timeout |
+|------|-------------|---------|
+| `init_nextjs_app` | Initialize a new Next.js app with TypeScript & Tailwind | 20s |
+| `install_dependencies` | Run `npm install` in the project directory | 20s |
+| `run_dev_server` | Start the Next.js dev server (`npm run dev`) | - |
+| `run_npm_command` | Execute any npm command (e.g., install packages, build) | 20s |
 
 ## Development
 

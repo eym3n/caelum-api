@@ -23,6 +23,15 @@ from app.agent.tools.files import (
     update_lines,
 )
 
+from app.agent.tools.commands import (
+    init_nextjs_app,
+    install_dependencies,
+    run_dev_server,
+    run_npm_command,
+    lint_project,
+)
+from app.checkpointer import get_default_checkpointer
+
 load_dotenv()
 
 
@@ -57,7 +66,17 @@ file_tools = [
     update_lines,
 ]
 
-coder_tools_node = ToolNode(file_tools)
+command_tools = [
+    init_nextjs_app,
+    install_dependencies,
+    run_dev_server,
+    run_npm_command,
+    lint_project,
+]
+
+# Coder has access to both file and command tools
+coder_tools_node = ToolNode(file_tools + command_tools)
+# Clarify and planner only need file reading tools
 clarify_tools_node = ToolNode([list_files, read_file])
 planner_tools_node = ToolNode([list_files, read_file])
 
@@ -87,7 +106,7 @@ graph.add_conditional_edges(
 graph.add_edge("clarify_tools", "clarify")
 
 
-checkpointer = MemorySaver()
+checkpointer = get_default_checkpointer()
 agent = graph.compile(checkpointer=checkpointer)
 
 # if __name__ == "__main__":
