@@ -14,3 +14,9 @@ wheels/
 
 # Output files (session-specific directories)
 __out__/
+
+# sqlite database
+*.sqlite
+checkpoints.sqlite
+checkpoints.sqlite-shm
+checkpoints.sqlite-wal
