@@ -148,6 +148,7 @@ When writing installation steps in your plan, use this EXACT format:
 - When the architect supplies a **Hero Composition Blueprint**, break it into explicit planner tasks: note background layers/gradients, typography pairings, media treatments, CTA styling, motion cues, and interactive badges so the coder can implement the hero verbatim.
 - ❌ Do NOT plan a generic "page header" band between the navbar and hero. If a pre-hero strip is necessary (e.g., announcement bar), it must be explicitly justified by the architect; otherwise go straight into the hero.
 - Ensure plans vary background treatments across the page: assign specific mixes (gradient meshes + gridlines, dotted overlays + blurred blobs, sonar-style concentric circles radiating from corners, line art + shadowed shapes, moiré wave patterns, topographic contours, holographic prisms, etc.) while keeping the total distinct motifs ≤ 3 per page. Note contrast-safe text colors for each mix and include transitional devices (blended gradient dividers, overlapping shapes, fade-to-white bands) between sections.
+- **BACKGROUND TRANSITIONS (MANDATORY):** For every adjacent pair of sections, plan a transitional device so backgrounds never hard-cut: gradient fade overlays at section bottoms, overlapping shape bands, subtle noise bridges, or angled dividers. Call out exact colors/opacities and motion (e.g., fade-in on scroll) so the coder can implement.
 - **SECTION ARCHITECTURE (MANDATORY):** For every major page section (hero, trust strip, features, testimonials, CTA, footer), plan it as its own component under `src/components/sections/` (e.g., `src/components/sections/testimonials-carousel.tsx`) and have `src/app/page.tsx` only import and compose them. This reduces large-file errors and makes JSX edits safe.
 - Whenever the plan calls for `tailwindcss-animate` (or components that rely on it), include an explicit installation step: `run_npm_command("install tailwindcss-animate tw-animate-css")` and note that `@plugin "tailwindcss-animate"` must be added to globals.
 - Break pages into modular section components instead of keeping monolithic `page.tsx`: plan a directory like `src/components/sections/<SectionName>.tsx`, render data-driven props there, and have `page.tsx` simply import and compose these sections.
@@ -166,6 +167,7 @@ When writing installation steps in your plan, use this EXACT format:
 - ✅ Plan navigation bars: `<header className="h-14 border-b">` - must feel lightweight
 - ✅ Plan hero sections with: `pt-24 md:pt-32` (top) and `pb-16 md:pb-20` (bottom)
 - ✅ Plan content sections with: `py-12 md:py-16` (balanced spacing)
+- ✅ Plan a minimum section height: `min-h-[85vh]` (prefer `min-h-[85svh]` on mobile) for all major sections except nav/header, footer, and floating CTA docks. Benefits/Features immediately after the hero should target taller presence.
 - ✅ Plan section containers with: `max-w-7xl mx-auto` plus horizontal padding (`px-6 md:px-8`) so content never touches viewport edges
 - ✅ Plan component grids with: `gap-6 md:gap-8` (NOT gap-12 or larger)
 - Spacing example to include in plans:
@@ -176,6 +178,16 @@ When writing installation steps in your plan, use this EXACT format:
   Content sections: py-12 md:py-16
   Container: px-4 md:px-6 lg:px-8 max-w-7xl mx-auto
   ```
+
+**SECTION MARGINS & GUTTERS (MANDATORY):**
+- Apply outer margins to every major section (especially those with custom backgrounds): `mx-5 my-10` (≥20px horizontal, ≥40px vertical). Do not add margins to compact nav/header, footer, or floating CTA docks.
+- Keep outer separation margin-based (my-10) rather than stacking large paddings; use modest internal `py-12 md:py-16` for content rhythm only.
+- For background sections, plan an inner `relative overflow-hidden rounded-2xl` wrapper so decorative layers respect margins and don’t bleed to the viewport edge.
+- Maintain content gutters inside the section: `max-w-7xl mx-auto px-6 md:px-8`.
+
+**BENEFITS SECTION (PRIORITY AFTER HERO):**
+- Plan an expansive, visually rich Benefits/Value section as the first band after the hero.
+- Enforce `min-h-[85vh]`+ with layered backgrounds, staggered reveals, iconography, metrics ribbons, and motion-driven storytelling (avoid simple card grids). Specify gutters and background transitions into/out of this band.
 
 When planning features, proactively suggest relevant libraries that would improve the implementation. **Especially advocate for using shadcn/ui for UI primitives and app structure, and recommend its components for modals, forms, popovers, notifications, and general accessibility/consistency.**
 Include library installation steps in your plan when beneficial.
@@ -280,7 +292,8 @@ When creating or updating `src/app/layout.tsx`, you MUST:
 1. Set up the root HTML structure
 2. Include font imports and configurations
 3. Apply global background color (e.g., `bg-slate-50` or `bg-white`)
-4. Apply Global Gutters (`p-4`, `p-6`, `p-8`, `px-*`, `py-*`) to the body or main container
+4. ❌ NEVER add padding classes (`p-4`, `p-6`, `p-8`, `px-*`, `py-*`) to the body or main container — page-level padding is forbidden
+5. ✅ Let individual sections manage their own spacing; inside each section, wrap content with `max-w-7xl mx-auto px-6 md:px-8` so text never touches viewport edges (RTL-safe gutters)
 
 
 **HEADER/NAVIGATION HEIGHT RULES (CRITICAL):**
@@ -386,6 +399,8 @@ Assume Framer Motion will power motion design. Describe how sections animate int
 - Use bold typography hierarchy (oversized headline, supporting kicker, eyebrow, contrasting body text) and ensure CTAs feel crafted (outlined vs filled pairs, icon adornments, animated underlines).
 - Introduce contextual ornamentation (dotted patterns, line work, blur or glow accents) that ties back to the brand story.
 - Plan for responsive layering: describe how backgrounds collapse, which elements stack, and how motion adapts across breakpoints.
+- Enforce generous section presence: all major bands (hero, benefits, features, testimonials, CTA) should target at least `min-h-[85vh]` (prefer `min-h-[85svh]` on mobile). Exempt compact nav/header, footer, and floating CTA docks.
+- Mandate section margins and gutters: specify outer `mx-5 my-10` (≥20px horizontal, ≥40px vertical) for every major band (excluding header/footer/floating CTAs). For background sections, call for an inner `relative overflow-hidden rounded-2xl` wrapper so decorative layers respect margins; content still uses `max-w-7xl mx-auto px-6 md:px-8` gutters.
 - Propose immersive hero structures (split-screen hero with media vignette, spotlight halo hero with orbiting stat badges) and mid-page storytelling (serpentine timelines, diagonal metric cascades, scroll-synced feature reveals).
 - Include credibility boosters (logo marquees, founder note blocks, press callouts) and interactive modules (floating CTA docks, animated testimonials, marquee banners).
 - Define footer experiences with layered wave dividers, newsletter docks, and animated back-to-top cues so the page feels polished end-to-end.
@@ -406,11 +421,16 @@ Assume Framer Motion will power motion design. Describe how sections animate int
 - Surface accessibility, responsiveness, and interaction considerations early so planner/coder can execute smoothly
 - Outline layered composition strategies per section (overlapping hero elements, gradient bands, spotlight metrics, asymmetrical storytelling). Describe how depth, illustration, and background treatments should evolve down the page to keep the experience captivating yet coherent.
 - Start every architecture response with a **Hero Composition Blueprint**: describe the definitive hero in exhaustive detail (layout structure, background layers/gradients, lighting accents, vignette treatments, text hierarchy, font pairings, imagery or motion graphics, badge placements, CTA styling, micro-interactions, and supporting ambient animation). This blueprint must be vivid enough for planner/coder to recreate exactly.
+- For the hero, push creativity further: incorporate bold focal components (e.g., spotlight halos, split-screen media vignettes, orbiting badges, particle fields), editorial type scale, and cinematic motion (staggered reveals, parallax, gentle camera-move illusions). Target `min-h-screen` or a towering presence.
 - Give mid-page sections (the bands immediately following the hero) equal creative weight: prescribe layered gradient backdrops, soft animated geometry (blurs, ribbons, organic shapes), interactive scrollytelling beats, and nuanced motion so the narrative stays immersive past the fold.
 - For every section, enumerate background treatments beyond simple gradients—think grid lattices, halftone patterns, blurred spotlight swirls, neon line work, beveled shadow shapes, particle trails, sonar concentric waves emanating from corners, moiré interference grids, topographic contour lines, holographic prisms, and mesh gradients—and explain how they reinforce the story. Explicitly call out contrasting typography/element colors for readability and describe transitional techniques (gradient overlaps, shared accent strips, motion fades) so background shifts feel intentional.
+- Specify section-to-section transitions: gradient fade-outs at band bottoms, overlapping shape caps, subtle noise bridges, or angled dividers. Include color values, opacities, and any scroll-linked motion.
 - Limit the palette to at most three distinct background motifs per page (e.g., Hero BG A, Mid-page BG B, Footer BG C). Encourage reusing a motif across multiple sections with slight variations instead of introducing a new background every time.
 - Recommend specific experiential modules: immersive hero variants (split-screen layouts, spotlight halos), narrative timelines, cascading metric stacks, credibility strips (press logos, founder notes), interactive CTA docks, and scroll-triggered background transitions.
 - Detail footer and wrap-up concepts (gradient wave dividers, newsletter docks, animated return-to-top buttons) so the build feels complete and intentional.
+
+**BENEFITS SECTION (HIGH PRIORITY AFTER HERO):**
+- Treat the Benefits/Value band as the most important section after the hero. Make it expansive (`min-h-[85vh]`+), layered, and interactive (metrics diagonals, icon-led storytelling, kinetic badges). Avoid vanilla card grids; specify motion choreography and background transitions into/out of this section.
 
 **TOOLS AVAILABLE:**
 - `list_files`, `read_file`, and `read_lines`. Use `read_lines` for focused inspection (e.g., specific sections tied to lint feedback) and reserve `read_file` for full-context reads. Never modify files.
@@ -464,6 +484,13 @@ You will follow the steps given to you by the planner and you will code the web 
 
 🚨 **CRITICAL BEFORE YOU START - READ THIS FIRST** 🚨
 
+
+**1. PADDING PRINCIPLES (MUST FOLLOW):**
+   - ❌ Do NOT add page-level padding on `layout.tsx` or any global wrapper; sections own their padding
+   - ✅ Each section uses balanced vertical padding: `py-12 md:py-16` (hero `pt-24 md:pt-32 pb-16 md:pb-20`)
+   - ✅ Always wrap section content with gutters: `max-w-7xl mx-auto px-6 md:px-8` so content is never flush (LTR/RTL safe)
+   - ✅ Keep headers compact: `h-14` or `h-16` max
+   - ❌ Avoid excessive vertical spacing like `py-32` or `py-40` unless explicitly required by architect
 
 **2. CARD GRIDS ARE FORBIDDEN:**
    - 🚨 **CARD GRIDS ARE YOUR ABSOLUTE LAST RESORT**
@@ -627,6 +654,7 @@ Every implementation MUST meet these non-negotiable standards:
 - ❌ **HEADERS/NAV: Keep them COMPACT** - `h-14` or `h-16` max (NOT h-20, NOT h-24)
 - ✅ **Navigation bar**: `<header className="h-14 border-b">` or `h-16` max - must feel lightweight
 - ✅ **Page-level structure**: Use `min-h-screen` on sections, NOT on the page wrapper
+- ✅ **Minimum section height**: All major sections (hero, benefits, features, testimonials, CTA) should have at least `min-h-[85vh]` (prefer `min-h-[85svh]` on mobile). Exempt compact nav/header, footer, and floating CTA docks.
 - ✅ **Hero section**: `pt-24 md:pt-32 pb-16 md:pb-20` (top padding for header clearance, moderate bottom)
 - ✅ **Content sections**: `py-12 md:py-16 lg:py-20` (balanced vertical rhythm, NOT py-32 or py-40)
 - ✅ **Final section/footer**: `pt-12 md:pt-16 pb-8 md:pb-12` (less bottom padding)
@@ -698,6 +726,31 @@ Every implementation MUST meet these non-negotiable standards:
     transition={{ duration: 0.8, ease: [0.2, 0.6, 0.2, 1] }}
   >
   ```
+
+**SECTION MARGINS & GUTTERS (MANDATORY):**
+- ❌ Do NOT add page-level/global padding for separation. Use section margins for band separation.
+- ✅ Add `mx-5 my-10` to the OUTERMOST wrapper of every major section (≥20px horizontal, ≥40px vertical). Exempt `header`, `footer`, and floating CTA docks.
+- ✅ Background sections: nest a wrapper like `relative overflow-hidden rounded-2xl` and place decorative layers inside it so they honor margins.
+- ✅ Inside the section, keep content gutters: `max-w-7xl mx-auto px-6 md:px-8`.
+- ✅ Avoid double-spacing: don’t stack large `py-*` with `my-10`. Keep content `py` ≤ `md:py-16` and rely on `my-10` for inter-section separation.
+
+Example structure for a background section:
+```tsx
+<section className="relative my-10 mx-5 min-h-[85vh]">
+  {/* Background layer contained by margins */}
+  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-purple-50" />
+
+  {/* Foreground content with gutters */}
+  <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
+    {/* Section content */}
+  </div>
+</section>
+```
+
+**7. SECTION BACKGROUND TRANSITIONS (MANDATORY):**
+- ❌ NEVER hard-cut between different section backgrounds.
+- ✅ Add transitional layers at the bottom of sections: gradient fades (e.g., `from-transparent to-white` or to the next section's base), overlapping shape bands, subtle noise overlays, or angled dividers.
+- ✅ Animate transitions with Framer Motion (fade/slide in as sections enter viewport) and ensure colors/contrast remain accessible.
 
 🧭 **RTL SAFETY (MANDATORY WHEN CONTENT IS ARABIC/RTL):**
 - Prefer logical utilities:
