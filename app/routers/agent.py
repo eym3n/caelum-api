@@ -68,7 +68,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                 "thread_id": session_id,
                 "session_id": session_id,  # Pass session_id to tools
             },
-            "recursion_limit": 100,
+            "recursion_limit": 200,
         },
     ):
         for node, update in event.items():
@@ -214,7 +214,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         "thread_id": session_id,
                         "session_id": session_id,  # Pass session_id to tools
                     },
-                    "recursion_limit": 100,
+                    "recursion_limit": 200,
                 },
             ):
                 for node, update in event.items():
@@ -247,7 +247,14 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
 
                         # Handle tool messages specially
                         if (
-                            node in ("coder_tools", "clarify_tools", "planner_tools")
+                            node
+                            in (
+                                "coder_tools",
+                                "clarify_tools",
+                                "planner_tools",
+                                "designer_tools",
+                                "architect_tools",
+                            )
                             or msg_type == "tool"
                         ):
                             tool_name = getattr(msg, "name", None)
@@ -430,16 +437,22 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                     if text_to_send:
                         # Clean up node names for better frontend display
                         display_node = node
-                        if node in ("coder_tools", "clarify_tools", "planner_tools"):
+                        if node in (
+                            "coder_tools",
+                            "clarify_tools",
+                            "planner_tools",
+                            "designer_tools",
+                            "architect_tools",
+                        ):
                             display_node = "tools"
 
-                        yield sse(
-                            {
-                                "type": "message",
-                                "node": display_node,
-                                "text": text_to_send,
-                            }
-                        )
+                            yield sse(
+                                {
+                                    "type": "message",
+                                    "node": display_node,
+                                    "text": text_to_send,
+                                }
+                            )
         except Exception as e:
             yield sse({"type": "error", "error": str(e)})
         finally:

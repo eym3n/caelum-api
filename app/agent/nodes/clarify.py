@@ -5,11 +5,11 @@ from dotenv import load_dotenv
 
 from app.agent.prompts import CLARIFY_SYSTEM_PROMPT
 from app.agent.state import BuilderState
-from app.agent.tools.files import list_files, read_file
+from app.agent.tools.files import list_files, read_file, read_lines
 
 load_dotenv()
 
-tools = [list_files, read_file]
+tools = [list_files, read_file, read_lines]
 
 _clarify_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14").bind_tools(tools)
 

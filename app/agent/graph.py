@@ -8,6 +8,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
 from app.agent.nodes.coder import coder
+from app.agent.nodes.architect import architect
+from app.agent.nodes.designer import designer
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
@@ -16,6 +18,7 @@ from app.agent.tools.files import (
     list_files,
     create_file,
     read_file,
+    read_lines,
     update_file,
     delete_file,
     remove_lines,
@@ -28,6 +31,7 @@ from app.agent.tools.commands import (
     install_dependencies,
     run_dev_server,
     run_npm_command,
+    run_npx_command,
     lint_project,
 )
 from app.checkpointer import get_default_checkpointer
@@ -38,7 +42,19 @@ load_dotenv()
 graph = StateGraph(BuilderState)
 
 
-def edge_after_router(state: BuilderState) -> Literal["planner", "clarify", END]:
+def edge_from_start(state: BuilderState) -> Literal["designer", "architect", "router"]:
+    if not state.design_system_run:
+        return "designer"
+    if not state.architect_system_run:
+        return "architect"
+    return "router"
+
+
+def edge_after_router(
+    state: BuilderState,
+) -> Literal["planner", "clarify", "architect", END]:
+    if state.user_intent == "architect":
+        return "architect"
     if state.user_intent == "code":
         return "planner"
     elif state.user_intent == "clarify":
@@ -55,10 +71,38 @@ def edge_after_planner(state: BuilderState) -> Literal["planner_tools", "coder"]
     return "coder"
 
 
+def noop(state: BuilderState) -> BuilderState:
+    return {}
+
+
+def edge_after_designer(state: BuilderState) -> Literal["architect", "router"]:
+    if not state.architect_system_run:
+        return "architect"
+    return "router"
+
+
+def edge_after_architect(state: BuilderState) -> Literal["router", "planner"]:
+    """Route after architect completes.
+
+    On the initial architecture run (when user_intent hasn't been set by router yet),
+    skip the router and go directly to planner.
+
+    If the router sent us here (architect_pending was True), user_intent will be set to "architect",
+    so we go back to router to continue the flow.
+    """
+    # If user_intent is "architect", that means the router sent us here, so go back to router
+    if hasattr(state, "user_intent") and state.user_intent == "architect":
+        return "router"
+
+    # Initial architecture run - proceed directly to planner
+    return "planner"
+
+
 file_tools = [
     list_files,
     create_file,
     read_file,
+    read_lines,
     update_file,
     delete_file,
     remove_lines,
@@ -71,16 +115,25 @@ command_tools = [
     install_dependencies,
     run_dev_server,
     run_npm_command,
+    run_npx_command,
     lint_project,
 ]
 
 # Coder has access to both file and command tools
 coder_tools_node = ToolNode(file_tools + command_tools)
 # Clarify and planner only need file reading tools
-clarify_tools_node = ToolNode([list_files, read_file])
-planner_tools_node = ToolNode([list_files, read_file])
+clarify_tools_node = ToolNode([list_files, read_file, read_lines])
+planner_tools_node = ToolNode([list_files, read_file, read_lines])
+designer_tools_node = ToolNode(file_tools + command_tools)
+architect_tools_node = ToolNode([list_files, read_file, read_lines])
 
 
+graph.add_node("designer", designer)
+graph.add_node("designer_tools", designer_tools_node)
+graph.add_node("designer_post", noop)
+graph.add_node("architect", architect)
+graph.add_node("architect_tools", architect_tools_node)
+graph.add_node("architect_post", noop)
 graph.add_node("router", router)
 graph.add_node("clarify", clarify)
 graph.add_node("planner", planner)
@@ -89,7 +142,7 @@ graph.add_node("coder_tools", coder_tools_node)
 graph.add_node("clarify_tools", clarify_tools_node)
 graph.add_node("planner_tools", planner_tools_node)
 
-graph.add_edge(START, "router")
+graph.add_conditional_edges(START, edge_from_start)
 graph.add_conditional_edges("router", edge_after_router)
 
 # Planner can use tools to read existing files before planning
@@ -99,6 +152,22 @@ graph.add_conditional_edges(
     "coder", tools_condition, {"tools": "coder_tools", "__end__": END}
 )
 graph.add_edge("coder_tools", "coder")
+
+graph.add_conditional_edges(
+    "designer",
+    tools_condition,
+    {"tools": "designer_tools", "__end__": "designer_post"},
+)
+graph.add_conditional_edges("designer_post", edge_after_designer)
+graph.add_edge("designer_tools", "designer")
+
+graph.add_conditional_edges(
+    "architect",
+    tools_condition,
+    {"tools": "architect_tools", "__end__": "architect_post"},
+)
+graph.add_conditional_edges("architect_post", edge_after_architect)
+graph.add_edge("architect_tools", "architect")
 
 graph.add_conditional_edges(
     "clarify", tools_condition, {"tools": "clarify_tools", "__end__": END}

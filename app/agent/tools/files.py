@@ -93,7 +93,7 @@ def read_file(name: str, config: Annotated[RunnableConfig, InjectedToolArg]) -> 
     """Read a file from the session directory with line numbers for easy reference.
 
     Supports nested paths (e.g., 'src/app/page.tsx', 'components/Button.tsx').
-    Returns the file content with line numbers prepended to each line (e.g., '0: content').
+    Returns the file content with line numbers prepended to each line (1-based, e.g., '1: content').
     This helps when using update_lines, insert_lines, or remove_lines tools.
     """
     session_id = _get_session_from_config(config)
@@ -107,13 +107,79 @@ def read_file(name: str, config: Annotated[RunnableConfig, InjectedToolArg]) -> 
     content = file_path.read_text()
     lines = content.splitlines(keepends=False)
 
-    # Add line numbers to each line for easy reference
+    # Add 1-based line numbers to each line for easy reference
     numbered_lines = []
-    for i, line in enumerate(lines):
+    for i, line in enumerate(lines, start=1):
         numbered_lines.append(f"{i}: {line}")
 
     result = "\n".join(numbered_lines)
     print(f"[FILES] read_file → Read {name} ({len(lines)} lines)")
+    return result
+
+
+@tool
+def read_lines(
+    name: str,
+    start_line: int,
+    end_line: int,
+    config: Annotated[RunnableConfig, InjectedToolArg],
+) -> str:
+    """Read a 1-based inclusive range of lines from a file.
+
+    Parameters
+    ----------
+    name: str
+        Path to the file relative to the session root.
+    start_line: int
+        1-based line number where the range should begin (inclusive).
+    end_line: int
+        1-based line number where the range should end (inclusive).
+
+    Returns the requested lines prefixed with their 1-based line numbers. Useful for
+    quickly inspecting small sections without streaming the entire file.
+    """
+
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    file_path = session_dir / name
+
+    if not file_path.exists():
+        print(f"[FILES] read_lines → ERROR: {name} not found")
+        return f"Error: File {name} not found."
+
+    if start_line < 1 or end_line < 1:
+        print("[FILES] read_lines → ERROR: start_line/end_line must be >= 1")
+        return "Error: start_line and end_line must be >= 1 (1-based indexing)."
+
+    if start_line > end_line:
+        print("[FILES] read_lines → ERROR: start_line greater than end_line")
+        return "Error: start_line must be less than or equal to end_line."
+
+    content = file_path.read_text().splitlines(keepends=False)
+    total_lines = len(content)
+
+    start_index = start_line - 1
+    end_index = end_line - 1
+
+    if start_index >= total_lines:
+        print("[FILES] read_lines → ERROR: start_line out of range")
+        return (
+            f"Error: start_line {start_line} exceeds total line count of {total_lines}."
+        )
+
+    if end_index >= total_lines:
+        print("[FILES] read_lines → ERROR: end_line out of range")
+        return f"Error: end_line {end_line} exceeds total line count of {total_lines}."
+
+    selected = []
+    for offset, line in enumerate(content[start_index : end_index + 1]):
+        actual_line_number = start_line + offset
+        selected.append(f"{actual_line_number}: {line}")
+
+    result = "\n".join(selected)
+    print(
+        f"[FILES] read_lines → Read lines {start_line}-{end_line} from {name} ({len(selected)} lines)"
+    )
     return result
 
 
@@ -173,18 +239,20 @@ def remove_lines(
         return f"Error: File {name} not found."
 
     lines = file_path.read_text().splitlines(keepends=True)
-    new_lines = [line for i, line in enumerate(lines) if i not in indices]
+    # Convert 1-based indices to 0-based positions
+    zero_based = {i - 1 for i in indices if i > 0}
+    new_lines = [line for i, line in enumerate(lines) if i not in zero_based]
     file_path.write_text("".join(new_lines))
     return f"Lines removed successfully from {name}."
 
 
 class InsertedLines(BaseModel):
     lines: list[str]
-    index: int
+    index: int  # 1-based insertion index
 
 
 class UpdatedLines(BaseModel):
-    """Lines to update with their replacements."""
+    """Lines to update with their replacements (1-based, inclusive)."""
 
     start_index: int
     end_index: int  # inclusive
@@ -214,10 +282,11 @@ def insert_lines(
     sorted_inserts = sorted(lines, key=lambda x: x.index, reverse=True)
 
     for insert in sorted_inserts:
+        pos = max(0, insert.index - 1)
         for line_text in reversed(insert.lines):
             if not line_text.endswith("\n"):
                 line_text += "\n"
-            content.insert(insert.index, line_text)
+            content.insert(pos, line_text)
 
     file_path.write_text("".join(content))
     return f"Lines inserted successfully into {name}."
@@ -251,12 +320,16 @@ def update_lines(
     sorted_updates = sorted(updates, key=lambda x: x.start_index, reverse=True)
 
     for update in sorted_updates:
-        # Validate indices
-        if update.start_index < 0 or update.end_index >= len(content):
-            print(f"[FILES] update_lines → ERROR: Indices out of range")
-            return f"Error: Line indices out of range (0-{len(content)-1})."
+        # Convert 1-based inputs to 0-based
+        start0 = update.start_index - 1
+        end0 = update.end_index - 1
 
-        if update.start_index > update.end_index:
+        # Validate indices
+        if start0 < 0 or end0 >= len(content):
+            print(f"[FILES] update_lines → ERROR: Indices out of range")
+            return f"Error: Line indices out of range (1-{len(content)})."
+
+        if start0 > end0:
             print(f"[FILES] update_lines → ERROR: Invalid range")
             return f"Error: start_index must be <= end_index."
 
@@ -272,12 +345,11 @@ def update_lines(
         )
 
         # Replace the line range
-        # Delete lines from start_index to end_index (inclusive)
-        del content[update.start_index : update.end_index + 1]
+        del content[start0 : end0 + 1]
 
-        # Insert replacement lines at start_index
+        # Insert replacement lines at start0
         for i, line in enumerate(replacement):
-            content.insert(update.start_index + i, line)
+            content.insert(start0 + i, line)
 
     file_path.write_text("".join(content))
     print(f"[FILES] update_lines → Successfully updated {name}")

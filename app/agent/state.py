@@ -23,6 +23,15 @@ class BuilderState(BaseModel):
     lines_added: Annotated[int, replace]
     lines_removed: Annotated[int, replace]
 
+    # Design System
+    design_system_run: Annotated[bool, replace] = False
+    design_guidelines: Annotated[str, replace] = ""
+
+    # Architecture
+    architect_system_run: Annotated[bool, replace] = False
+    architect_pending: Annotated[bool, replace] = False
+    architecture_blueprint: Annotated[str, replace] = ""
+
     # Planner
     todo_list: Annotated[list, replace]
     planner_output: Annotated[list, replace]

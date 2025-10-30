@@ -12,6 +12,7 @@ from app.agent.tools.files import (
     list_files,
     create_file,
     read_file,
+    read_lines,
     update_file,
     delete_file,
     remove_lines,
@@ -25,6 +26,7 @@ from app.agent.tools.commands import (
     run_dev_server,
     run_npm_command,
     lint_project,
+    run_npx_command,
 )
 
 load_dotenv()
@@ -34,6 +36,7 @@ tools = [
     list_files,
     create_file,
     read_file,
+    read_lines,
     update_file,
     delete_file,
     remove_lines,
@@ -44,16 +47,37 @@ tools = [
     install_dependencies,
     run_dev_server,
     run_npm_command,
+    run_npx_command,
     lint_project,
 ]
 
-_coder_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
+_coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(tools)
 
 
 def coder(state: BuilderState) -> BuilderState:
     TODO_LIST = state.planner_output
+    guidelines = state.design_guidelines.strip() if state.design_guidelines else ""
+    guidelines_section = (
+        "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n" + guidelines
+        if guidelines
+        else "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n- Design system guidelines not yet available. Coordinate with the design agent output or maintain neutral styling."
+    )
 
-    SYS = SystemMessage(content=CODER_SYSTEM_PROMPT + f"\nTODO List: {TODO_LIST}")
+    blueprint = (
+        state.architecture_blueprint.strip() if state.architecture_blueprint else ""
+    )
+    blueprint_section = (
+        "\n\nCURRENT ARCHITECTURE BLUEPRINT:\n" + blueprint
+        if blueprint
+        else "\n\nCURRENT ARCHITECTURE BLUEPRINT:\n- Architecture blueprint not yet available. Coordinate with the architect agent output or confirm structure with the planner."
+    )
+
+    SYS = SystemMessage(
+        content=CODER_SYSTEM_PROMPT
+        + guidelines_section
+        + blueprint_section
+        + f"\n\nTODO List: {TODO_LIST}"
+    )
     messages = [SYS, *state.messages]
     coder_response = _coder_llm_.invoke(messages)
 

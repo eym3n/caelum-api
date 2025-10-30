@@ -1,0 +1,75 @@
+from __future__ import annotations
+
+from dotenv import load_dotenv
+from langchain_core.messages import SystemMessage
+from langchain_openai import ChatOpenAI
+
+from app.agent.prompts import ARCHITECT_SYSTEM_PROMPT
+from app.agent.state import BuilderState
+from app.agent.tools.files import list_files, read_file, read_lines
+
+load_dotenv()
+
+tools = [list_files, read_file, read_lines]
+
+_architect_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
+
+
+def architect(state: BuilderState) -> BuilderState:
+    design_guidelines = (
+        state.design_guidelines.strip() if state.design_guidelines else ""
+    )
+    guidelines_section = (
+        "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n" + design_guidelines
+        if design_guidelines
+        else "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n- Design system not documented yet. Coordinate with the design agent to establish one."
+    )
+
+    previous_blueprint = (
+        state.architecture_blueprint.strip() if state.architecture_blueprint else ""
+    )
+    previous_architecture_section = (
+        "\n\nEXISTING ARCHITECTURE BLUEPRINT:\n" + previous_blueprint
+        if previous_blueprint
+        else "\n\nEXISTING ARCHITECTURE BLUEPRINT:\n- No prior blueprint. Produce a fresh architecture overview."
+    )
+
+    SYS = SystemMessage(
+        content=ARCHITECT_SYSTEM_PROMPT
+        + guidelines_section
+        + previous_architecture_section
+    )
+    messages = [SYS, *state.messages]
+
+    architect_response = _architect_llm_.invoke(messages)
+
+    print(
+        f"[ARCHITECT] Response has tool_calls: {bool(getattr(architect_response, 'tool_calls', []))}"
+    )
+
+    if getattr(architect_response, "tool_calls", None):
+        print(
+            f"[ARCHITECT] Calling {len(architect_response.tool_calls)} tool(s) for architectural discovery"
+        )
+        return {"messages": [architect_response]}
+
+    blueprint = ""
+    if isinstance(architect_response.content, str):
+        blueprint = architect_response.content.strip()
+    elif isinstance(architect_response.content, list):
+        blueprint = "\n".join(
+            str(segment) for segment in architect_response.content if segment
+        ).strip()
+
+    if not blueprint:
+        blueprint = "Architecture blueprint generated. Refer to response content."
+
+    print("[ARCHITECT] Architecture blueprint captured in state")
+
+    return {
+        "messages": [architect_response],
+        "architecture_blueprint": blueprint,
+        "architect_system_run": True,
+        "architect_pending": False,
+        "architect_output": blueprint,
+    }

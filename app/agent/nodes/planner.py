@@ -6,17 +6,35 @@ import re
 
 from app.agent.prompts import PLANNER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
-from app.agent.tools.files import list_files, read_file
+from app.agent.tools.files import list_files, read_file, read_lines
 
 load_dotenv()
 
-tools = [list_files, read_file]
+tools = [list_files, read_file, read_lines]
 
-_planner_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
+_planner_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
 
 
 def planner(state: BuilderState) -> BuilderState:
-    SYS = SystemMessage(content=PLANNER_SYSTEM_PROMPT)
+    guidelines = state.design_guidelines.strip() if state.design_guidelines else ""
+    guidelines_section = (
+        "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n" + guidelines
+        if guidelines
+        else "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n- Design system guidelines not yet available. Coordinate with the design agent or use a neutral Tailwind baseline until they are provided."
+    )
+
+    blueprint = (
+        state.architecture_blueprint.strip() if state.architecture_blueprint else ""
+    )
+    blueprint_section = (
+        "\n\nCURRENT ARCHITECTURE BLUEPRINT:\n" + blueprint
+        if blueprint
+        else "\n\nCURRENT ARCHITECTURE BLUEPRINT:\n- Architecture blueprint not yet available. Confer with the architect agent output or draft a provisional structure before planning."
+    )
+
+    SYS = SystemMessage(
+        content=PLANNER_SYSTEM_PROMPT + guidelines_section + blueprint_section
+    )
     messages = [SYS, *state.messages]
     planner_response = _planner_llm_.invoke(messages)
 

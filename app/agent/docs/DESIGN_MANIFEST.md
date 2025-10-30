@@ -106,18 +106,242 @@ export default {
 
 **globals.css**
 
+example:
+
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+@plugin "@tailwindcss/forms";
 
-:root { --radius: 12px; }
+/* Theme tokens */
+:root {
+  /* Brand */
+  --brand-50:  #eef7ff;
+  --brand-100: #dbeeff;
+  --brand-200: #b7dcff;
+  --brand-300: #8ec6ff;
+  --brand-400: #5ea9ff;
+  --brand-500: #2b8aff; /* primary */
+  --brand-600: #1f6fe0;
+  --brand-700: #1b59b3;
+  --brand-800: #17488e;
+  --brand-900: #123a72;
 
-body {
-  @apply bg-[hsl(0_0%_99%)] text-foreground antialiased;
+  /* Neutrals */
+  --neutral-50:  #f8fafc;
+  --neutral-100: #f1f5f9;
+  --neutral-200: #e2e8f0;
+  --neutral-300: #cbd5e1;
+  --neutral-400: #94a3b8;
+  --neutral-500: #64748b;
+  --neutral-600: #475569;
+  --neutral-700: #334155;
+  --neutral-800: #1f2937;
+  --neutral-900: #0f172a;
+
+  /* Semantic */
+  --success:  #16a34a;
+  --warning:  #f59e0b;
+  --danger:   #ef4444;
+  --info:     #0ea5e9;
+
+  /* Radius & shadow */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-soft: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  --radius:  0.625rem;
+  --background:  oklch(1 0 0);
+  --foreground:  oklch(0.145 0 0);
+  --card:  oklch(1 0 0);
+  --card-foreground:  oklch(0.145 0 0);
+  --popover:  oklch(1 0 0);
+  --popover-foreground:  oklch(0.145 0 0);
+  --primary:  oklch(0.205 0 0);
+  --primary-foreground:  oklch(0.985 0 0);
+  --secondary:  oklch(0.97 0 0);
+  --secondary-foreground:  oklch(0.205 0 0);
+  --muted:  oklch(0.97 0 0);
+  --muted-foreground:  oklch(0.556 0 0);
+  --accent:  oklch(0.97 0 0);
+  --accent-foreground:  oklch(0.205 0 0);
+  --destructive:  oklch(0.577 0.245 27.325);
+  --border:  oklch(0.922 0 0);
+  --input:  oklch(0.922 0 0);
+  --ring:  oklch(0.708 0 0);
+  --chart-1:  oklch(0.646 0.222 41.116);
+  --chart-2:  oklch(0.6 0.118 184.704);
+  --chart-3:  oklch(0.398 0.07 227.392);
+  --chart-4:  oklch(0.828 0.189 84.429);
+  --chart-5:  oklch(0.769 0.188 70.08);
+  --sidebar:  oklch(0.985 0 0);
+  --sidebar-foreground:  oklch(0.145 0 0);
+  --sidebar-primary:  oklch(0.205 0 0);
+  --sidebar-primary-foreground:  oklch(0.985 0 0);
+  --sidebar-accent:  oklch(0.97 0 0);
+  --sidebar-accent-foreground:  oklch(0.205 0 0);
+  --sidebar-border:  oklch(0.922 0 0);
+  --sidebar-ring:  oklch(0.708 0 0);
 }
 
-.prose { @apply max-w-none; }
+@theme inline {
+  --color-background: var(--neutral-50);
+  --color-foreground: var(--neutral-900);
+  --color-muted: var(--neutral-600);
+  --color-border: var(--neutral-200);
+  --color-card: #ffffff;
+  --color-ring: var(--brand-500);
+
+  --color-primary-50: var(--brand-50);
+  --color-primary-100: var(--brand-100);
+  --color-primary-200: var(--brand-200);
+  --color-primary-300: var(--brand-300);
+  --color-primary-400: var(--brand-400);
+  --color-primary-500: var(--brand-500);
+  --color-primary-600: var(--brand-600);
+  --color-primary-700: var(--brand-700);
+  --color-primary-800: var(--brand-800);
+  --color-primary-900: var(--brand-900);
+
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
+
+  --radius: var(--radius-md);
+
+  --color-sidebar-ring:  var(--sidebar-ring);
+
+  --color-sidebar-border:  var(--sidebar-border);
+
+  --color-sidebar-accent-foreground:  var(--sidebar-accent-foreground);
+
+  --color-sidebar-accent:  var(--sidebar-accent);
+
+  --color-sidebar-primary-foreground:  var(--sidebar-primary-foreground);
+
+  --color-sidebar-primary:  var(--sidebar-primary);
+
+  --color-sidebar-foreground:  var(--sidebar-foreground);
+
+  --color-sidebar:  var(--sidebar);
+
+  --color-chart-5:  var(--chart-5);
+
+  --color-chart-4:  var(--chart-4);
+
+  --color-chart-3:  var(--chart-3);
+
+  --color-chart-2:  var(--chart-2);
+
+  --color-chart-1:  var(--chart-1);
+
+  --color-input:  var(--input);
+
+  --color-destructive:  var(--destructive);
+
+  --color-accent-foreground:  var(--accent-foreground);
+
+  --color-accent:  var(--accent);
+
+  --color-muted-foreground:  var(--muted-foreground);
+
+  --color-secondary-foreground:  var(--secondary-foreground);
+
+  --color-secondary:  var(--secondary);
+
+  --color-primary-foreground:  var(--primary-foreground);
+
+  --color-primary:  var(--primary);
+
+  --color-popover-foreground:  var(--popover-foreground);
+
+  --color-popover:  var(--popover);
+
+  --color-card-foreground:  var(--card-foreground);
+
+  --radius-sm:  calc(var(--radius) - 4px);
+
+  --radius-md:  calc(var(--radius) - 2px);
+
+  --radius-lg:  var(--radius);
+
+  --radius-xl:  calc(var(--radius) + 4px);
+}
+
+:root.dark, .dark :root {
+  --color-background: #0b1220;
+  --color-foreground: #e5e7eb;
+  --color-muted: #9ca3af;
+  --color-border: #1f2937;
+  --color-card: #0f172a;
+}
+
+/* Base */
+html, body { height: 100%; }
+body { font-family: var(--font-sans, ui-sans-serif), system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; }
+
+/* Typography helpers */
+.font-heading { font-family: var(--font-heading, ui-sans-serif), system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial; }
+
+/* Focus styles */
+:focus-visible { outline: none; box-shadow: 0 0 0 2px white, 0 0 0 4px var(--brand-500); border-radius: 8px; }
+
+/***** Utilities *****/
+@layer utilities {
+  .container-max { @apply container mx-auto max-w-screen-xl; }
+  .layout-gutter { @apply px-6 md:px-8; }
+}
+
+/***** Component presets *****/
+@layer components {
+  .card { @apply bg-white border border-[--color-border]; }
+  .btn-base { @apply inline-flex items-center justify-center text-sm font-medium transition-all duration-200 ease-[cubic-bezier(.2,.6,.2,1)] focus-visible:ring-2 focus-visible:ring-[--color-ring] disabled:opacity-50 disabled:cursor-not-allowed; }
+  .input-base { @apply w-full border border-[--color-border] bg-white text-[--color-foreground] placeholder:text-[--color-muted] focus:outline-none focus:ring-2 focus:ring-[--color-ring]; }
+}
+
+.dark {
+  --background:  oklch(0.145 0 0);
+  --foreground:  oklch(0.985 0 0);
+  --card:  oklch(0.205 0 0);
+  --card-foreground:  oklch(0.985 0 0);
+  --popover:  oklch(0.205 0 0);
+  --popover-foreground:  oklch(0.985 0 0);
+  --primary:  oklch(0.922 0 0);
+  --primary-foreground:  oklch(0.205 0 0);
+  --secondary:  oklch(0.269 0 0);
+  --secondary-foreground:  oklch(0.985 0 0);
+  --muted:  oklch(0.269 0 0);
+  --muted-foreground:  oklch(0.708 0 0);
+  --accent:  oklch(0.269 0 0);
+  --accent-foreground:  oklch(0.985 0 0);
+  --destructive:  oklch(0.704 0.191 22.216);
+  --border:  oklch(1 0 0 / 10%);
+  --input:  oklch(1 0 0 / 15%);
+  --ring:  oklch(0.556 0 0);
+  --chart-1:  oklch(0.488 0.243 264.376);
+  --chart-2:  oklch(0.696 0.17 162.48);
+  --chart-3:  oklch(0.769 0.188 70.08);
+  --chart-4:  oklch(0.627 0.265 303.9);
+  --chart-5:  oklch(0.645 0.246 16.439);
+  --sidebar:  oklch(0.205 0 0);
+  --sidebar-foreground:  oklch(0.985 0 0);
+  --sidebar-primary:  oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground:  oklch(0.985 0 0);
+  --sidebar-accent:  oklch(0.269 0 0);
+  --sidebar-accent-foreground:  oklch(0.985 0 0);
+  --sidebar-border:  oklch(1 0 0 / 10%);
+  --sidebar-ring:  oklch(0.556 0 0);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
 ```
 
 ---
@@ -128,73 +352,9 @@ The agent must **always** build UIs with these reusable primitives.
 
 ### 🧭 Section
 
-```tsx
-export function Section({ children, className="" }) {
-  return (
-    <section className={`py-12 md:py-16 ${className}`}>
-      <div className="container max-w-screen-xl">{children}</div>
-    </section>
-  );
-}
-```
-
 ### 🪶 Button
 
-```tsx
-import { cva, type VariantProps } from "class-variance-authority";
-import { twMerge } from "tailwind-merge";
-
-const button = cva(
-  "inline-flex items-center justify-center rounded-xl text-sm font-medium transition-all duration-200 ease-smooth focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:cursor-not-allowed",
-  {
-    variants: {
-      variant: {
-        primary: "bg-indigo-600 text-white hover:bg-indigo-700",
-        secondary: "bg-white text-zinc-900 border border-border hover:bg-zinc-50",
-        ghost: "hover:bg-zinc-100 text-zinc-700"
-      },
-      size: {
-        sm: "h-9 px-3",
-        md: "h-10 px-4",
-        lg: "h-11 px-5"
-      }
-    },
-    defaultVariants: { variant: "primary", size: "md" }
-  }
-);
-
-export function Button({ className, variant, size, ...props }) {
-  return <button className={twMerge(button({ variant, size }), className)} {...props} />;
-}
-```
-
 ### 🗂️ Card
-
-```tsx
-export function Card({ children, className="" }) {
-  return <div className={`rounded-xl border border-border bg-card shadow-soft ${className}`}>{children}</div>;
-}
-export const CardHeader = ({ children }) => <div className="p-5 border-b">{children}</div>;
-export const CardContent = ({ children }) => <div className="p-5 space-y-4">{children}</div>;
-```
-
-### 🏷️ PageHeader
-
-```tsx
-export function PageHeader({ title, subtitle, actions }) {
-  return (
-    <div className="mb-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">{title}</h1>
-          {subtitle && <p className="text-zinc-600">{subtitle}</p>}
-        </div>
-        {actions}
-      </div>
-    </div>
-  );
-}
-```
 
 ---
 
@@ -214,13 +374,11 @@ When no user design context is given, the agent must self-generate a **DesignBri
 }
 ```
 
-The agent must map this schema to Tailwind utilities (e.g. `text-2xl font-semibold`, `shadow-soft`, `rounded-xl`).
-
 ---
 
 ## 🧩 Composition Rules
 
-1. **Every page** must start with a `<PageHeader>`
+1. **Every page** must start with a `<Nav>`
 2. **Content** must be wrapped in `<Section>` with `container max-w-screen-xl`.
 3. **Use grid/flex layout** — avoid arbitrary margins.
 4. **Spacing scale:** 2, 4, 6, 8, 12, 16, 24.
@@ -268,7 +426,7 @@ The agent must self-assess and **not output** until it scores ≥ 4 in all categ
 
 ## ✅ Design Do’s
 
-* ✅ Use predefined primitives (`Section`, `Card`, `Button`, `PageHeader`)
+* ✅ Use predefined primitives (`Section`, `Card`, `Button`, `Nav`)
 * ✅ Follow consistent `container max-w-screen-xl`
 * ✅ Use `shadow-soft`, `rounded-xl`, `space-y-*`
 * ✅ Keep text hierarchy clear with `text-2xl md:text-3xl font-semibold`
@@ -298,23 +456,10 @@ The agent must self-assess and **not output** until it scores ≥ 4 in all categ
 * Use `eslint-plugin-tailwindcss`
 * Fail build if:
 
-  * Missing `PageHeader`
   * No `container` in main layout
   * More than 2 distinct radii
   * Text smaller than `text-sm`
   * Hardcoded colors outside config palette
 
----
 
-## 💬 Example System Prompt Snippet
-
-> Use the **UI Manifest** design standards.
->
-> * Start every page with `<PageHeader>` and at least one `<Section>`.
-> * Follow Tailwind 8pt spacing, Inter font, indigo primary.
-> * Compose from primitives (Section, Card, Button).
-> * Enforce Visual QA Rubric (≥4).
-> * Generate code → self-review → fix → output final.
-> * Avoid full-bleed layouts and inconsistent radii.
-> * Add loading/empty/error states.
 

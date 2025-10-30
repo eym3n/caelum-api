@@ -34,7 +34,7 @@ def init_nextjs_app(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
             cwd="/Users/maystro/Documents/langgraph-app-builder/api",
             capture_output=True,
             text=True,
-            timeout=20,
+            timeout=75,
         )
 
         if result.returncode == 0:
@@ -48,7 +48,7 @@ def init_nextjs_app(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
 
     except subprocess.TimeoutExpired:
         print(f"[COMMANDS] init_nextjs_app → TIMEOUT")
-        return "Error: Command timed out after 20 seconds"
+        return "Error: Command timed out after 75 seconds"
     except Exception as e:
         print(f"[COMMANDS] init_nextjs_app → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -73,7 +73,7 @@ def install_dependencies(config: Annotated[RunnableConfig, InjectedToolArg]) -> 
             cwd="/Users/maystro/Documents/langgraph-app-builder/api",
             capture_output=True,
             text=True,
-            timeout=20,
+            timeout=75,
         )
 
         if result.returncode == 0:
@@ -87,7 +87,7 @@ def install_dependencies(config: Annotated[RunnableConfig, InjectedToolArg]) -> 
 
     except subprocess.TimeoutExpired:
         print(f"[COMMANDS] install_dependencies → TIMEOUT")
-        return "Error: Command timed out after 20 seconds. Try again or the installation may still be running in the background."
+        return "Error: Command timed out after 75 seconds. Try again or the installation may still be running in the background."
     except Exception as e:
         print(f"[COMMANDS] install_dependencies → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -165,7 +165,7 @@ def run_npm_command(
             cwd="/Users/maystro/Documents/langgraph-app-builder/api",
             capture_output=True,
             text=True,
-            timeout=20,
+            timeout=75,
         )
 
         output = result.stdout if result.stdout else result.stderr
@@ -179,9 +179,56 @@ def run_npm_command(
 
     except subprocess.TimeoutExpired:
         print(f"[COMMANDS] run_npm_command → TIMEOUT")
-        return "Error: Command timed out after 20 seconds"
+        return "Error: Command timed out after 75 seconds"
     except Exception as e:
         print(f"[COMMANDS] run_npm_command → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
+
+@tool
+def run_npx_command(
+    command: str, config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Run any npx command in the project directory.
+
+    Ideal for installing shadcn components or executing CLI utilities.
+
+    Args:
+        command: npx command arguments (e.g., "shadcn@latest add @shadcn/ui/spotlight")
+
+    Returns:
+        Command output or error details.
+    """
+
+    session_id = _get_session_from_config(config)
+
+    print(
+        f"[COMMANDS] run_npx_command → Running 'npx {command}' for session {session_id}"
+    )
+
+    try:
+        result = subprocess.run(
+            ["bash", "scripts/run_npx_command.sh", session_id, *command.split()],
+            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+            capture_output=True,
+            text=True,
+            timeout=75,
+        )
+
+        output = result.stdout if result.stdout else result.stderr
+
+        if result.returncode == 0:
+            print(f"[COMMANDS] run_npx_command → SUCCESS")
+            return f"✓ npx command completed successfully!\n\n{output}"
+        else:
+            print(f"[COMMANDS] run_npx_command → ERROR: {result.stderr}")
+            return f"Error running npx command:\n{output}"
+
+    except subprocess.TimeoutExpired:
+        print(f"[COMMANDS] run_npx_command → TIMEOUT")
+        return "Error: npx command timed out after 75 seconds"
+    except Exception as e:
+        print(f"[COMMANDS] run_npx_command → EXCEPTION: {e}")
         return f"Error: {str(e)}"
 
 
@@ -211,7 +258,7 @@ def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
             cwd="/Users/maystro/Documents/langgraph-app-builder/api",
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=75,
         )
 
         output = result.stdout if result.stdout else result.stderr
@@ -227,7 +274,7 @@ def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
 
     except subprocess.TimeoutExpired:
         print(f"[COMMANDS] lint_project → TIMEOUT")
-        return "Error: Linting timed out after 30 seconds"
+        return "Error: Linting timed out after 75 seconds"
     except Exception as e:
         print(f"[COMMANDS] lint_project → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -239,5 +286,6 @@ command_tools = [
     install_dependencies,
     run_dev_server,
     run_npm_command,
+    run_npx_command,
     lint_project,
 ]
