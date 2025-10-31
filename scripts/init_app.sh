@@ -19,3 +19,9 @@ fi
 
 yes "" | npx create-next-app@latest "${TARGET_DIR}" \
   --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm
+
+# Install base packages commonly required by prompts and components
+pushd "${TARGET_DIR}" >/dev/null
+echo "📦 Installing base packages: tailwindcss-animate, tw-animate-css, framer-motion"
+npm install tailwindcss-animate tw-animate-css framer-motion --no-audit --no-fund
+popd >/dev/null

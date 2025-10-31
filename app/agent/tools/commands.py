@@ -233,6 +233,50 @@ def run_npx_command(
 
 
 @tool
+def run_git_command(
+    command: str, config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Run a git command in the project directory for the current session.
+
+    Args:
+        command: git arguments (e.g., "status -sb", "add -A", "commit -m 'msg'")
+
+    Returns:
+        Command output or error details.
+    """
+
+    session_id = _get_session_from_config(config)
+
+    print(
+        f"[COMMANDS] run_git_command → Running 'git {command}' for session {session_id}"
+    )
+
+    try:
+        result = subprocess.run(
+            ["bash", "scripts/run_git_command.sh", session_id, *command.split()],
+            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+            capture_output=True,
+            text=True,
+            timeout=75,
+        )
+
+        output = result.stdout if result.stdout else result.stderr
+
+        if result.returncode == 0:
+            print(f"[COMMANDS] run_git_command → SUCCESS")
+            return f"✓ git command completed successfully!\n\n{output}"
+        else:
+            print(f"[COMMANDS] run_git_command → ERROR: {result.stderr}")
+            return f"Error running git command:\n{output}"
+
+    except subprocess.TimeoutExpired:
+        print(f"[COMMANDS] run_git_command → TIMEOUT")
+        return "Error: git command timed out after 75 seconds"
+    except Exception as e:
+        print(f"[COMMANDS] run_git_command → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
+@tool
 def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     """Run ESLint to check for syntax errors and linting issues in the Next.js project.
 
@@ -280,6 +324,97 @@ def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
         return f"Error: {str(e)}"
 
 
+@tool
+def git_log(
+    limit: int, config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Show recent commits (history) with a concise format.
+
+    Args:
+        limit: number of commits to show (e.g., 10)
+
+    Returns:
+        Formatted git log output or error details.
+    """
+    session_id = _get_session_from_config(config)
+    print(f"[COMMANDS] git_log → Showing last {limit} commits for {session_id}")
+    try:
+        result = subprocess.run(
+            [
+                "bash",
+                "scripts/run_git_command.sh",
+                session_id,
+                "log",
+                f"-n",
+                str(limit),
+                "--pretty=format:%h %ad %an %s",
+                "--date=short",
+            ],
+            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+            capture_output=True,
+            text=True,
+            timeout=75,
+        )
+        output = result.stdout if result.stdout else result.stderr
+        if result.returncode == 0:
+            print(f"[COMMANDS] git_log → SUCCESS")
+            return output
+        else:
+            print(f"[COMMANDS] git_log → ERROR: {result.stderr}")
+            return f"Error running git log:\n{output}"
+    except subprocess.TimeoutExpired:
+        print(f"[COMMANDS] git_log → TIMEOUT")
+        return "Error: git log timed out after 75 seconds"
+    except Exception as e:
+        print(f"[COMMANDS] git_log → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
+
+@tool
+def git_show(
+    commit: str, config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Show details for a specific commit (message, author, files changed).
+
+    Args:
+        commit: commit hash or ref (e.g., HEAD, abc123)
+
+    Returns:
+        Commit details including stats and file list.
+    """
+    session_id = _get_session_from_config(config)
+    print(f"[COMMANDS] git_show → Showing commit {commit} for {session_id}")
+    try:
+        result = subprocess.run(
+            [
+                "bash",
+                "scripts/run_git_command.sh",
+                session_id,
+                "show",
+                "--stat",
+                "--name-status",
+                "--format=fuller",
+                commit,
+            ],
+            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+            capture_output=True,
+            text=True,
+            timeout=75,
+        )
+        output = result.stdout if result.stdout else result.stderr
+        if result.returncode == 0:
+            print(f"[COMMANDS] git_show → SUCCESS")
+            return output
+        else:
+            print(f"[COMMANDS] git_show → ERROR: {result.stderr}")
+            return f"Error running git show:\n{output}"
+    except subprocess.TimeoutExpired:
+        print(f"[COMMANDS] git_show → TIMEOUT")
+        return "Error: git show timed out after 75 seconds"
+    except Exception as e:
+        print(f"[COMMANDS] git_show → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
 # Export all command tools
 command_tools = [
     init_nextjs_app,
@@ -287,5 +422,8 @@ command_tools = [
     run_dev_server,
     run_npm_command,
     run_npx_command,
+    run_git_command,
+    git_log,
+    git_show,
     lint_project,
 ]

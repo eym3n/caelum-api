@@ -27,6 +27,9 @@ from app.agent.tools.commands import (
     run_npm_command,
     lint_project,
     run_npx_command,
+    run_git_command,
+    git_log,
+    git_show,
 )
 
 load_dotenv()
@@ -49,6 +52,9 @@ tools = [
     run_npm_command,
     run_npx_command,
     lint_project,
+    run_git_command,
+    git_log,
+    git_show,
 ]
 
 _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(tools)

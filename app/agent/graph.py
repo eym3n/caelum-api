@@ -8,6 +8,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
 from app.agent.nodes.coder import coder
+from app.agent.nodes.git_sync import git_sync
 from app.agent.nodes.architect import architect
 from app.agent.nodes.designer import designer
 from app.agent.state import BuilderState
@@ -32,6 +33,7 @@ from app.agent.tools.commands import (
     run_dev_server,
     run_npm_command,
     run_npx_command,
+    run_git_command,
     lint_project,
 )
 from app.checkpointer import get_default_checkpointer
@@ -116,6 +118,7 @@ command_tools = [
     run_dev_server,
     run_npm_command,
     run_npx_command,
+    run_git_command,
     lint_project,
 ]
 
@@ -139,6 +142,7 @@ graph.add_node("clarify", clarify)
 graph.add_node("planner", planner)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
+graph.add_node("git_sync", git_sync)
 graph.add_node("clarify_tools", clarify_tools_node)
 graph.add_node("planner_tools", planner_tools_node)
 
@@ -149,9 +153,10 @@ graph.add_conditional_edges("router", edge_after_router)
 graph.add_conditional_edges("planner", edge_after_planner)
 graph.add_edge("planner_tools", "planner")
 graph.add_conditional_edges(
-    "coder", tools_condition, {"tools": "coder_tools", "__end__": END}
+    "coder", tools_condition, {"tools": "coder_tools", "__end__": "git_sync"}
 )
 graph.add_edge("coder_tools", "coder")
+graph.add_edge("git_sync", END)
 
 graph.add_conditional_edges(
     "designer",
