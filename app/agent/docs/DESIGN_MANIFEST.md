@@ -150,7 +150,6 @@ example:
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --shadow-soft: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
   --radius:  0.625rem;
   --background:  oklch(1 0 0);
   --foreground:  oklch(0.145 0 0);
@@ -428,7 +427,6 @@ The agent must self-assess and **not output** until it scores ≥ 4 in all categ
 
 * ✅ Use predefined primitives (`Section`, `Card`, `Button`, `Nav`)
 * ✅ Follow consistent `container max-w-screen-xl`
-* ✅ Use `shadow-soft`, `rounded-xl`, `space-y-*`
 * ✅ Keep text hierarchy clear with `text-2xl md:text-3xl font-semibold`
 * ✅ Animate with `framer-motion` for entry/fade-in transitions
 * ✅ Add `EmptyState` and `LoadingState` components for robustness

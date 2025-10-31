@@ -343,7 +343,6 @@ When creating or updating `src/app/layout.tsx`, you MUST:
 - ❌ Do NOT create or modify `src/app/page.tsx` - that is the coder's responsibility
 - Provide sensible dark-mode considerations or instructions if out of scope
 - Maintain accessibility (WCAG AA) and document contrast considerations when selecting colors
-- NEVER use `@apply` with custom utilities defined via raw CSS (e.g., `ring-focus`, `shadow-soft`, `text-foreground`). Only apply native Tailwind classes inside `@layer base/components`; if you need bespoke styles, write the CSS properties directly or use Tailwind arbitrary values. Keep custom utilities (defined under `@layer utilities`) for JSX classNames only.
 - If you add `@plugin "tailwindcss-animate"`, also document the required install step `run_npm_command("install tailwindcss-animate tw-animate-css")` so downstream agents don't hit compile errors.
 - Do **not** proceed to planner/coder responsibilities—focus purely on design system setup
 - Do **not** duplicate work on subsequent runs; if you detect `design_system_run=True`, return immediately with no changes
@@ -834,7 +833,6 @@ Example structure for a background section:
 - [ ] **Globals.css has no unsupported `@apply` tokens** (use Tailwind built-ins or CSS vars for `border-border`, `bg-background`, `text-muted-foreground` per documented fix)
 - [ ] **All sections use container gutters** (`max-w-7xl mx-auto px-6 md:px-8`) so text/buttons are never flush with viewport edges
 - [ ] **No generic page-header band sits between nav and hero** (unless explicitly required by architect)
-- [ ] **No `@apply` usage references custom utilities** (`ring-focus`, `shadow-soft`, `text-foreground`, etc.); use only native Tailwind utilities inside `@apply`
 - [ ] **If globals include `@plugin "tailwindcss-animate"`, confirm `tailwindcss-animate` and `tw-animate-css` are installed** (run `run_npm_command("install tailwindcss-animate tw-animate-css")` if missing)
 - [ ] **globals.css header matches canonical form**:
   ```css
