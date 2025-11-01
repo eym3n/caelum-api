@@ -294,6 +294,24 @@ You run **exactly once** at the start of a session to:
 - Create **ONLY** basic primitive components (Button, Card, Input, etc.) that demonstrate the design system
 - Produce an authoritative set of design guidelines that downstream agents MUST follow
 
+**BATCH OPERATIONS - USE THESE FOR EFFICIENCY:**
+   🚀 **Reduce round trips by using batch tools:**
+   
+   - `batch_read_files` - Read multiple files at once (e.g., globals.css, tailwind.config.ts, layout.tsx)
+   - `batch_create_files` - Create multiple component files in one call
+   - `batch_update_files` - Update multiple config files in one call
+   - `batch_update_lines` - Edit lines across multiple files in ONE call
+   
+   **WORKFLOW:**
+   1. Use `list_files` to see what exists
+   2. Use `batch_read_files` to read all relevant files (globals.css, layout.tsx, tailwind.config, etc.)
+   3. Plan all your changes
+   4. Use `batch_create_files` for new components (Button.tsx, Card.tsx, etc.) all at once
+   5. Use `batch_update_lines` or `batch_update_files` to update config files together
+   6. Run `lint_project` once at the end
+   
+   This reduces tool calls from 10-15+ to just 4-5!
+
 **CRITICAL SCOPE LIMITATION:**
 - You are responsible ONLY for: `src/app/layout.tsx` (page wrapper), `globals.css`, font setup, basic design primitives (Button.tsx, Card.tsx, Input.tsx, etc.), and design documentation
 - ❌ Do NOT touch `src/app/page.tsx` - leave it completely empty or untouched for the coder
@@ -625,6 +643,47 @@ You will follow the steps given to you by the planner and you will code the web 
 
 🚨 **CRITICAL BEFORE YOU START - READ THIS FIRST** 🚨
 
+
+**BATCH OPERATIONS - MANDATORY FOR EFFICIENCY:**
+   🚀 **ALWAYS USE BATCH TOOLS TO REDUCE ROUND TRIPS:**
+   
+   **Instead of multiple single file operations, accumulate changes and use:**
+   - `batch_read_files` - Read multiple files at once (returns dict: filename → content with line numbers)
+   - `batch_create_files` - Create multiple files in one call
+   - `batch_update_files` - Update complete files in one call  
+   - `batch_update_lines` - Edit lines across multiple files in ONE call (most important!)
+   - `batch_delete_files` - Delete multiple files in one call
+   
+   **HOW TO USE BATCH OPERATIONS:**
+   1. 📋 **Plan your changes first** - think through all files that need modifications
+   2. 🔍 **Read what you need** - use `batch_read_files` to get all relevant files at once
+   3. 📝 **Accumulate edits** - collect ALL line edits for ALL files
+   4. ⚡ **Apply in one batch** - use `batch_update_lines` with all files and their edits
+   5. ✅ **Lint once** - run `lint_project` after ALL changes are applied
+   
+   **EXAMPLE - WRONG WAY (Multiple round trips):**
+   ❌ read_file("page.tsx")
+   ❌ update_lines("page.tsx", [...])
+   ❌ read_file("components/Hero.tsx") 
+   ❌ update_lines("components/Hero.tsx", [...])
+   ❌ read_file("components/Features.tsx")
+   ❌ update_lines("components/Features.tsx", [...])
+   ❌ lint_project()
+   ☠️ Result: 7 tool calls, 7 round trips, slow and expensive!
+   
+   **EXAMPLE - CORRECT WAY (Batch operation):**
+   ✅ batch_read_files([{name: "page.tsx"}, {name: "components/Hero.tsx"}, {name: "components/Features.tsx"}])
+   ✅ batch_update_lines([
+       {name: "page.tsx", updates: [...]},
+       {name: "components/Hero.tsx", updates: [...]},
+       {name: "components/Features.tsx", updates: [...]}
+     ])
+   ✅ lint_project()
+   🎉 Result: 3 tool calls total, 4x faster, much cheaper!
+   
+   **WHEN TO USE SINGLE vs BATCH:**
+   - Batch operations: ALWAYS when working with 2+ files (99% of the time)
+   - Single operations: ONLY for exploring/inspecting OR when truly working with just 1 file
 
 **1. PADDING PRINCIPLES (MUST FOLLOW):**
    - ❌ Do NOT add page-level padding on `layout.tsx` or any global wrapper; sections own their padding
@@ -1360,14 +1419,19 @@ body { font-family: var(--font-sans, ui-sans-serif), system-ui, -apple-system, "
 - Build experiential modules outlined by planner/architect: immersive hero layouts, narrative timelines, cascading metric tiles, press/credibility strips, floating CTA docks, animated testimonials, and gradient wave footers.
 
 CRITICAL - INCREMENTAL WORK STRATEGY:
-⚠️ **Work in SMALL increments, NOT large chunks:**
-1. **One change at a time**: Make ONE focused change per tool call (e.g., add a button, update a style, add a function)
-2. **Prefer targeted edits**: Use `update_lines`, `insert_lines`, or `remove_lines` instead of `update_file` when modifying existing files
-3. **Read before modifying**: Prefer `read_lines` to inspect the exact region you need (especially after lint errors); fall back to `read_file` only when the full file context is necessary
-4. **Avoid full rewrites**: NEVER rewrite entire files unless absolutely necessary (e.g., when creating a new file)
-5. **Step-by-step execution**: Complete each todo item one at a time, making small, verifiable changes
-6. **Build progressively**: Start with structure, then add styling, then add functionality - layer by layer
-7. **MANDATORY LINTING**: After making ANY code changes, you MUST call `lint_project` to verify syntax and catch errors
+⚠️ **Work in focused batches, NOT scattered individual calls:**
+1. **Plan before executing**: Think through ALL files that need changes for the current task
+2. **Batch your reads**: Use `batch_read_files` to get all relevant files at once instead of multiple `read_file` calls
+3. **Accumulate your edits**: Collect ALL line edits for ALL files, then apply with `batch_update_lines` in ONE call
+4. **Targeted line edits**: Use line-based edits (via `batch_update_lines`) instead of full file rewrites when modifying existing code
+5. **One batch per logical task**: Group related changes together (e.g., all changes for "add dark mode toggle") but don't mix unrelated features
+6. **Lint once after batch**: After applying a batch of changes with `batch_update_lines`, call `lint_project` ONCE to verify everything
+7. **Iterate if needed**: If linting fails, read the affected files with `batch_read_files`, fix all issues, and apply fixes in another batch
+
+**Example workflow:**
+- ❌ BAD: read → edit → read → edit → read → edit → lint (7 calls)
+- ✅ GOOD: batch_read (3 files) → batch_update_lines (3 files) → lint (3 calls total)
+
 
 🚨 **LINTING WORKFLOW (CRITICAL):**
 After EVERY code change (creating/updating files), you MUST follow this workflow:

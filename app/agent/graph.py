@@ -18,15 +18,14 @@ from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
 from app.agent.nodes.planner import planner
 from app.agent.tools.files import (
+    # Batch operations (primary tools)
+    batch_read_files,
+    batch_create_files,
+    batch_update_files,
+    batch_delete_files,
+    batch_update_lines,
+    # Utility
     list_files,
-    create_file,
-    read_file,
-    read_lines,
-    update_file,
-    delete_file,
-    remove_lines,
-    insert_lines,
-    update_lines,
 )
 
 from app.agent.tools.commands import (
@@ -92,15 +91,14 @@ def edge_after_architect(state: BuilderState) -> Literal["planner"]:
 
 
 file_tools = [
+    # Batch operations (agents must use these)
+    batch_read_files,
+    batch_create_files,
+    batch_update_files,
+    batch_delete_files,
+    batch_update_lines,
+    # Utility
     list_files,
-    create_file,
-    read_file,
-    read_lines,
-    update_file,
-    delete_file,
-    remove_lines,
-    insert_lines,
-    update_lines,
 ]
 
 command_tools = [
@@ -114,13 +112,15 @@ command_tools = [
     lint_project,
 ]
 
-# Coder has access to both file and command tools
+# Coder has access to both file and command tools (batch operations only)
 coder_tools_node = ToolNode(file_tools + command_tools)
-# Clarify and planner only need file reading tools
-clarify_tools_node = ToolNode([list_files, read_file, read_lines])
-planner_tools_node = ToolNode([list_files, read_file, read_lines])
+# Clarify and planner only need file reading (batch reads)
+clarify_tools_node = ToolNode([batch_read_files, list_files])
+planner_tools_node = ToolNode([batch_read_files, list_files])
+# Designer has access to both file and command tools (batch operations only)
 designer_tools_node = ToolNode(file_tools + command_tools)
-architect_tools_node = ToolNode([list_files, read_file, read_lines])
+# Architect only needs reading tools (batch reads)
+architect_tools_node = ToolNode([batch_read_files, list_files])
 
 
 graph.add_node("designer", designer)

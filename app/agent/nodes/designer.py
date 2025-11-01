@@ -14,30 +14,27 @@ from app.agent.tools.commands import (
     run_npm_command,
 )
 from app.agent.tools.files import (
-    create_file,
-    delete_file,
-    insert_lines,
+    # Batch operations (ONLY USE THESE)
+    batch_read_files,
+    batch_create_files,
+    batch_update_files,
+    batch_delete_files,
+    batch_update_lines,
+    # Utility
     list_files,
-    read_file,
-    read_lines,
-    remove_lines,
-    update_file,
-    update_lines,
 )
 
 load_dotenv()
 
 tools = [
-    # File tools
+    # Batch file operations (ONLY USE THESE FOR FILES)
+    batch_read_files,
+    batch_create_files,
+    batch_update_files,
+    batch_delete_files,
+    batch_update_lines,
+    # Utility
     list_files,
-    read_file,
-    read_lines,
-    create_file,
-    update_file,
-    delete_file,
-    remove_lines,
-    insert_lines,
-    update_lines,
     # Command tools
     init_nextjs_app,
     install_dependencies,

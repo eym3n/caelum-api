@@ -354,3 +354,244 @@ def update_lines(
     file_path.write_text("".join(content))
     print(f"[FILES] update_lines → Successfully updated {name}")
     return f"Lines updated successfully in {name}."
+
+
+# ============================================================================
+# BATCH OPERATIONS - Preferred for efficiency
+# ============================================================================
+
+
+class FileRead(BaseModel):
+    """File to read."""
+
+    name: str
+
+
+class FileCreate(BaseModel):
+    """File to create."""
+
+    name: str
+    content: str
+
+
+class FileUpdate(BaseModel):
+    """File to update."""
+
+    name: str
+    content: str
+
+
+class FileDelete(BaseModel):
+    """File to delete."""
+
+    name: str
+
+
+class FileLineUpdate(BaseModel):
+    """File with line updates."""
+
+    name: str
+    updates: list[UpdatedLines]
+
+
+@tool
+def batch_read_files(
+    files: list[FileRead], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> dict[str, str]:
+    """Read multiple files in a single operation. Much more efficient than calling read_file multiple times.
+
+    Returns a dictionary mapping file names to their content (with line numbers).
+    If a file doesn't exist, its value will be an error message.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    results = {}
+
+    print(f"[FILES] batch_read_files → Reading {len(files)} file(s)")
+
+    for file_read in files:
+        file_path = session_dir / file_read.name
+        if not file_path.exists():
+            results[file_read.name] = f"Error: File {file_read.name} not found."
+            continue
+
+        content = file_path.read_text()
+        lines = content.splitlines(keepends=False)
+
+        # Add 1-based line numbers
+        numbered_lines = [f"{i}: {line}" for i, line in enumerate(lines, start=1)]
+        results[file_read.name] = "\n".join(numbered_lines)
+
+    print(
+        f"[FILES] batch_read_files → Successfully read {len([r for r in results.values() if not r.startswith('Error')])} file(s)"
+    )
+    return results
+
+
+@tool
+def batch_create_files(
+    files: list[FileCreate], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Create multiple files in a single operation. Much more efficient than calling create_file multiple times.
+
+    All parent directories will be created automatically.
+    Returns a summary of the operation.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    created = []
+    errors = []
+
+    print(f"[FILES] batch_create_files → Creating {len(files)} file(s)")
+
+    for file_create in files:
+        file_path = session_dir / file_create.name
+
+        if file_path.exists():
+            errors.append(
+                f"{file_create.name}: already exists (use batch_update_files to modify)"
+            )
+            continue
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(file_create.content)
+        created.append(file_create.name)
+
+    summary = f"Created {len(created)} file(s): {', '.join(created)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] batch_create_files → {summary}")
+    return summary
+
+
+@tool
+def batch_update_files(
+    files: list[FileUpdate], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Update multiple files in a single operation. Much more efficient than calling update_file multiple times.
+
+    Returns a summary of the operation.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    updated = []
+    errors = []
+
+    print(f"[FILES] batch_update_files → Updating {len(files)} file(s)")
+
+    for file_update in files:
+        file_path = session_dir / file_update.name
+
+        if not file_path.exists():
+            errors.append(
+                f"{file_update.name}: not found (use batch_create_files to create)"
+            )
+            continue
+
+        file_path.write_text(file_update.content)
+        updated.append(file_update.name)
+
+    summary = f"Updated {len(updated)} file(s): {', '.join(updated)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] batch_update_files → {summary}")
+    return summary
+
+
+@tool
+def batch_delete_files(
+    files: list[FileDelete], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Delete multiple files in a single operation. Much more efficient than calling delete_file multiple times.
+
+    Returns a summary of the operation.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    deleted = []
+    errors = []
+
+    print(f"[FILES] batch_delete_files → Deleting {len(files)} file(s)")
+
+    for file_delete in files:
+        file_path = session_dir / file_delete.name
+
+        if not file_path.exists():
+            errors.append(f"{file_delete.name}: not found")
+            continue
+
+        file_path.unlink()
+        deleted.append(file_delete.name)
+
+    summary = f"Deleted {len(deleted)} file(s): {', '.join(deleted)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] batch_delete_files → {summary}")
+    return summary
+
+
+@tool
+def batch_update_lines(
+    files: list[FileLineUpdate], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Update lines in multiple files in a single operation. MUCH more efficient than calling update_lines multiple times.
+
+    This is the PREFERRED way to make edits across multiple files. Accumulate all your changes and apply them in one batch.
+
+    Returns a summary of the operation.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    updated = []
+    errors = []
+
+    print(
+        f"[FILES] batch_update_lines → Updating lines in {len(files)} file(s) with {sum(len(f.updates) for f in files)} total edit(s)"
+    )
+
+    for file_update in files:
+        file_path = session_dir / file_update.name
+
+        if not file_path.exists():
+            errors.append(f"{file_update.name}: not found")
+            continue
+
+        content = file_path.read_text().splitlines(keepends=True)
+
+        # Sort by start_index in reverse to process from bottom to top
+        sorted_updates = sorted(
+            file_update.updates, key=lambda x: x.start_index, reverse=True
+        )
+
+        for update in sorted_updates:
+            start0 = update.start_index - 1
+            end0 = update.end_index - 1
+
+            if start0 < 0 or end0 >= len(content) or start0 > end0:
+                errors.append(
+                    f"{file_update.name}: invalid range {update.start_index}-{update.end_index}"
+                )
+                continue
+
+            replacement = []
+            for line_text in update.replacement_lines:
+                if not line_text.endswith("\n"):
+                    line_text += "\n"
+                replacement.append(line_text)
+
+            del content[start0 : end0 + 1]
+            for i, line in enumerate(replacement):
+                content.insert(start0 + i, line)
+
+        file_path.write_text("".join(content))
+        updated.append(f"{file_update.name} ({len(file_update.updates)} edit(s))")
+
+    summary = f"Updated {len(updated)} file(s): {', '.join(updated)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] batch_update_lines → {summary}")
+    return summary

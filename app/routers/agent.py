@@ -59,6 +59,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
         clear_session_dir(session_id)
         # Initialize Next.js project
         import subprocess
+
         print(f"[CHAT] Initializing Next.js app for session {session_id}")
         try:
             result = subprocess.run(
@@ -66,12 +67,18 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                 cwd="/Users/maystro/Documents/langgraph-app-builder/api",
                 capture_output=True,
                 text=True,
-                timeout=75,
+                timeout=120,
             )
             if result.returncode == 0:
                 print(f"[CHAT] Next.js app initialized successfully")
+                if result.stdout:
+                    print(f"[CHAT] Init output:\n{result.stdout}")
             else:
-                print(f"[CHAT] WARNING: Failed to initialize Next.js app: {result.stderr}")
+                print(
+                    f"[CHAT] WARNING: Failed to initialize Next.js app: {result.stderr}"
+                )
+                if result.stdout:
+                    print(f"[CHAT] Stdout:\n{result.stdout}")
         except Exception as e:
             print(f"[CHAT] WARNING: Exception during Next.js init: {e}")
     else:
@@ -131,6 +138,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
         clear_session_dir(session_id)
         # Initialize Next.js project
         import subprocess
+
         print(f"[STREAM] Initializing Next.js app for session {session_id}")
         try:
             result = subprocess.run(
@@ -138,12 +146,18 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                 cwd="/Users/maystro/Documents/langgraph-app-builder/api",
                 capture_output=True,
                 text=True,
-                timeout=75,
+                timeout=120,
             )
             if result.returncode == 0:
                 print(f"[STREAM] Next.js app initialized successfully")
+                if result.stdout:
+                    print(f"[STREAM] Init output:\n{result.stdout}")
             else:
-                print(f"[STREAM] WARNING: Failed to initialize Next.js app: {result.stderr}")
+                print(
+                    f"[STREAM] WARNING: Failed to initialize Next.js app: {result.stderr}"
+                )
+                if result.stdout:
+                    print(f"[STREAM] Stdout:\n{result.stdout}")
         except Exception as e:
             print(f"[STREAM] WARNING: Exception during Next.js init: {e}")
     else:
