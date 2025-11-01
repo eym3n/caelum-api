@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 from app.agent.prompts import ARCHITECT_SYSTEM_PROMPT
 from app.agent.state import BuilderState
@@ -12,7 +13,7 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_architect_llm_ = ChatOpenAI(model="gpt-5-nano").bind_tools(tools)
+_architect_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
 
 
 def architect(state: BuilderState) -> BuilderState:
@@ -46,6 +47,22 @@ def architect(state: BuilderState) -> BuilderState:
     print(
         f"[ARCHITECT] Response has tool_calls: {bool(getattr(architect_response, 'tool_calls', []))}"
     )
+
+    # Check for malformed function call
+    finish_reason = getattr(architect_response, "response_metadata", {}).get(
+        "finish_reason"
+    )
+    if finish_reason == "MALFORMED_FUNCTION_CALL":
+        print(
+            "[ARCHITECT] ⚠️  Malformed function call detected. Retrying with a simpler prompt..."
+        )
+        recovery_msg = HumanMessage(
+            content="The previous request had an error. Please respond with a clear text explanation of the architecture without making tool calls."
+        )
+        messages.append(architect_response)
+        messages.append(recovery_msg)
+        architect_response = _architect_llm_.invoke(messages)
+        print(f"[ARCHITECT] Retry response: {architect_response}")
 
     if getattr(architect_response, "tool_calls", None):
         print(

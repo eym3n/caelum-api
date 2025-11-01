@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dotenv import load_dotenv
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.prompts import DESIGNER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 from app.agent.tools.commands import (
@@ -46,7 +46,7 @@ tools = [
     lint_project,
 ]
 
-_designer_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
+_designer_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
@@ -61,6 +61,22 @@ def designer(state: BuilderState) -> BuilderState:
     print(
         f"[DESIGNER] Response has tool_calls: {bool(getattr(designer_response, 'tool_calls', []))}"
     )
+
+    # Check for malformed function call
+    finish_reason = getattr(designer_response, "response_metadata", {}).get(
+        "finish_reason"
+    )
+    if finish_reason == "MALFORMED_FUNCTION_CALL":
+        print(
+            "[DESIGNER] ⚠️  Malformed function call detected. Retrying with a simpler prompt..."
+        )
+        recovery_msg = HumanMessage(
+            content="The previous request had an error. Please respond with a clear text explanation of the design system without making tool calls."
+        )
+        messages.append(designer_response)
+        messages.append(recovery_msg)
+        designer_response = _designer_llm_.invoke(messages)
+        print(f"[DESIGNER] Retry response: {designer_response}")
 
     if getattr(designer_response, "tool_calls", None):
         print(

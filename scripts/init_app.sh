@@ -26,6 +26,10 @@ echo "📦 Installing base packages..."
 npm install \
   tailwindcss-animate \
   tw-animate-css \
+  @tailwindcss/typography \
+  @tailwindcss/forms \
+  @radix-ui/react-slot \
+  class-variance-authority \
   framer-motion \
   lucide-react \
   clsx \

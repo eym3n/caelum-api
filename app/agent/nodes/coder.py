@@ -3,6 +3,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 
 from app.agent.prompts import CODER_SYSTEM_PROMPT
@@ -59,7 +60,7 @@ tools = [
     check_css,
 ]
 
-_coder_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
+_coder_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
 
 
 def coder(state: BuilderState) -> BuilderState:
@@ -91,4 +92,39 @@ def coder(state: BuilderState) -> BuilderState:
 
     print(f"[CODER] {coder_response}")
 
-    return {"messages": [coder_response], "coder_output": coder_response.content}
+    # Check for malformed function call
+    finish_reason = getattr(coder_response, "response_metadata", {}).get(
+        "finish_reason"
+    )
+    if finish_reason == "MALFORMED_FUNCTION_CALL":
+        print(
+            "[CODER] ⚠️  Malformed function call detected. Retrying with a simpler prompt..."
+        )
+        # Retry with a recovery message
+        recovery_msg = HumanMessage(
+            content="The previous request had an error. Please respond with a clear text explanation of what you were trying to do, without making tool calls. Then I'll help you make the correct tool calls."
+        )
+        messages.append(coder_response)
+        messages.append(recovery_msg)
+        coder_response = _coder_llm_.invoke(messages)
+        print(f"[CODER] Retry response: {coder_response}")
+
+    # Extract content as string (handle both str and list responses)
+    output = ""
+    if isinstance(coder_response.content, str):
+        output = coder_response.content.strip()
+    elif isinstance(coder_response.content, list):
+        output = "\n".join(
+            (
+                str(segment.get("text", segment))
+                if isinstance(segment, dict)
+                else str(segment)
+            )
+            for segment in coder_response.content
+            if segment
+        ).strip()
+
+    if not output:
+        output = "Coder response completed. Refer to tool calls or message content."
+
+    return {"messages": [coder_response], "coder_output": output}

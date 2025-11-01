@@ -3,13 +3,13 @@ from typing import Literal
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
-
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.prompts import ROUTER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 
 load_dotenv()
 
-_router_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14")
+_router_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
 from pydantic import BaseModel
 
@@ -21,7 +21,9 @@ class RouterResponse(BaseModel):
 
 def router(state: BuilderState) -> BuilderState:
 
-    design_guidelines = state.design_guidelines.strip() if state.design_guidelines else ""
+    design_guidelines = (
+        state.design_guidelines.strip() if state.design_guidelines else ""
+    )
     architecture_blueprint = (
         state.architecture_blueprint.strip() if state.architecture_blueprint else ""
     )
@@ -32,7 +34,9 @@ def router(state: BuilderState) -> BuilderState:
         f"Architect pending additional pass: {'yes' if state.architect_pending else 'no'}",
     ]
 
-    context_section = "\n".join(["CURRENT BUILD CONTEXT:", *("- " + line for line in status_lines)])
+    context_section = "\n".join(
+        ["CURRENT BUILD CONTEXT:", *("- " + line for line in status_lines)]
+    )
 
     guidelines_section = (
         "\n\nDESIGN SYSTEM SNAPSHOT:\n" + design_guidelines
