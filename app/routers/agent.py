@@ -494,13 +494,13 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         ):
                             display_node = "tools"
 
-                            yield sse(
-                                {
-                                    "type": "message",
-                                    "node": display_node,
-                                    "text": text_to_send,
-                                }
-                            )
+                        yield sse(
+                            {
+                                "type": "message",
+                                "node": display_node,
+                                "text": text_to_send,
+                            }
+                        )
         except Exception as e:
             yield sse({"type": "error", "error": str(e)})
         finally:
