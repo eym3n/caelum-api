@@ -8,7 +8,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.checkpoint.memory import MemorySaver
 from dotenv import load_dotenv
 from app.agent.nodes.coder import coder
-from app.agent.nodes.git_sync import git_sync
+
+# from app.agent.nodes.git_sync import git_sync  # Commented out for now
 from app.agent.nodes.architect import architect
 from app.agent.nodes.designer import designer
 from app.agent.state import BuilderState
@@ -83,20 +84,8 @@ def edge_after_designer(state: BuilderState) -> Literal["architect", "router"]:
     return "router"
 
 
-def edge_after_architect(state: BuilderState) -> Literal["router", "planner"]:
-    """Route after architect completes.
-
-    On the initial architecture run (when user_intent hasn't been set by router yet),
-    skip the router and go directly to planner.
-
-    If the router sent us here (architect_pending was True), user_intent will be set to "architect",
-    so we go back to router to continue the flow.
-    """
-    # If user_intent is "architect", that means the router sent us here, so go back to router
-    if hasattr(state, "user_intent") and state.user_intent == "architect":
-        return "router"
-
-    # Initial architecture run - proceed directly to planner
+def edge_after_architect(state: BuilderState) -> Literal["planner"]:
+    """After architect completes, always proceed directly to planner to avoid loops."""
     return "planner"
 
 
@@ -142,7 +131,7 @@ graph.add_node("clarify", clarify)
 graph.add_node("planner", planner)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
-graph.add_node("git_sync", git_sync)
+# graph.add_node("git_sync", git_sync)  # Commented out for now
 graph.add_node("clarify_tools", clarify_tools_node)
 graph.add_node("planner_tools", planner_tools_node)
 
@@ -153,10 +142,15 @@ graph.add_conditional_edges("router", edge_after_router)
 graph.add_conditional_edges("planner", edge_after_planner)
 graph.add_edge("planner_tools", "planner")
 graph.add_conditional_edges(
-    "coder", tools_condition, {"tools": "coder_tools", "__end__": "git_sync"}
+    "coder",
+    tools_condition,
+    {
+        "tools": "coder_tools",
+        "__end__": END,
+    },  # Changed '__end__' from 'git_sync' to END
 )
 graph.add_edge("coder_tools", "coder")
-graph.add_edge("git_sync", END)
+# graph.add_edge("git_sync", END)  # Commented out for now
 
 graph.add_conditional_edges(
     "designer",
@@ -171,7 +165,7 @@ graph.add_conditional_edges(
     tools_condition,
     {"tools": "architect_tools", "__end__": "architect_post"},
 )
-graph.add_conditional_edges("architect_post", edge_after_architect)
+graph.add_edge("architect_post", "planner")
 graph.add_edge("architect_tools", "architect")
 
 graph.add_conditional_edges(

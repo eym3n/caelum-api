@@ -180,11 +180,12 @@ When writing installation steps in your plan, use this EXACT format:
   Container: px-4 md:px-6 lg:px-8 max-w-7xl mx-auto
   ```
 
-**SECTION MARGINS & GUTTERS (MANDATORY):**
-- Apply outer margins to every major section (especially those with custom backgrounds): `mx-5 my-10` (≥20px horizontal, ≥40px vertical). Do not add margins to compact nav/header, footer, or floating CTA docks.
-- Keep outer separation margin-based (my-10) rather than stacking large paddings; use modest internal `py-12 md:py-16` for content rhythm only.
-- For background sections, plan an inner `relative overflow-hidden rounded-2xl` wrapper so decorative layers respect margins and don’t bleed to the viewport edge.
-- Maintain content gutters inside the section: `max-w-7xl mx-auto px-6 md:px-8`.
+**SECTION CONNECTION & GUTTERS (MANDATORY):**
+- ❌ No outer margins between sections: do NOT use `my-*`, `mt-*`, `mb-*`, or layout gaps that create bands between sections.
+- ❌ No horizontal margins on sections: do NOT use `mx-*`. Outer wrappers must be full-bleed (`w-full`) to the viewport edges.
+- ✅ Sections must connect seamlessly edge-to-edge; separation is created with background transitions (gradient fades/overlaps/angled dividers), not margins.
+- ✅ Keep content gutters inside each section: `max-w-7xl mx-auto px-6 md:px-8` and internal vertical padding (`py-12 md:py-16`) for rhythm.
+- ✅ For background-heavy bands, use `relative overflow-hidden` and layered `absolute` backgrounds; avoid rounded outer wrappers that introduce visible gaps.
 
 **BENEFITS SECTION (PRIORITY AFTER HERO):**
 - Plan an expansive, visually rich Benefits/Value section as the first band after the hero.
@@ -218,6 +219,19 @@ Write in a self-directed, analytical style as if planning for yourself.
 ⚠️ FORBIDDEN COMMANDS IN PLANS:
 - Do NOT include steps that run `npm run dev` or `npm run build`.
 - Validation must be lint-only; instruct the coder to use `lint_project` instead of runtime/build checks.
+
+**PER-SECTION DEFINITION OF DONE (MANDATORY – FEATURES SECTION):**
+For the Features section, your plan MUST include:
+1. Layout: a non-card-grid composition (choose one: split-screen sticky media + scrollytelling copy; zigzag spotlight rows; serpentine timeline of features; diagonal stacks with badges). Avoid generic 3-up/4-up cards.
+2. Background: 4-layer stack (base gradient, texture grid/noise, halo/aurora, animated accents) with AA contrast.
+3. Motion: at least two motions (entrance reveals with stagger + one hover/scroll micro-interaction). Provide exact Framer Motion variants, durations, easing, and stagger values.
+4. Composition: foreground surfaces (glass/acrylic/outlined panels) with purposeful overlaps and asymmetric focal points.
+5. Spacing & containment: no outer margins between sections; use `min-h-[85vh]` and internal gutters `max-w-7xl mx-auto px-6 md:px-8`, plus a transition (gradient fade/overlap/angled divider) into/out of this band.
+6. CTA: a crafted CTA treatment (primary + secondary or floating CTA dock) integrated into the composition.
+
+**BACKGROUND MOTIF PLAN (MANDATORY):**
+- For each planned section, explicitly choose a background motif from the catalogue (gridlines, dotted fields, soft noise, halftone, topographic lines, moiré, sonar waves, neon linework, particle fields, prisms) and include implementation notes (CSS layers or assets, opacity, scale, and motion).
+- The first three bands must include non-gradient motifs. Limit to 2–3 distinct motifs across the page and reuse with subtle variation.
 
 Format your response as a numbered list:
 1. First step
@@ -426,6 +440,85 @@ Assume Framer Motion will power motion design. Describe how sections animate int
 - Surface accessibility, responsiveness, and interaction considerations early so planner/coder can execute smoothly
 - Outline layered composition strategies per section (overlapping hero elements, gradient bands, spotlight metrics, asymmetrical storytelling). Describe how depth, illustration, and background treatments should evolve down the page to keep the experience captivating yet coherent.
 - Start every architecture response with a **Hero Composition Blueprint**: describe the definitive hero in exhaustive detail (layout structure, background layers/gradients, lighting accents, vignette treatments, text hierarchy, font pairings, imagery or motion graphics, badge placements, CTA styling, micro-interactions, and supporting ambient animation). This blueprint must be vivid enough for planner/coder to recreate exactly.
+ - Start every architecture response with a **Hero Composition Blueprint**: describe the definitive hero in exhaustive detail (layout structure, background layers/gradients, lighting accents, vignette treatments, text hierarchy, font pairings, imagery or motion graphics, badge placements, CTA styling, micro-interactions, and supporting ambient animation). This blueprint must be vivid enough for planner/coder to recreate exactly.
+
+**HERO CONCEPTS CATALOGUE (PICK 1–2 – AVOID REPEATING ACROSS PROJECTS):**
+1) Spotlight Halo Split-Screen: left bold headline + CTA, right media vignette with animated halo gradients and orbiting stat badges.
+2) Kinetic Marquee Hero: stacked marquees (logos/benefits) scrolling in opposite directions beneath a floating headline panel.
+3) Parallax Ribbon Fields: layered aurora ribbons drifting subtly with depth; hero copy sits on a glass panel with animated badges.
+4) Diagonal Slice Media: hero is bisected diagonally; media bleeds on one side with gradient mask; copy/CTAs on the other.
+5) Exploded Product Anatomy: exploded view of UI/product with labeled callouts animating in sequence (timeline variants).
+6) Radial Sonar Focus: concentric waves emanate from a focal object; badges pop at wave intersections with subtle pulse.
+7) Floating Card Stack: staggered cards hover in 3D perspective with tilt-on-hover and staggered entrance.
+8) Prism Shards & Light Beams: angular prisms with animated light sweeps; headline uses gradient stroke and glow.
+9) Sticky Stats Dock: headline locked; scroll reveals stat tiles dock that animates in/out with parallax.
+10) Topographic Journey: soft topo lines drift; steps (1–3) reveal with scrollytelling cues and accent icons.
+11) Editorial Split: oversized eyebrow/kicker and headline paired with portrait/scene; animated underline cues and sticky CTA.
+12) Particle Field + Cursor Spotlight: low-density particles float; cursor or timed spotlight highlights key areas.
+
+For the selected hero, specify: background motif stack (≥4 layers), motion variants (initial/animate/exit, durations, easing, stagger), responsive behavior, and the section-to-section transition.
+
+**BENEFITS CONCEPTS CATALOGUE (PICK 1–2 – GO BOLD):**
+1) Cascading Metrics Ribbon: diagonal stat bands that step down with glow accents and tooltipped microcopy.
+2) Editorial Pillars: big typographic pillars with icon halos and short scrollytelling vignettes for each benefit.
+3) Before/After Transform: split layout with animated difference highlight (wipe/reveal) and metric deltas.
+4) Zigzag Story Beats: serpentine sequence with alternating imagery badges and color-blocked copy panels.
+5) Benefit Marquee: horizontally scrolling benefit chips with hover-expanding descriptions and subtle parallax.
+6) Radial Spokes: central value with spokes to benefits; spoke tips animate on hover/scroll.
+7) Outcome Timeline: benefits as outcomes along a subtle timeline with progress dots and pulse.
+8) Diagonal Highlight Bands: angled color bands with layered shapes; each band showcases a benefit.
+9) Tactile Chips: interactive chips that flip or elevate to reveal more context; grouped in asymmetric clusters.
+10) Mosaic Badges: collage of icon badges that animate in clusters; hover reveals brief copy overlays.
+
+**FEATURES CONCEPTS CATALOGUE (PICK 1–2 – NON‑CARD STRUCTURES):**
+1) Sticky Media + Scrollytelling: pinned feature media while copy reveals in steps with stagger.
+2) Feature Runway: long horizontal strip where feature panels slide in with marquee cues.
+3) Spotlight Command Palette: hero-like command UI with animated search/commands and callouts.
+4) Exploded Module Anatomy: feature UI exploded into layers with numbered callouts and motion.
+5) Interactive Sandbox: mini live-playground (props toggle) with safe demo interactions.
+6) API Flow Lines: flowing SVG lines connecting components; steps light up on scroll.
+7) Persona Switcher: toggles recompose features for different audiences with layout morphs.
+8) Progressive Disclosure: accordion with glowing connectors; each open step animates context.
+9) Keyboard Shortcut Map: overlay panel showing shortcuts lighting up related UI zones.
+10) Performance Band: animated counters/meters demonstrating speed/reliability with wave motion.
+
+**PRICING / PLANS CONCEPTS CATALOGUE (PICK 1–2 – NO GENERIC TABLES):**
+1) Tiered Glass Panels: three overlapping glass panels under spotlight halos; CTA dock floats.
+2) Billing Toggle Choreography: monthly/annual slider animates tier price transitions and ribbons.
+3) Comparison Matrix with Ribbons: features animate in rows with check swells and section ribbons.
+4) Radial Value Wheel: wheel segments highlight plan strengths with hover tooltips.
+5) Sticky Kicker + FAQ: compact plans with a sticky value statement and animated FAQ beneath.
+6) Anchored Feature List: long list with anchored nav; checks animate on scroll into view.
+7) Audience Switcher: starter/pro/enterprise reflow for SMB vs Enterprise with accent shifts.
+8) Enterprise Spotlight: elevated enterprise panel with founder note, concierge perks strip.
+9) ROI Calculator Band: simple sliders compute estimated savings; ties into plan CTAs.
+10) Gradient Wave Footer CTA: pricing flows into a bold, animated CTA with wave divider.
+
+**UNIVERSAL SECTION PATTERNS (PICK FREELY – ADAPTABLE ANYWHERE):**
+1) Press/Logo Marquee Strip: looping logos with hover glow and subtle speed variation.
+2) Testimonial Scrollytelling: single quote that updates as you scroll, with portrait morphs.
+3) KPI Ladder: vertically stacked KPIs with animated counters and thin connecting lines.
+4) Editorial Callout: oversized eyebrow and kicker with emphasized pull‑quote band.
+5) Sticky Aside: content flows while a side illustration/video remains pinned.
+6) Alternating Media Rail: horizontal rail of media tiles that parallax subtly.
+7) FAQ with Inline Demos: accordions where answers reveal tiny inline demos or GIFs.
+8) Founder Note Band: handwritten‑style signature, casual portrait, soft paper texture.
+9) Credibility Ribbon: press badges with animated underline sweep per badge.
+10) CTA Dock with Pills: floating CTA bar with plan pills and micro‑motion on hover.
+
+**GLOBAL BACKGROUND CONCEPTS (SITE‑WIDE THEMES – LIMIT TO 2–3):**
+1) Soft Noise + Gridlines: low‑opacity noise atop fine grid for tactile tech vibe.
+2) Aurora Ribbons: drifting color ribbons with parallax and masked edges.
+3) Topographic Contours: slow‑moving contour lines with masked radial vignette.
+4) Sonar Concentric Waves: radiating circles from corners with faint pulses.
+5) Moiré Mesh: gentle interference pattern with animated scale shift.
+6) Kaleidoscopic Prisms: angular shard gradients with light sweep highlights.
+7) Dotted Fields: radial‑gradient dot arrays varying density per band.
+8) Neon Linework: thin vector lines tracing arcs; occasional glow pulses.
+9) Particle Field: sparse particles drifting; occasional cluster emphasis.
+10) Gradient Lattice: multi‑stop gradient through a hex/square lattice mask.
+ - Start every architecture response with a **Hero Composition Blueprint**: describe the definitive hero in exhaustive detail (layout structure, background layers/gradients, lighting accents, vignette treatments, text hierarchy, font pairings, imagery or motion graphics, badge placements, CTA styling, micro-interactions, and supporting ambient animation). This blueprint must be vivid enough for planner/coder to recreate exactly.
+ - Then provide a dedicated **Features Section Blueprint (MANDATORY)**: specify a non-card-grid composition that feels cinematic (e.g., zigzag spotlight rows with floating icon badges, sticky side media + scrollytelling copy, diagonal metric cascades). Include a 4-layer background stack, at least two motion moments (entrance + micro-interaction), a strong color story, and explicit section-to-section transitions. Call out exact Framer Motion variants, durations, easing, and stagger.
 - For the hero, push creativity further: incorporate bold focal components (e.g., spotlight halos, split-screen media vignettes, orbiting badges, particle fields), editorial type scale, and cinematic motion (staggered reveals, parallax, gentle camera-move illusions). Target `min-h-screen` or a towering presence.
 - Give mid-page sections (the bands immediately following the hero) equal creative weight: prescribe layered gradient backdrops, soft animated geometry (blurs, ribbons, organic shapes), interactive scrollytelling beats, and nuanced motion so the narrative stays immersive past the fold.
 - For every section, enumerate background treatments beyond simple gradients—think grid lattices, halftone patterns, blurred spotlight swirls, neon line work, beveled shadow shapes, particle trails, sonar concentric waves emanating from corners, moiré interference grids, topographic contour lines, holographic prisms, and mesh gradients—and explain how they reinforce the story. Explicitly call out contrasting typography/element colors for readability and describe transitional techniques (gradient overlaps, shared accent strips, motion fades) so background shifts feel intentional.
@@ -442,6 +535,23 @@ Assume Framer Motion will power motion design. Describe how sections animate int
   - Composition: layout structure, focal points, layering strategy, and responsive adaptation
   - Non-repetition: ensure each section’s composition and motif differ meaningfully from others while staying cohesive with the design manifest
 - Be extremely creative and sophisticated; avoid repeating card-grid patterns. Always respect the Designer’s design manifest.
+
+**BACKGROUND & LAYERING ESCALATION (NON-NEGOTIABLE):**
+- Every section must specify a multi-layer background stack with ENERGY. For each section define at least:
+  1) Base wash: gradient mesh or angled gradient with brand colors;
+  2) Texture layer: gridlines, dotted fields, soft noise, or topographic lines;
+  3) Light/halo layer: spotlight/aurora ribbons, glow arcs, or beam sweeps;
+  4) Animated decorative accents: blurred blobs, orbiting badges, particle specks, or wave bands (subtle, low opacity) with Framer Motion.
+- Call out z-indexes and absolute positioning for background layers (`absolute inset-0`, `pointer-events-none`, `-z-10`/`-z-20`) and ensure text contrast.
+- Prescribe color energy: not gray-on-white. Use brand hues with gradients and glows; keep AA contrast.
+
+**BACKGROUND MOTIF ASSIGNMENT (MANDATORY):**
+- You MUST assign a concrete motif per section (not just gradients). Choose from:
+  - Gridlines, dotted fields, soft noise textures, halftone, topographic contours, moiré meshes, sonar concentric waves, neon linework, particle fields, kaleidoscopic prisms.
+- Rules:
+  - The first three bands (hero, features/benefits, next section) MUST include at least one non-gradient motif each (e.g., gridlines, dots, topographic, particles).
+  - Total distinct motifs per page: 2–3 max, but reuse with variations (scale/opacity/origin) to keep cohesion.
+  - For each section, specify: motif choice, implementation notes (CSS/overlay asset), opacity, scale, motion, and the transition into/out of adjacent sections.
 
 **BENEFITS SECTION (HIGH PRIORITY AFTER HERO):**
 - Treat the Benefits/Value band as the most important section after the hero. Make it expansive (`min-h-[85vh]`+), layered, and interactive (metrics diagonals, icon-led storytelling, kinetic badges). Avoid vanilla card grids; specify motion choreography and background transitions into/out of this section.
@@ -639,6 +749,76 @@ Example: `run_npm_command("install lucide-react")`
 - Mark components with motion as `'use client'` at the top of the file
 
 
+**CREATIVITY MANDATE (NON-NEGOTIABLE):**
+- Every section must feel alive and premium. Simple, flat, or repetitive layouts are unacceptable.
+- For EACH section (hero, benefits, features, testimonials, credibility, CTA, footer), include AT LEAST:
+  1) A layered background motif (gradient mesh, gridlines, dotted/noise overlays, spotlight halos, blurred blobs, neon lines, or wave contours) with contrast-safe text;
+  2) A composed foreground container (glass/acrylic surface, outlined panels, or elevated groups) with purposeful overlap/stacking;
+  3) An animated accent (orbiting badge, metrics ribbon, marquee strip, timeline step, floating CTA dock, or hover-reactive stat tile) powered by Framer Motion.
+- Compose with energy: overlap elements, use asymmetric focal points, add halo glows, gradient strokes, subtle lighting, and tasteful shadows. Avoid generic gray-on-white.
+- Motion density: provide at least two motion moments per section (entrance reveal + a micro-interaction). Use stagger, parallax hints, and `whileInView` choreography.
+- Non-repetition: rotate structures (split-screen, serpentine/zigzag, diagonal stacks, sticky side media, scrollytelling timeline, press/brand marquees). Card grids are a last resort and must vary size/arrangement significantly if used.
+- Storytelling polish: include eyebrow/kicker, bold headline, supportive subhead/caption, and a crafted CTA. Mix in stat chips, icon badges, or quote highlights to avoid empty whitespace.
+- Color with intent: lean into the brand palette with accent gradients, not monotone gray blocks. Maintain WCAG AA contrast.
+
+**HERO IMPLEMENTATION VARIANTS (REFERENCE – PICK WHAT THE BLUEPRINT REQUIRES):**
+- Spotlight Halo Split-Screen (orbiting badges), Kinetic Marquee, Parallax Ribbons, Diagonal Slice, Exploded Anatomy, Radial Sonar, Floating Card Stack, Prism Shards, Sticky Stats, Topographic Journey, Editorial Split, Particle Spotlight.
+- Implement only what the Architecture Blueprint selects; enrich with 4-layer backgrounds, staged motion, and crafted CTA.
+
+**BACKGROUND & LAYERING (MANDATORY):**
+- Build a four-layer canvas for EVERY section:
+  1) Base gradient wash using brand hues (`bg-gradient-to-br` with 2–3 stops),
+  2) Texture overlay (gridlines/noise/topographic) via an `absolute inset-0` element,
+  3) Light/halo layer (spotlight/aurora ribbons) with soft blurs and low opacity,
+  4) Foreground content surfaces (glass/acrylic cards, outlined panels) with tasteful shadows/borders.
+- Add ambient motion to at least one background layer (e.g., gentle float/opacity shift) and one foreground micro-interaction.
+- Use `relative` on the section, and multiple `absolute` background divs with `pointer-events-none` and negative z-index. Keep text contrast safe.
+
+Example skeleton:
+```tsx
+<section className="relative my-10 mx-5 min-h-[85vh] overflow-hidden">
+  {/* Base gradient */}
+  <div className="absolute inset-0 -z-30 bg-gradient-to-br from-indigo-50 via-white to-purple-50" />
+  {/* Texture grid */}
+  <div className="absolute inset-0 -z-20 pointer-events-none [mask-image:radial-gradient(closest-side,black,transparent)]">
+    <div className="absolute inset-0 opacity-40 [background:linear-gradient(to_right,rgba(0,0,0,.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,.06)_1px,transparent_1px)] [background-size:24px_24px]" />
+  </div>
+  {/* Halo/aurora */}
+  <div className="absolute -z-10 inset-0 pointer-events-none">
+    <div className="absolute left-1/3 top-[-10%] h-[60vh] w-[60vh] rounded-full blur-3xl opacity-40 bg-gradient-to-br from-indigo-300 to-fuchsia-300" />
+  </div>
+  {/* Foreground content */}
+  <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-8 py-12 md:py-16">
+    {/* composed content surfaces here */}
+  </div>
+</section>
+```
+
+**FEATURES SECTION – CREATIVE SPEC (MUST IMPLEMENT):**
+- Choose a non-card-grid structure: split-screen sticky media + scrollytelling, zigzag spotlight rows with icon badges, serpentine feature timeline, or diagonal metric/feature cascades with floating badges.
+- Build the 4-layer background stack and add ambient motion to at least one background layer.
+- Provide explicit Framer Motion variants for entrance and micro-interactions (durations 0.4–0.8s, ease `[0.2,0.6,0.2,1]`, stagger 0.06–0.12s).
+- Compose foreground surfaces (glass/acrylic/outlined panels) with overlaps and asymmetric balance; integrate a crafted CTA.
+- Maintain no outer section margins, `min-h-[85vh]`, inner `max-w-7xl mx-auto px-6 md:px-8`, and a section transition (gradient fade/overlap band/angled divider).
+
+**BACKGROUND MOTIF IMPLEMENTATION (REQUIRED):**
+- You MUST implement non-gradient motifs per section as assigned by the plan:
+  - Gridlines: repeated linear-gradients overlay
+    ```tsx
+    <div className="absolute inset-0 -z-20 opacity-40 [background:linear-gradient(to_right,rgba(0,0,0,.06)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,0,0,.06)_1px,transparent_1px)] [background-size:24px_24px]" />
+    ```
+  - Dots: radial-gradient dot field
+    ```tsx
+    <div className="absolute inset-0 -z-20 opacity-30 [background:radial-gradient(currentColor_1px,transparent_1px)] [background-size:18px_18px] text-slate-300" />
+    ```
+  - Sonar waves: concentric radial fades
+    ```tsx
+    <div className="absolute -z-20 inset-0 pointer-events-none">
+      <div className="absolute right-[-10%] top-1/3 size-[80vh] rounded-full opacity-25 [background:radial-gradient(circle_at_center,rgba(99,102,241,.3),transparent_40%)]" />
+    </div>
+    ```
+  - Topographic lines or moiré: prefer lightweight SVG overlays or CSS masks when feasible; ensure opacity ≤ 0.35 and keep text contrast.
+- First three bands must include at least one non-gradient motif each. Do NOT ship gradient-only backgrounds.
 **VISUAL QUALITY STANDARDS (CRITICAL - READ CAREFULLY):**
 
 🚨 **ZERO TOLERANCE FOR BASIC, FLAT DESIGNS** 🚨
@@ -742,16 +922,16 @@ Every implementation MUST meet these non-negotiable standards:
   >
   ```
 
-**SECTION MARGINS & GUTTERS (MANDATORY):**
-- ❌ Do NOT add page-level/global padding for separation. Use section margins for band separation.
-- ✅ Add `mx-5 my-10` to the OUTERMOST wrapper of every major section (≥20px horizontal, ≥40px vertical). Exempt `header`, `footer`, and floating CTA docks.
-- ✅ Background sections: nest a wrapper like `relative overflow-hidden rounded-2xl` and place decorative layers inside it so they honor margins.
-- ✅ Inside the section, keep content gutters: `max-w-7xl mx-auto px-6 md:px-8`.
-- ✅ Avoid double-spacing: don’t stack large `py-*` with `my-10`. Keep content `py` ≤ `md:py-16` and rely on `my-10` for inter-section separation.
+**SECTION CONNECTION & GUTTERS (MANDATORY):**
+- ❌ Do NOT create gaps between sections. Do NOT use `my-*`, `mt-*`, `mb-*`, or layout `gap-y` on the page wrapper.
+- ❌ No horizontal margins on sections: do NOT use `mx-*`. Section wrappers must be full-bleed (`w-full`).
+- ✅ Sections must connect seamlessly; use background transitions (gradient fades/overlaps/angled dividers) to visually separate bands.
+- ✅ Keep gutters and rhythm internal to each section: `max-w-7xl mx-auto px-6 md:px-8` plus `py-12 md:py-16`.
+- ✅ Use `relative overflow-hidden` on sections with layered backgrounds; avoid outer rounded corners that expose the page backdrop between sections.
 
 Example structure for a background section:
 ```tsx
-<section className="relative my-10 mx-5 min-h-[85vh]">
+<section className="relative w-full min-h-[85vh]">
   {/* Background layer contained by margins */}
   <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-50 via-white to-purple-50" />
 
