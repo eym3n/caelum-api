@@ -276,6 +276,7 @@ def run_git_command(
         print(f"[COMMANDS] run_git_command → EXCEPTION: {e}")
         return f"Error: {str(e)}"
 
+
 @tool
 def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     """Run ESLint to check for syntax errors and linting issues in the Next.js project.
@@ -325,9 +326,7 @@ def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
 
 
 @tool
-def git_log(
-    limit: int, config: Annotated[RunnableConfig, InjectedToolArg]
-) -> str:
+def git_log(limit: int, config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     """Show recent commits (history) with a concise format.
 
     Args:
@@ -371,9 +370,7 @@ def git_log(
 
 
 @tool
-def git_show(
-    commit: str, config: Annotated[RunnableConfig, InjectedToolArg]
-) -> str:
+def git_show(commit: str, config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     """Show details for a specific commit (message, author, files changed).
 
     Args:
@@ -415,6 +412,39 @@ def git_show(
         print(f"[COMMANDS] git_show → EXCEPTION: {e}")
         return f"Error: {str(e)}"
 
+
+@tool
+def check_css(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
+    """Type-check Tailwind CSS in globals.css using the Tailwind CLI.
+
+    Runs a one-file compile against src/app/globals.css to catch errors like
+    'Cannot apply unknown utility class'. Does not start dev server or build the app.
+    """
+    session_id = _get_session_from_config(config)
+    print(f"[COMMANDS] check_css → Checking globals.css for session {session_id}")
+    try:
+        result = subprocess.run(
+            ["bash", "scripts/css_check.sh", session_id],
+            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+            capture_output=True,
+            text=True,
+            timeout=75,
+        )
+        output = result.stdout if result.stdout else result.stderr
+        if result.returncode == 0:
+            print("[COMMANDS] check_css → SUCCESS")
+            return f"✓ CSS check passed.\n\n{output}"
+        else:
+            print("[COMMANDS] check_css → ERROR")
+            return f"❌ CSS check failed.\n\n{output}"
+    except subprocess.TimeoutExpired:
+        print("[COMMANDS] check_css → TIMEOUT")
+        return "Error: CSS check timed out after 75 seconds"
+    except Exception as e:
+        print(f"[COMMANDS] check_css → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
+
 # Export all command tools
 command_tools = [
     init_nextjs_app,
@@ -423,6 +453,7 @@ command_tools = [
     run_npm_command,
     run_npx_command,
     run_git_command,
+    check_css,
     git_log,
     git_show,
     lint_project,

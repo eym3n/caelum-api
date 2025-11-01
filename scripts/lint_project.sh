@@ -3,7 +3,7 @@
 PROJECT_NAME="$1"
 cd __out__/"$PROJECT_NAME" || { echo "❌ Project '$PROJECT_NAME' not found!"; exit 1; }
 
-echo "🔍 Running linter and TypeScript checks for '$PROJECT_NAME'..."
+echo "🔍 Running linter, TypeScript, and CSS checks for '$PROJECT_NAME'..."
 
 # Check if node_modules exists
 if [ ! -d "node_modules" ]; then
@@ -33,5 +33,14 @@ if ! npx tsc --noEmit 2>&1; then
 fi
 
 echo ""
-echo "✅ Linting and TypeScript checks completed successfully! No issues found."
+echo "🧴 Checking Tailwind CSS (globals.css) with Tailwind CLI..."
+if ! bash ../../scripts/css_check.sh "$PROJECT_NAME" 2>&1; then
+    CSS_EXIT_CODE=$?
+    echo ""
+    echo "❌ CSS check failed for globals.css"
+    exit $CSS_EXIT_CODE
+fi
+
+echo ""
+echo "✅ All checks passed (ESLint, TypeScript, CSS)."
 exit 0

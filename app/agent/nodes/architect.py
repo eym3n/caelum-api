@@ -12,7 +12,7 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_architect_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
+_architect_llm_ = ChatOpenAI(model="gpt-5-nano").bind_tools(tools)
 
 
 def architect(state: BuilderState) -> BuilderState:
@@ -65,6 +65,7 @@ def architect(state: BuilderState) -> BuilderState:
         blueprint = "Architecture blueprint generated. Refer to response content."
 
     print("[ARCHITECT] Architecture blueprint captured in state")
+    print(f"[ARCHITECT] {architect_response}")
 
     return {
         "messages": [architect_response],

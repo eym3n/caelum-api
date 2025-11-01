@@ -12,6 +12,7 @@ from app.agent.nodes.coder import coder
 # from app.agent.nodes.git_sync import git_sync  # Commented out for now
 from app.agent.nodes.architect import architect
 from app.agent.nodes.designer import designer
+from app.agent.nodes.planner import planner
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
@@ -35,6 +36,7 @@ from app.agent.tools.commands import (
     run_npm_command,
     run_npx_command,
     run_git_command,
+    check_css,
     lint_project,
 )
 from app.checkpointer import get_default_checkpointer
@@ -108,6 +110,7 @@ command_tools = [
     run_npm_command,
     run_npx_command,
     run_git_command,
+    check_css,
     lint_project,
 ]
 

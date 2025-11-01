@@ -30,6 +30,7 @@ from app.agent.tools.commands import (
     run_git_command,
     git_log,
     git_show,
+    check_css,
 )
 
 load_dotenv()
@@ -55,13 +56,14 @@ tools = [
     run_git_command,
     git_log,
     git_show,
+    check_css,
 ]
 
-_coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(tools)
+_coder_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
 
 
 def coder(state: BuilderState) -> BuilderState:
-    TODO_LIST = state.planner_output
+    TODO_LIST = getattr(state, "planner_output", [])
     guidelines = state.design_guidelines.strip() if state.design_guidelines else ""
     guidelines_section = (
         "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n" + guidelines
@@ -86,5 +88,7 @@ def coder(state: BuilderState) -> BuilderState:
     )
     messages = [SYS, *state.messages]
     coder_response = _coder_llm_.invoke(messages)
+
+    print(f"[CODER] {coder_response}")
 
     return {"messages": [coder_response], "coder_output": coder_response.content}

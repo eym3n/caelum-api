@@ -46,7 +46,7 @@ tools = [
     lint_project,
 ]
 
-_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
@@ -77,7 +77,7 @@ def designer(state: BuilderState) -> BuilderState:
     if not guidelines:
         guidelines = "Design system established. Refer to generated files for details."
 
-    print("[DESIGNER] Design system established and guidelines stored in state")
+    print("[DESIGNER] guidelines: {guidelines}")
 
     return {
         "messages": [designer_response],
