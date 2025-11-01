@@ -57,6 +57,23 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
     if is_first_message:
         print(f"[CHAT] First message detected for session: {session_id}")
         clear_session_dir(session_id)
+        # Initialize Next.js project
+        import subprocess
+        print(f"[CHAT] Initializing Next.js app for session {session_id}")
+        try:
+            result = subprocess.run(
+                ["bash", "scripts/init_app.sh", session_id],
+                cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                capture_output=True,
+                text=True,
+                timeout=75,
+            )
+            if result.returncode == 0:
+                print(f"[CHAT] Next.js app initialized successfully")
+            else:
+                print(f"[CHAT] WARNING: Failed to initialize Next.js app: {result.stderr}")
+        except Exception as e:
+            print(f"[CHAT] WARNING: Exception during Next.js init: {e}")
     else:
         print(f"[CHAT] Continuing session: {session_id}")
 
@@ -112,6 +129,23 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
     if is_first_message:
         print(f"[STREAM] First message detected for session: {session_id}")
         clear_session_dir(session_id)
+        # Initialize Next.js project
+        import subprocess
+        print(f"[STREAM] Initializing Next.js app for session {session_id}")
+        try:
+            result = subprocess.run(
+                ["bash", "scripts/init_app.sh", session_id],
+                cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                capture_output=True,
+                text=True,
+                timeout=75,
+            )
+            if result.returncode == 0:
+                print(f"[STREAM] Next.js app initialized successfully")
+            else:
+                print(f"[STREAM] WARNING: Failed to initialize Next.js app: {result.stderr}")
+        except Exception as e:
+            print(f"[STREAM] WARNING: Exception during Next.js init: {e}")
     else:
         print(f"[STREAM] Continuing session: {session_id}")
 

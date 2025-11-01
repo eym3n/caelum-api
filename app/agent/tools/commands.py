@@ -447,7 +447,6 @@ def check_css(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
 
 # Export all command tools
 command_tools = [
-    init_nextjs_app,
     install_dependencies,
     run_dev_server,
     run_npm_command,

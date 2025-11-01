@@ -22,6 +22,14 @@ yes "" | npx create-next-app@latest "${TARGET_DIR}" \
 
 # Install base packages commonly required by prompts and components
 pushd "${TARGET_DIR}" >/dev/null
-echo "📦 Installing base packages: tailwindcss-animate, tw-animate-css, framer-motion"
-npm install tailwindcss-animate tw-animate-css framer-motion --no-audit --no-fund
+echo "📦 Installing base packages..."
+npm install \
+  tailwindcss-animate \
+  tw-animate-css \
+  framer-motion \
+  lucide-react \
+  clsx \
+  react-hook-form \
+  zod \
+  --no-audit --no-fund
 popd >/dev/null

@@ -12,7 +12,7 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_planner_llm_ = ChatOpenAI(model="gpt-5-nano").bind_tools(tools)
+_planner_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
 
 
 def planner(state: BuilderState) -> BuilderState:

@@ -65,7 +65,7 @@ def architect(state: BuilderState) -> BuilderState:
         blueprint = "Architecture blueprint generated. Refer to response content."
 
     print("[ARCHITECT] Architecture blueprint captured in state")
-    print(f"[ARCHITECT] {architect_response}")
+    print(f"[ARCHITECT] {architect_response.content}")
 
     return {
         "messages": [architect_response],

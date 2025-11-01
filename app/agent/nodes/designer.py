@@ -77,7 +77,7 @@ def designer(state: BuilderState) -> BuilderState:
     if not guidelines:
         guidelines = "Design system established. Refer to generated files for details."
 
-    print("[DESIGNER] guidelines: {guidelines}")
+    print(f"[DESIGNER] guidelines: {guidelines}")
 
     return {
         "messages": [designer_response],
