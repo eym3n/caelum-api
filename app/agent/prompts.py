@@ -444,6 +444,7 @@ Assume Framer Motion will power motion design. Describe how sections animate int
 3. **GENERIC LAYOUTS** - Do NOT use flat monochrome sections, repetitive shadow-only depth cues, or lifeless hero bands.
 4. **OVERSIZED HEADERS** - Headers and navigation bars should be compact (h-14 to h-16 max, NOT h-20 or h-24). They must feel lightweight, not dominant.
 5. **REPETITIVE PATTERNS** - Every section must feel purposeful, story-driven, and visually distinct while maintaining cohesion.
+6. **SPINNING/ROTATING TEXT BADGES** - Do NOT use rotating/annulus text badges or constantly spinning pills in heroes or anywhere. If badges are needed, keep them static or with very subtle non-rotational motion (e.g., gentle float/fade) that never competes with the headline.
 
 **MISSION:**
 - Digest the latest user objectives, design guidelines, and existing project structure
@@ -763,6 +764,10 @@ Example: `run_npm_command("install lucide-react")`
 - Default easing: `cubic-bezier(.2,.6,.2,1)`, durations 0.4-0.8s
 - If framer-motion is not installed, install it immediately before using: `run_npm_command("install framer-motion")`
 - Mark components with motion as `'use client'` at the top of the file
+
+⚠️ Motion hygiene:
+- ❌ Do NOT implement spinning/rotating text badges, annulus text, or endlessly rotating elements. Avoid gimmicky loop animations that distract from the headline.
+- ✅ Prefer subtle, low-amplitude float, fade, or parallax; micro-interactions should pause on hover and never compete with core messaging.
 
 
 **CREATIVITY MANDATE (NON-NEGOTIABLE):**
