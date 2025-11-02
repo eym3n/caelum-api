@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
-from app.agent.prompts import CODER_SYSTEM_PROMPT
+from app.agent.prompts_new import CODER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 
 from app.agent.tools.files import (
@@ -57,33 +57,18 @@ tools = [
     check_css,
 ]
 
-_coder_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
+_coder_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
 
 
 def coder(state: BuilderState) -> BuilderState:
-    TODO_LIST = getattr(state, "planner_output", [])
     guidelines = state.design_guidelines.strip() if state.design_guidelines else ""
     guidelines_section = (
         "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n" + guidelines
         if guidelines
-        else "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n- Design system guidelines not yet available. Coordinate with the design agent output or maintain neutral styling."
+        else "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n- Design system guidelines not yet available. Align with the template defaults until the designer provides them."
     )
 
-    blueprint = (
-        state.architecture_blueprint.strip() if state.architecture_blueprint else ""
-    )
-    blueprint_section = (
-        "\n\nCURRENT ARCHITECTURE BLUEPRINT:\n" + blueprint
-        if blueprint
-        else "\n\nCURRENT ARCHITECTURE BLUEPRINT:\n- Architecture blueprint not yet available. Coordinate with the architect agent output or confirm structure with the planner."
-    )
-
-    SYS = SystemMessage(
-        content=CODER_SYSTEM_PROMPT
-        + guidelines_section
-        + blueprint_section
-        + f"\n\nTODO List: {TODO_LIST}"
-    )
+    SYS = SystemMessage(content=CODER_SYSTEM_PROMPT + guidelines_section)
     messages = [SYS, *state.messages]
     coder_response = _coder_llm_.invoke(messages)
 
@@ -99,7 +84,7 @@ def coder(state: BuilderState) -> BuilderState:
         )
         # Retry with a recovery message
         recovery_msg = HumanMessage(
-            content="The previous request had an error. Please respond with a clear text explanation of what you were trying to do, without making tool calls. Then I'll help you make the correct tool calls."
+            content="The previous request had an error. Please retry with the correct tool calls."
         )
         messages.append(coder_response)
         messages.append(recovery_msg)

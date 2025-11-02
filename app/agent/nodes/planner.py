@@ -4,7 +4,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from dotenv import load_dotenv
 import re
 from langchain_google_genai import ChatGoogleGenerativeAI
-from app.agent.prompts import PLANNER_SYSTEM_PROMPT
+from app.agent.prompts_new import PLANNER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 from app.agent.tools.files import list_files, read_file, read_lines
 
@@ -12,7 +12,7 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
+_planner_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
 
 
 def planner(state: BuilderState) -> BuilderState:

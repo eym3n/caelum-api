@@ -17,23 +17,15 @@ if [ -d "${TARGET_DIR}" ] && [ "$(ls -A "${TARGET_DIR}")" ]; then
   exit 0
 fi
 
-yes "" | npx create-next-app@latest "${TARGET_DIR}" \
-  --typescript --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm
+npx create-next-app@latest "${TARGET_DIR}" \
+  --typescript \
+  --tailwind \
+  --eslint \
+  --app \
+  --src-dir \
+  --import-alias "@/*" \
+  --use-npm \
+  --yes \
+  --no-turbo \
+  --no-compiler
 
-# Install base packages commonly required by prompts and components
-pushd "${TARGET_DIR}" >/dev/null
-echo "📦 Installing base packages..."
-npm install \
-  tailwindcss-animate \
-  tw-animate-css \
-  @tailwindcss/typography \
-  @tailwindcss/forms \
-  @radix-ui/react-slot \
-  class-variance-authority \
-  framer-motion \
-  lucide-react \
-  clsx \
-  react-hook-form \
-  zod \
-  --no-audit --no-fund
-popd >/dev/null

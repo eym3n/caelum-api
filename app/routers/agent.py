@@ -67,12 +67,31 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                 cwd="/Users/maystro/Documents/langgraph-app-builder/api",
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=300,
             )
             if result.returncode == 0:
                 print(f"[CHAT] Next.js app initialized successfully")
                 if result.stdout:
                     print(f"[CHAT] Init output:\n{result.stdout}")
+
+                # Install base dependencies in a separate step
+                install_result = subprocess.run(
+                    ["bash", "scripts/install_base_dependencies.sh", session_id],
+                    cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
+                if install_result.returncode == 0:
+                    print(f"[CHAT] Base dependencies installed successfully")
+                    if install_result.stdout:
+                        print(f"[CHAT] Install output:\n{install_result.stdout}")
+                else:
+                    print(
+                        f"[CHAT] WARNING: Failed to install base dependencies: {install_result.stderr}"
+                    )
+                    if install_result.stdout:
+                        print(f"[CHAT] Install stdout:\n{install_result.stdout}")
             else:
                 print(
                     f"[CHAT] WARNING: Failed to initialize Next.js app: {result.stderr}"
@@ -146,12 +165,30 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                 cwd="/Users/maystro/Documents/langgraph-app-builder/api",
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=300,
             )
             if result.returncode == 0:
                 print(f"[STREAM] Next.js app initialized successfully")
                 if result.stdout:
                     print(f"[STREAM] Init output:\n{result.stdout}")
+
+                install_result = subprocess.run(
+                    ["bash", "scripts/install_base_dependencies.sh", session_id],
+                    cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
+                if install_result.returncode == 0:
+                    print(f"[STREAM] Base dependencies installed successfully")
+                    if install_result.stdout:
+                        print(f"[STREAM] Install output:\n{install_result.stdout}")
+                else:
+                    print(
+                        f"[STREAM] WARNING: Failed to install base dependencies: {install_result.stderr}"
+                    )
+                    if install_result.stdout:
+                        print(f"[STREAM] Install stdout:\n{install_result.stdout}")
             else:
                 print(
                     f"[STREAM] WARNING: Failed to initialize Next.js app: {result.stderr}"

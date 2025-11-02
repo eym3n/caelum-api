@@ -3,7 +3,7 @@ from __future__ import annotations
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 
-from app.agent.prompts import GIT_MANAGER_SYSTEM_PROMPT
+from app.agent.prompts_new import GIT_MANAGER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 from app.agent.tools.commands import run_git_command
 

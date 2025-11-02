@@ -4,18 +4,33 @@ from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
-from app.agent.prompts import ROUTER_SYSTEM_PROMPT
+from app.agent.prompts_new import ROUTER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 
 load_dotenv()
 
+# LLM
+ROUTER_SYSTEM_PROMPT = """
+You coordinate the remaining specialists in the workspace. For every user message decide who should act next:
+
+- `design` → When the user needs design-system updates, visual direction changes, or a fresh brand setup.
+- `code` → When implementation work should proceed with the current design system.
+- `clarify` → When the request is unclear, purely informational, or needs more detail before design or coding can continue.
+
+Base the decision on the current design-system status and conversation context. Keep progress moving—only send the user back to design when visual foundations truly need revision.
+
+Respond with one literal token: `design`, `code`, or `clarify`.
+"""
+
 _router_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
 
+
+# Structured Output
 from pydantic import BaseModel
 
 
 class RouterResponse(BaseModel):
-    next_node: Literal["architect", "code", "clarify"]
+    next_node: Literal["design", "code", "clarify"]
     reasoning: str
 
 
@@ -24,14 +39,9 @@ def router(state: BuilderState) -> BuilderState:
     design_guidelines = (
         state.design_guidelines.strip() if state.design_guidelines else ""
     )
-    architecture_blueprint = (
-        state.architecture_blueprint.strip() if state.architecture_blueprint else ""
-    )
 
     status_lines = [
         f"Design system established: {'yes' if state.design_system_run else 'no'}",
-        f"Architecture blueprint established: {'yes' if state.architect_system_run else 'no'}",
-        f"Architect pending additional pass: {'yes' if state.architect_pending else 'no'}",
     ]
 
     context_section = "\n".join(
@@ -44,18 +54,8 @@ def router(state: BuilderState) -> BuilderState:
         else "\n\nDESIGN SYSTEM SNAPSHOT:\n- Not available"
     )
 
-    architecture_section = (
-        "\n\nARCHITECTURE BLUEPRINT SNAPSHOT:\n" + architecture_blueprint
-        if architecture_blueprint
-        else "\n\nARCHITECTURE BLUEPRINT SNAPSHOT:\n- Not available"
-    )
-
     SYS = SystemMessage(
-        content=ROUTER_SYSTEM_PROMPT
-        + "\n\n"
-        + context_section
-        + guidelines_section
-        + architecture_section
+        content=ROUTER_SYSTEM_PROMPT + "\n\n" + context_section + guidelines_section
     )
 
     messages = [SYS, *state.messages]
@@ -67,5 +67,4 @@ def router(state: BuilderState) -> BuilderState:
     next_node = router_response.next_node
     return {
         "user_intent": next_node,
-        "architect_pending": next_node == "architect",
     }

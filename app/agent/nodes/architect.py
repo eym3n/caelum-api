@@ -5,7 +5,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
-from app.agent.prompts import ARCHITECT_SYSTEM_PROMPT
+from app.agent.prompts_new import ARCHITECT_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 from app.agent.tools.files import list_files, read_file, read_lines
 
@@ -13,7 +13,7 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_architect_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
+_architect_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
 
 
 def architect(state: BuilderState) -> BuilderState:

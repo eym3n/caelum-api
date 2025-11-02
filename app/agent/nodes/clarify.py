@@ -4,7 +4,7 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 
-from app.agent.prompts import CLARIFY_SYSTEM_PROMPT
+from app.agent.prompts_new import CLARIFY_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 from app.agent.tools.files import list_files, read_file, read_lines
 
@@ -12,7 +12,7 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_clarify_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
+_clarify_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
 
 
 def clarify(state: BuilderState) -> BuilderState:
