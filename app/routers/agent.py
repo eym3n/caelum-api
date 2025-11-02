@@ -7,6 +7,9 @@ from app.agent.graph import agent
 from app.agent.tools.files import get_session_dir, clear_session_dir
 from pathlib import Path
 import json
+import subprocess
+
+WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
 router = APIRouter()
 
@@ -43,6 +46,27 @@ class FilesResponse(BaseModel):
     files: list[FileInfo]
 
 
+def ensure_dev_server(session_id: str, context_label: str) -> None:
+    try:
+        result = subprocess.run(
+            ["bash", "scripts/manage_dev_server.sh", session_id],
+            cwd=str(WORKSPACE_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=45,
+        )
+        if result.returncode == 0:
+            if result.stdout.strip():
+                print(f"[{context_label}] manage_dev_server → {result.stdout.strip()}")
+        else:
+            combined = (result.stderr or "") + ("\n" + result.stdout if result.stdout else "")
+            print(
+                f"[{context_label}] WARNING: manage_dev_server failed (code {result.returncode}): {combined.strip()}"
+            )
+    except Exception as exc:
+        print(f"[{context_label}] WARNING: Exception while managing dev server: {exc}")
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
     # Check if this is the first message - clear session directory
@@ -54,17 +78,17 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
     except Exception:
         is_first_message = True
 
+    app_ready = not is_first_message
+
     if is_first_message:
         print(f"[CHAT] First message detected for session: {session_id}")
         clear_session_dir(session_id)
         # Initialize Next.js project
-        import subprocess
-
         print(f"[CHAT] Initializing Next.js app for session {session_id}")
         try:
             result = subprocess.run(
                 ["bash", "scripts/init_app.sh", session_id],
-                cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                cwd=str(WORKSPACE_ROOT),
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -77,7 +101,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                 # Install base dependencies in a separate step
                 install_result = subprocess.run(
                     ["bash", "scripts/install_base_dependencies.sh", session_id],
-                    cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                    cwd=str(WORKSPACE_ROOT),
                     capture_output=True,
                     text=True,
                     timeout=300,
@@ -92,6 +116,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                     )
                     if install_result.stdout:
                         print(f"[CHAT] Install stdout:\n{install_result.stdout}")
+                app_ready = True
             else:
                 print(
                     f"[CHAT] WARNING: Failed to initialize Next.js app: {result.stderr}"
@@ -102,6 +127,9 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
             print(f"[CHAT] WARNING: Exception during Next.js init: {e}")
     else:
         print(f"[CHAT] Continuing session: {session_id}")
+
+    if app_ready:
+        ensure_dev_server(session_id, "CHAT")
 
     last_text = ""
     for event in agent.stream(
@@ -152,17 +180,17 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
     except Exception:
         is_first_message = True
 
+    app_ready = not is_first_message
+
     if is_first_message:
         print(f"[STREAM] First message detected for session: {session_id}")
         clear_session_dir(session_id)
         # Initialize Next.js project
-        import subprocess
-
         print(f"[STREAM] Initializing Next.js app for session {session_id}")
         try:
             result = subprocess.run(
                 ["bash", "scripts/init_app.sh", session_id],
-                cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                cwd=str(WORKSPACE_ROOT),
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -174,7 +202,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
 
                 install_result = subprocess.run(
                     ["bash", "scripts/install_base_dependencies.sh", session_id],
-                    cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+                    cwd=str(WORKSPACE_ROOT),
                     capture_output=True,
                     text=True,
                     timeout=300,
@@ -189,6 +217,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                     )
                     if install_result.stdout:
                         print(f"[STREAM] Install stdout:\n{install_result.stdout}")
+                app_ready = True
             else:
                 print(
                     f"[STREAM] WARNING: Failed to initialize Next.js app: {result.stderr}"
@@ -199,6 +228,9 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
             print(f"[STREAM] WARNING: Exception during Next.js init: {e}")
     else:
         print(f"[STREAM] Continuing session: {session_id}")
+
+    if app_ready:
+        ensure_dev_server(session_id, "STREAM")
 
     def sse(data: dict) -> str:
         return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"

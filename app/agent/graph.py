@@ -16,6 +16,11 @@ from app.agent.tools.files import (
     batch_update_lines,
     # Utility
     list_files,
+    read_file,
+    read_lines,
+    update_file,
+    update_lines,
+    insert_lines,
 )
 
 from app.agent.tools.commands import (
@@ -66,6 +71,11 @@ file_tools = [
     batch_update_lines,
     # Utility
     list_files,
+    read_file,
+    read_lines,
+    update_file,
+    update_lines,
+    insert_lines,
 ]
 
 command_tools = [
@@ -126,21 +136,3 @@ graph.add_edge("clarify_tools", "clarify")
 
 checkpointer = get_default_checkpointer()
 agent = graph.compile(checkpointer=checkpointer)
-
-# if __name__ == "__main__":
-#     import os
-
-#     OUTPUT_DIR = "__out__"
-
-#     # Empty the output directory
-#     for file in os.listdir(OUTPUT_DIR):
-#         os.remove(os.path.join(OUTPUT_DIR, file))
-
-#     while True:
-#         user_input = input("You: ")
-#         if user_input.lower() == "exit":
-#             break
-#         result = agent.invoke(
-#             {"messages": [HumanMessage(content=user_input)]},
-#             config={"configurable": {"thread_id": "1"}},
-#         )

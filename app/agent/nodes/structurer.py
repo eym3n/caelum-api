@@ -2,6 +2,7 @@ from __future__ import annotations
 from langchain_core.messages import SystemMessage, AIMessage
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 from app.agent.state import BuilderState
 
 
@@ -54,14 +55,16 @@ class DesignerStructuredOutput(BaseModel):
 
 
 def structurer(state: BuilderState) -> BuilderState:
-    SYS = SystemMessage(content=STRUCTURER_SYSTEM_PROMPT)
-    designer_output = (
-        state.raw_designer_output.strip() if state.raw_designer_output else ""
+    SYS = SystemMessage(
+        content=STRUCTURER_SYSTEM_PROMPT
+        + "\n\nDESIGNER_OUTPUT:\n"
+        + state.raw_designer_output
     )
-    messages = [SYS, AIMessage(content=f"DESIGNER_OUTPUT:\n{designer_output}")]
+    messages = [SYS, *state.messages]
     structurer_response = _structurer_llm_.with_structured_output(
         DesignerStructuredOutput
     ).invoke(messages)
+    print(f"[STRUCTURER] Response: {structurer_response}")
     return {
         "design_manifest": structurer_response.design_manifest,
         "component_specs": structurer_response.component_specs,

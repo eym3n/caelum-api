@@ -57,18 +57,72 @@ tools = [
     check_css,
 ]
 
-_coder_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
+_coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(tools)
 
 
 def coder(state: BuilderState) -> BuilderState:
-    guidelines = state.design_guidelines.strip() if state.design_guidelines else ""
-    guidelines_section = (
-        "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n" + guidelines
-        if guidelines
-        else "\n\nCURRENT DESIGN SYSTEM GUIDELINES:\n- Design system guidelines not yet available. Align with the template defaults until the designer provides them."
+    # Gather all design fields from state for coder prompt context
+    design_context = {
+        "raw_designer_output": (
+            state.raw_designer_output if hasattr(state, "raw_designer_output") else ""
+        ),
+        "design_guidelines": (
+            state.design_guidelines if hasattr(state, "design_guidelines") else ""
+        ),
+        "design_manifest": (
+            state.design_manifest if hasattr(state, "design_manifest") else {}
+        ),
+        "component_specs": (
+            state.component_specs if hasattr(state, "component_specs") else {}
+        ),
+        "tokens_css": state.tokens_css if hasattr(state, "tokens_css") else "",
+        "accessibility_report": (
+            state.accessibility_report if hasattr(state, "accessibility_report") else ""
+        ),
+        "byoc_export": state.byoc_export if hasattr(state, "byoc_export") else {},
+        "design_system_run": (
+            state.design_system_run if hasattr(state, "design_system_run") else False
+        ),
+    }
+
+    def summarize_design_context(context):
+        summary = []
+        # Short summaries for each field
+
+        guidelines = context.get("design_guidelines", "")
+        if guidelines:
+            summary.append(f"Design guidelines:\n{guidelines}")
+        manifest = context.get("design_manifest", {})
+        if manifest:
+            summary.append(f"Design manifest present: ✓")
+        specs = context.get("component_specs", {})
+        if specs:
+            summary.append(
+                f"Component specs available for: {', '.join(list(specs.keys())[:4])}{'...' if len(specs) > 4 else ''}"
+            )
+        tokens_css = context.get("tokens_css", "")
+        if tokens_css:
+            summary.append("tokens.css present.")
+        a11y = context.get("accessibility_report", "")
+        if a11y:
+            summary.append("Accessibility report present.")
+        byoc = context.get("byoc_export", {})
+        if byoc:
+            summary.append("BYOC export present.")
+        dsysrun = context.get("design_system_run", False)
+        summary.append(f"Design system run: {'✅' if dsysrun else '❌'}")
+        if not summary:
+            summary.append(
+                "(No design context available yet. Proceed with template defaults.)"
+            )
+        return "\n".join(summary)
+
+    design_context_section = (
+        "\n\nCURRENT DESIGN SYSTEM CONTEXT:\n"
+        + summarize_design_context(design_context)
     )
 
-    SYS = SystemMessage(content=CODER_SYSTEM_PROMPT + guidelines_section)
+    SYS = SystemMessage(content=CODER_SYSTEM_PROMPT + design_context_section)
     messages = [SYS, *state.messages]
     coder_response = _coder_llm_.invoke(messages)
 
