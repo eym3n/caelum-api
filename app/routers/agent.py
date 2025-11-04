@@ -645,17 +645,18 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                                     )
                                 return simple_map.get(name, "Ran tool")
 
-                            if tool_name:
+                            # Skip streaming for read operations - user doesn't want file content
+                            read_tools = {
+                                "read_file",
+                                "read_lines",
+                                "batch_read_files",
+                                "list_files",
+                            }
+                            if tool_name and tool_name in read_tools:
+                                # Skip entirely - don't send anything for read operations
+                                text_to_send = None
+                            elif tool_name:
                                 text_to_send = brief_tool_summary(tool_name, tool_call)
-                                # Skip streaming for read operations - user doesn't want file content
-                                read_tools = {
-                                    "read_file",
-                                    "read_lines",
-                                    "batch_read_files",
-                                    "list_files",
-                                }
-                                if tool_name in read_tools:
-                                    text_to_send = "Reading files..."
                             else:
                                 text_to_send = "Ran tool"
                         else:
@@ -1073,6 +1074,8 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
         return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
     def event_gen():
+        tool_calls_map = {}
+
         try:
             for event in agent.stream(
                 {
@@ -1090,16 +1093,128 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
                         continue
                     if not isinstance(update, dict):
                         continue
+
                     text_to_send = None
+
                     if "coder_output" in update:
                         text_to_send = update["coder_output"]
                     elif "clarify_response" in update:
                         text_to_send = update["clarify_response"]
                     elif "messages" in update:
                         msg = update["messages"][-1]
-                        c = getattr(msg, "content", "")
-                        if isinstance(c, str) and c:
-                            text_to_send = c
+                        msg_type = getattr(msg, "type", None)
+
+                        # Track tool calls from AI messages
+                        if msg_type == "ai" and hasattr(msg, "tool_calls"):
+                            for tc in msg.tool_calls:
+                                tool_calls_map[tc.get("id")] = tc
+
+                        # Handle tool messages with ultra-brief summaries
+                        if (
+                            node
+                            in (
+                                "coder_tools",
+                                "clarify_tools",
+                                "planner_tools",
+                                "designer_tools",
+                                "architect_tools",
+                            )
+                            or msg_type == "tool"
+                        ):
+                            tool_name = getattr(msg, "name", None)
+                            tool_call_id = getattr(msg, "tool_call_id", None)
+                            tool_call = (
+                                tool_calls_map.get(tool_call_id)
+                                if tool_call_id
+                                else None
+                            )
+
+                            def brief_tool_summary(name: str, call: dict | None) -> str:
+                                args = (
+                                    call.get("args", {})
+                                    if isinstance(call, dict)
+                                    else {}
+                                )
+                                # Batch counts
+                                count = 0
+                                if name.startswith("batch_"):
+                                    files = (
+                                        args.get("files") or args.get("updates") or []
+                                    )
+                                    if isinstance(files, list):
+                                        count = len(files)
+                                simple_map = {
+                                    "create_file": "Created file",
+                                    "update_file": "Edited file",
+                                    "delete_file": "Deleted file",
+                                    "read_file": "Read file",
+                                    "insert_lines": "Edited file",
+                                    "remove_lines": "Edited file",
+                                    "update_lines": "Edited file",
+                                    "read_lines": "Read file",
+                                    "list_files": "Listed files",
+                                    "init_nextjs_app": "Initialized app",
+                                    "install_dependencies": "Installed dependencies",
+                                    "run_dev_server": "Started dev server",
+                                    "run_npm_command": "Ran npm command",
+                                    "run_npx_command": "Ran npx command",
+                                    "run_git_command": "Ran git command",
+                                    "git_log": "Viewed commit log",
+                                    "git_show": "Viewed commit",
+                                    "lint_project": "Ran linter",
+                                    "check_css": "Checked CSS",
+                                }
+                                if name == "batch_create_files":
+                                    return (
+                                        f"Created {count} file(s)"
+                                        if count
+                                        else "Created files"
+                                    )
+                                if name == "batch_update_files":
+                                    return (
+                                        f"Edited {count} file(s)"
+                                        if count
+                                        else "Edited files"
+                                    )
+                                if name == "batch_delete_files":
+                                    return (
+                                        f"Deleted {count} file(s)"
+                                        if count
+                                        else "Deleted files"
+                                    )
+                                if name == "batch_read_files":
+                                    return (
+                                        f"Read {count} file(s)"
+                                        if count
+                                        else "Read files"
+                                    )
+                                if name == "batch_update_lines":
+                                    return (
+                                        f"Edited {count} file(s)"
+                                        if count
+                                        else "Edited files"
+                                    )
+                                return simple_map.get(name, "Ran tool")
+
+                            # Skip streaming for read operations - user doesn't want file content
+                            read_tools = {
+                                "read_file",
+                                "read_lines",
+                                "batch_read_files",
+                                "list_files",
+                            }
+                            if tool_name and tool_name in read_tools:
+                                # Skip entirely - don't send anything for read operations
+                                text_to_send = None
+                            elif tool_name:
+                                text_to_send = brief_tool_summary(tool_name, tool_call)
+                            else:
+                                text_to_send = "Ran tool"
+                        else:
+                            c = getattr(msg, "content", "")
+                            if isinstance(c, str) and c:
+                                text_to_send = c
+
                     if text_to_send:
                         yield sse(
                             {"type": "message", "node": node, "text": text_to_send}

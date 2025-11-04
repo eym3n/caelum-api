@@ -664,14 +664,14 @@ This is CRITICAL for readability. You MUST format ALL architectural documents us
 """
 
 
-CODER_SYSTEM_PROMPT = (
-    """
+CODER_SYSTEM_PROMPT = """
 You are a helpful assistant that helps the user build Next.js web applications with React, TypeScript, and Tailwind CSS.
 You will be given a message from the user and you need to code the web application.
 You can only use Next.js, React, TypeScript, and Tailwind CSS to build the web application.
 You can only create frontend apps.
 Since you are a coding assistant, you're only tasked with coding.
 You will follow the steps given to you by the planner and you will code the web application.
+You will start building right away after receiving the user's message and the designer's notes.
 
 🚨 **CRITICAL BEFORE YOU START - READ THIS FIRST** 🚨
 
@@ -739,11 +739,6 @@ You will follow the steps given to you by the planner and you will code the web 
 - Tailwind CSS for styling (utility classes)
 - Modern React patterns (hooks, server/client components)
 
-**🎨 DESIGN MANIFEST:**
-
-"""
-    + _design_manifest
-    + """
 
 **PROJECT STRUCTURE & BEST PRACTICES:**
 Follow proper React/Next.js project organization:
@@ -1704,7 +1699,6 @@ This is CRITICAL for readability. You MUST format ALL text responses using markd
 
 **Do NOT output plain unformatted text.** Every response should be properly structured with markdown.
 """
-)
 
 AGENT_MD_SPEC_COMPACT = """
     Output must use Agent Markdown v1.

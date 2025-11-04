@@ -36,10 +36,6 @@ class RouterResponse(BaseModel):
 
 def router(state: BuilderState) -> BuilderState:
 
-    design_guidelines = (
-        state.design_guidelines.strip() if state.design_guidelines else ""
-    )
-
     status_lines = [
         f"Design system established: {'yes' if state.design_system_run else 'no'}",
     ]
@@ -48,15 +44,7 @@ def router(state: BuilderState) -> BuilderState:
         ["CURRENT BUILD CONTEXT:", *("- " + line for line in status_lines)]
     )
 
-    guidelines_section = (
-        "\n\nDESIGN SYSTEM SNAPSHOT:\n" + design_guidelines
-        if design_guidelines
-        else "\n\nDESIGN SYSTEM SNAPSHOT:\n- Not available"
-    )
-
-    SYS = SystemMessage(
-        content=ROUTER_SYSTEM_PROMPT + "\n\n" + context_section + guidelines_section
-    )
+    SYS = SystemMessage(content=ROUTER_SYSTEM_PROMPT + "\n\n" + context_section)
 
     messages = [SYS, *state.messages]
 

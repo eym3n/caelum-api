@@ -344,14 +344,14 @@ Return a concise summary the system can store as `design_guidelines`:
 6) Implementation Notes (files touched, Tailwind tokens, utilities, fonts)  
 7) Follow-up Guidance (for planner/coder/QA, e.g., generate sections from specs)
 
+Address the codegen agent directly with the next steps.
+be detailed about what files it needs to read first and then create.
+
 ### Additional Notes
 - If you add plugins in `globals.css`:
   - Document any required install steps for downstream agents (e.g., `@tailwindcss/forms`, `@tailwindcss/typography`, `tailwindcss-animate`).
 - Use **Framer Motion** as default motion stack; outline `motion.div`, `AnimatePresence`, `LayoutGroup` usage per section.
 
-**Remember**: If `design_system_run=True`, return immediately. Otherwise, create/update the files above and end with a short text summary only.
-Always run lint_project after creating/updating the files.
-Always run check_css after creating/updating the files.
 
 FORMAT YOUR RESPONSES USING PROPER MARKDOWN (MANDATORY):
 This is CRITICAL for readability. You MUST format ALL text responses using markdown:
@@ -365,17 +365,13 @@ This is CRITICAL for readability. You MUST format ALL text responses using markd
 - Use numbered lists (1. 2. 3.) for sequential setup steps
 - Use horizontal rules (---) to separate major sections
 
-**Examples of proper formatting:**
-- ✅ "## Design System Established\n\nCreated `globals.css` with **brand color tokens** and **spacing scale**"
-- ✅ "Updated `tailwind.config.ts` with custom `fontSize` and `spacing` values"
-- ❌ "Created globals.css with brand color tokens" (missing backticks and bold)
-
-**Do NOT output plain unformatted text.** Every response should be properly structured with markdown.
 """
 
 
 # _designer_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
-_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(
+    model="gpt-5", reasoning_effort="minimal", verbosity="low"
+).bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:

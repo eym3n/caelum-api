@@ -3,7 +3,6 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from dotenv import load_dotenv
 from app.agent.nodes.designer import designer
-from app.agent.nodes.structurer import structurer
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
@@ -37,20 +36,22 @@ from app.checkpointer import get_default_checkpointer
 
 load_dotenv()
 
+print("🧱 Building agent graph...")
+
 
 graph = StateGraph(BuilderState)
 
 
 def edge_after_router(
     state: BuilderState,
-) -> Literal["designer", "coder", "clarify", END]:
+) -> Literal["designer", "coder", "clarify", "__end__"]:
     if state.user_intent == "design":
         return "designer"
     if state.user_intent == "code":
         return "coder"
     if state.user_intent == "clarify":
         return "clarify"
-    return END
+    return "__end__"
 
 
 def edge_after_designer(state: BuilderState) -> Literal["router"]:
@@ -100,7 +101,6 @@ designer_tools_node = ToolNode(file_tools + command_tools)
 graph.add_node("router", router)
 graph.add_node("designer", designer)
 graph.add_node("designer_tools", designer_tools_node)
-graph.add_node("structurer", structurer)
 graph.add_node("clarify", clarify)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
@@ -112,11 +112,10 @@ graph.add_conditional_edges("router", edge_after_router)
 graph.add_conditional_edges(
     "designer",
     tools_condition,
-    {"tools": "designer_tools", "__end__": "structurer"},
+    {"tools": "designer_tools", "__end__": "coder"},
 )
 graph.add_edge("designer_tools", "designer")
 
-graph.add_edge("structurer", "coder")
 
 graph.add_conditional_edges(
     "coder",

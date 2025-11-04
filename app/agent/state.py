@@ -29,26 +29,6 @@ class BuilderState(BaseModel):
         default="",
         description="Raw unstructured output from Designer Agent.",
     )
-    design_guidelines: Annotated[str, replace] = Field(
-        default="", description="Optional user-specified design or brand guidelines."
-    )
-    design_manifest: Annotated[Dict[str, Any], replace] = Field(
-        default_factory=dict,
-        description="Generated design_manifest.json from Designer Agent.",
-    )
-    component_specs: Annotated[Dict[str, Any], replace] = Field(
-        default_factory=dict,
-        description="Dictionary of component_specs/*.json for each component.",
-    )
-    tokens_css: Annotated[str, replace] = Field(
-        default="", description="Generated tokens.css containing CSS variables."
-    )
-    accessibility_report: Annotated[str, replace] = Field(
-        default="", description="Accessibility report (markdown)."
-    )
-    byoc_export: Annotated[Dict[str, Any], replace] = Field(
-        default_factory=dict, description="JSON export compatible with Sitecore BYOC."
-    )
     design_system_run: Annotated[bool, replace] = Field(
         default=False,
         description="Indicates whether the design system pass has completed for the session.",
