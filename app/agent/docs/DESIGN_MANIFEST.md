@@ -294,7 +294,6 @@ body { font-family: var(--font-sans, ui-sans-serif), system-ui, -apple-system, S
 /***** Component presets *****/
 @layer components {
   .card { @apply bg-white border border-[--color-border]; }
-  .btn-base { @apply inline-flex items-center justify-center text-sm font-medium transition-all duration-200 ease-[cubic-bezier(.2,.6,.2,1)] focus-visible:ring-2 focus-visible:ring-[--color-ring] disabled:opacity-50 disabled:cursor-not-allowed; }
   .input-base { @apply w-full border border-[--color-border] bg-white text-[--color-foreground] placeholder:text-[--color-muted] focus:outline-none focus:ring-2 focus:ring-[--color-ring]; }
 }
 

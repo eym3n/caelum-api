@@ -20,3 +20,18 @@ __out__/
 checkpoints.sqlite
 checkpoints.sqlite-shm
 checkpoints.sqlite-wal
+
+
+# Dev server state
+.devserver/
+
+
+# Other
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

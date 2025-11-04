@@ -11,6 +11,7 @@ from app.agent.tools.commands import (
     lint_project,
     run_dev_server,
     run_npm_command,
+    check_css,
 )
 from app.agent.tools.files import (
     # Batch operations (ONLY USE THESE)
@@ -49,6 +50,7 @@ tools = [
     install_dependencies,
     run_npm_command,
     lint_project,
+    check_css,
 ]
 
 DESIGNER_SYSTEM_PROMPT = """
@@ -215,13 +217,6 @@ body {
   .section-y { @apply py-12 md:py-16; }
 }
 
-/***** Component presets *****/
-@layer components {
-  .card { @apply bg-white dark:bg-[color:var(--card)] border border-[color:var(--color-border)] rounded-xl shadow-sm; }
-  .btn-base { @apply inline-flex items-center justify-center gap-2 text-sm font-medium transition-all duration-200 ease-[cubic-bezier(.2,.6,.2,1)] focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] disabled:opacity-50 disabled:cursor-not-allowed; }
-  .input-base { @apply w-full rounded-md border border-[color:var(--color-border)] bg-white text-[color:var(--color-foreground)] placeholder:text-[color:var(--color-muted)] focus:outline-none focus:ring-2 focus:ring-[color:var(--color-ring)] focus:border-transparent; }
-}
-
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
@@ -259,7 +254,7 @@ Create or update **`<APP_ROOT>/layout.tsx`** (`/src/app/layout.tsx` preferred if
 ### 5) UI Primitives (skeletons)
 Create **`/components/ui/primitives/`**:
 - `button.tsx`, `card.tsx`, `input.tsx`
-- Minimal accessible components wired to tokens via Tailwind (use the `.btn-base`, `.card`, `.input-base` helpers and/or className bridges to CSS vars).
+- Minimal accessible components wired to tokens via Tailwind (use the `.card`, `.input-base` helpers and/or className bridges to CSS vars).
 - No business logic; just structure + a11y.
 
 ### 6) Design Manifest (JSON)
@@ -355,6 +350,27 @@ Return a concise summary the system can store as `design_guidelines`:
 - Use **Framer Motion** as default motion stack; outline `motion.div`, `AnimatePresence`, `LayoutGroup` usage per section.
 
 **Remember**: If `design_system_run=True`, return immediately. Otherwise, create/update the files above and end with a short text summary only.
+Always run lint_project after creating/updating the files.
+Always run check_css after creating/updating the files.
+
+FORMAT YOUR RESPONSES USING PROPER MARKDOWN (MANDATORY):
+This is CRITICAL for readability. You MUST format ALL text responses using markdown:
+
+**Required formatting:**
+- Use **bold** for emphasis on design decisions, component names, and key actions
+- Use `code` for ALL inline references: file names, CSS classes, component names, property names
+- Use code blocks with ```css```, ```tsx```, or ```typescript``` for code snippets (ALWAYS specify language)
+- Use headings (## for main sections like "Design System Created", ### for subsections)
+- Use bullet points (-) for lists of design tokens, files created, or features
+- Use numbered lists (1. 2. 3.) for sequential setup steps
+- Use horizontal rules (---) to separate major sections
+
+**Examples of proper formatting:**
+- ✅ "## Design System Established\n\nCreated `globals.css` with **brand color tokens** and **spacing scale**"
+- ✅ "Updated `tailwind.config.ts` with custom `fontSize` and `spacing` values"
+- ❌ "Created globals.css with brand color tokens" (missing backticks and bold)
+
+**Do NOT output plain unformatted text.** Every response should be properly structured with markdown.
 """
 
 

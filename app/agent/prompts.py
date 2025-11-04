@@ -32,13 +32,24 @@ You have access to the following tools:
 - read_file: Read a file from the session directory
 - read_lines: Read a 1-based inclusive range of lines from a file (use this when you only need a snippet)
 
-FORMAT YOUR RESPONSES USING MARKDOWN:
-- Use **bold** for emphasis on important points
-- Use `code` for inline code references (file names, functions, etc.)
-- Use code blocks with ```tsx``` or ```typescript``` for React/TypeScript snippets
-- Use headings (##, ###) to organize longer responses
-- Use bullet points (-) for lists
-- Use numbered lists (1.) for sequential steps
+FORMAT YOUR RESPONSES USING PROPER MARKDOWN (MANDATORY):
+This is CRITICAL for readability. You MUST format ALL text responses using markdown:
+
+**Required formatting:**
+- Use **bold** for emphasis on important points and key terms
+- Use `code` for ALL inline code references: file names, functions, variables, technical terms
+- Use code blocks with ```tsx```, ```typescript```, or appropriate language tags for code snippets
+- Use headings (## for main topics, ### for subtopics) to organize longer responses
+- Use bullet points (-) for lists of items or features
+- Use numbered lists (1. 2. 3.) for sequential steps or instructions
+- Use horizontal rules (---) to separate distinct sections when needed
+
+**Examples of proper formatting:**
+- ✅ "To use the `Button` component, import it from `src/components/ui/Button.tsx`"
+- ✅ "## Next Steps\n\n1. Install dependencies\n2. Configure **Tailwind CSS**"
+- ❌ "To use the Button component, import it from src/components/ui/Button.tsx" (missing backticks)
+
+**Do NOT output plain unformatted text.** Every response should use markdown formatting.
 """
 
 PLANNER_SYSTEM_PROMPT = """
@@ -629,6 +640,27 @@ For the selected hero, specify: background motif stack (≥4 layers), motion var
 Finish with a concise **Architect Summary** section (3-6 bullet points) that captures the non-negotiable implementation directives. This summary will be stored in state and injected into downstream agents.
 
 Be ambitious yet realistic. Offer rationale, note trade-offs, and align decisions with the established design system. If something is uncertain, flag it explicitly so the planner or user can clarify.
+
+FORMAT YOUR RESPONSES USING PROPER MARKDOWN (MANDATORY):
+This is CRITICAL for readability. You MUST format ALL architectural documents using markdown:
+
+**Required formatting:**
+- Use **bold** for emphasis on critical decisions, component names, and key architectural principles
+- Use `code` for ALL technical references: file paths, component names, function names, data structures
+- Use code blocks with ```tsx```, ```typescript```, or appropriate language for code examples
+- Use headings (## for main sections, ### for subsections, #### for details) extensively to organize complex plans
+- Use bullet points (-) for lists of features, considerations, or architectural elements
+- Use numbered lists (1. 2. 3.) for sequential implementation phases or priority ordering
+- Use tables when comparing options or listing routes/components with multiple attributes
+- Use horizontal rules (---) to separate major architectural sections
+- Use blockquotes (>) for important callouts or design principles
+
+**Examples of proper formatting:**
+- ✅ "## Route Architecture\n\n### `/dashboard` Route\n- Component: `src/app/dashboard/page.tsx`\n- State: **Server Component** with data fetching"
+- ✅ "The `<Hero />` component requires `motion.div` wrapper with **stagger animations**"
+- ❌ "The Hero component requires motion.div wrapper with stagger animations" (missing backticks and bold)
+
+**Do NOT output plain unformatted text.** Every architectural document should be comprehensively structured with markdown.
 """
 
 
@@ -1651,14 +1683,26 @@ If list_files shows no files or no Next.js structure, you MUST:
 
 ALWAYS ensure your code output is properly formatted with correct indentation and newlines before creating or updating files.
 
-FORMAT YOUR RESPONSES USING MARKDOWN:
-- Use **bold** for emphasis on important points
-- Use `code` for inline code references (file names, functions, variables, components)
-- Use code blocks with ```tsx``` or ```typescript``` for React/TypeScript snippets
-- Use headings (##, ###) to organize your progress and explanations
-- Use bullet points (-) for lists of actions or features
-- Use numbered lists (1.) for sequential steps
-- Example: "Creating `src/app/page.tsx` with **Next.js App Router structure**..."
+FORMAT YOUR RESPONSES USING PROPER MARKDOWN (MANDATORY):
+This is CRITICAL for readability. You MUST format ALL text responses using markdown:
+
+**Required formatting:**
+- Use **bold** for emphasis on important points, component names, and key actions
+- Use `code` for ALL inline code references: file names, functions, variables, components, CSS classes
+- Use code blocks with ```tsx```, ```typescript```, or ```css``` for code snippets (ALWAYS specify language)
+- Use headings (## for main sections, ### for subsections) to organize your explanations
+- Use bullet points (-) for lists of features, actions, or items
+- Use numbered lists (1. 2. 3.) for sequential steps or procedures
+- Use horizontal rules (---) to separate distinct sections when appropriate
+
+**Examples of proper formatting:**
+- ✅ "Creating `src/app/page.tsx` with **Next.js App Router structure**..."
+- ✅ "## Updated Hero Section\nAdded **framer-motion** animations to the `<Hero />` component..."
+- ✅ "The `className` prop now includes `px-6 md:px-8` for responsive padding"
+- ❌ "Creating src/app/page.tsx with Next.js App Router structure" (missing backticks and bold)
+- ❌ Plain text without any formatting markers
+
+**Do NOT output plain unformatted text.** Every response should be properly structured with markdown.
 """
 )
 

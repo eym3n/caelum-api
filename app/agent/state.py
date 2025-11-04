@@ -64,3 +64,13 @@ class BuilderState(BaseModel):
         default="",
         description="Response from Clarifier Agent when no code/design action is needed.",
     )
+
+    # 🚀 Initialization Payload
+    init_payload: Annotated[Dict[str, Any], replace] = Field(
+        default_factory=dict,
+        description="Raw structured initialization payload captured from /init endpoint.",
+    )
+    init_payload_text: Annotated[str, replace] = Field(
+        default="",
+        description="Flattened textual summary of the initialization payload injected as the first human message.",
+    )

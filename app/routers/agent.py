@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse, Response, FileResponse
 from pydantic import BaseModel
 from app.deps import get_session_id
@@ -8,6 +8,10 @@ from app.agent.tools.files import get_session_dir, clear_session_dir
 from pathlib import Path
 import json
 import subprocess
+import mimetypes
+import re
+from urllib.parse import urlparse
+import requests
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
@@ -46,6 +50,90 @@ class FilesResponse(BaseModel):
     files: list[FileInfo]
 
 
+# =============================
+# Initialization Payload Models
+# =============================
+
+
+class CampaignSection(BaseModel):
+    objective: str | None = None
+    productName: str | None = None
+    primaryOffer: str | None = None
+
+
+class AudienceSection(BaseModel):
+    description: str | None = None
+    personaKeywords: list[str] | None = None
+    uvp: str | None = None
+
+
+class BenefitsSection(BaseModel):
+    topBenefits: list[str] | None = None
+    features: list[str] | None = None
+    emotionalTriggers: list[str] | None = None
+
+
+class TrustSection(BaseModel):
+    objections: list[str] | None = None
+    testimonials: list[str] | None = None
+    indicators: list[str] | None = None
+
+
+class ConversionSection(BaseModel):
+    primaryCTA: str | None = None
+    secondaryCTA: str | None = None
+    primaryKPI: str | None = None
+
+
+class MessagingSection(BaseModel):
+    tone: str | None = None
+    seoKeywords: list[str] | None = None
+    eventTracking: list[str] | None = None
+
+
+class BrandingSection(BaseModel):
+    colorPalette: dict | None = None  # expects {"raw": str}
+    fonts: str | None = None
+    layoutPreference: str | None = None
+
+
+class MediaSection(BaseModel):
+    videoUrl: str | None = None
+    privacyPolicyUrl: str | None = None
+    consentText: str | None = None
+
+
+class AdvancedSection(BaseModel):
+    formFields: list[str] | None = None
+    analytics: dict | None = None  # { rawIDs: ..., gtag: ... }
+    customPrompt: str | None = None
+
+
+class AssetsSection(BaseModel):
+    logo: str | None = None  # file ref or URL
+    heroImage: str | None = None  # file ref or URL
+    secondaryImages: list[str] | None = None
+
+
+class InitPayload(BaseModel):
+    campaign: CampaignSection | None = None
+    audience: AudienceSection | None = None
+    benefits: BenefitsSection | None = None
+    trust: TrustSection | None = None
+    conversion: ConversionSection | None = None
+    messaging: MessagingSection | None = None
+    branding: BrandingSection | None = None
+    media: MediaSection | None = None
+    advanced: AdvancedSection | None = None
+    assets: AssetsSection | None = None
+
+
+class InitRequest(BaseModel):
+    payload: InitPayload
+    # Optional explicit session id override (otherwise header is used)
+    session_id: str | None = None
+
+
 def ensure_dev_server(session_id: str, context_label: str) -> None:
     try:
         result = subprocess.run(
@@ -59,12 +147,120 @@ def ensure_dev_server(session_id: str, context_label: str) -> None:
             if result.stdout.strip():
                 print(f"[{context_label}] manage_dev_server → {result.stdout.strip()}")
         else:
-            combined = (result.stderr or "") + ("\n" + result.stdout if result.stdout else "")
+            combined = (result.stderr or "") + (
+                "\n" + result.stdout if result.stdout else ""
+            )
             print(
                 f"[{context_label}] WARNING: manage_dev_server failed (code {result.returncode}): {combined.strip()}"
             )
     except Exception as exc:
         print(f"[{context_label}] WARNING: Exception while managing dev server: {exc}")
+
+
+# =============================
+# Asset Handling Helpers
+# =============================
+
+
+def _safe_filename_from_url(url: str, fallback: str) -> str:
+    try:
+        parsed = urlparse(url)
+        name = Path(parsed.path).name
+        return name or fallback
+    except Exception:
+        return fallback
+
+
+def _infer_ext_from_mime(mime: str) -> str:
+    if not mime:
+        return ""
+    ext = mimetypes.guess_extension(mime.split(";")[0].strip()) or ""
+    return ext.replace(".jpeg", ".jpg")  # normalize
+
+
+def _download_asset(ref: str) -> tuple[bytes | None, str | None]:
+    """Download asset if ref looks like a URL; return (bytes, inferred_ext)."""
+    if not ref or not re.match(r"https?://", ref):
+        return None, None
+    try:
+        resp = requests.get(ref, timeout=15)
+        if resp.status_code == 200:
+            mime = resp.headers.get("Content-Type", "")
+            ext = _infer_ext_from_mime(mime)
+            return resp.content, ext
+    except Exception as e:
+        print(f"[INIT-ASSETS] Download failed for {ref}: {e}")
+    return None, None
+
+
+def _store_binary(path: Path, data: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("wb") as f:
+        f.write(data)
+    print(f"[INIT-ASSETS] Stored asset {path}")
+
+
+def ingest_assets(session_id: str, assets: AssetsSection | None) -> list[str]:
+    """Ingest logo, heroImage, secondaryImages into session public/ folder.
+
+    Naming rules:
+      - logo → public/logo.<ext>
+      - heroImage → public/hero.<ext>
+      - secondaryImages → public/assets/<original or generated name>
+    If ext not derivable, default to original filename extension; else omit.
+    """
+    written: list[str] = []
+    if not assets:
+        return written
+
+    session_dir = get_session_dir(session_id)
+    public_dir = session_dir / "public"
+    public_dir.mkdir(parents=True, exist_ok=True)
+    assets_dir = public_dir / "assets"
+    assets_dir.mkdir(parents=True, exist_ok=True)
+
+    # Handle logo
+    if assets.logo:
+        data, ext = _download_asset(assets.logo)
+        if data:
+            use_ext = ext or Path(_safe_filename_from_url(assets.logo, "logo")).suffix
+            target = public_dir / f"logo{use_ext}"
+            _store_binary(target, data)
+            written.append(str(target.relative_to(session_dir)))
+        else:
+            # If it's not a URL we don't have binary; placeholder note
+            print(f"[INIT-ASSETS] Logo ref not downloaded (non-URL): {assets.logo}")
+
+    # Handle hero
+    if assets.heroImage:
+        data, ext = _download_asset(assets.heroImage)
+        if data:
+            use_ext = (
+                ext or Path(_safe_filename_from_url(assets.heroImage, "hero")).suffix
+            )
+            target = public_dir / f"hero{use_ext}"
+            _store_binary(target, data)
+            written.append(str(target.relative_to(session_dir)))
+        else:
+            print(
+                f"[INIT-ASSETS] Hero ref not downloaded (non-URL or failed): {assets.heroImage}"
+            )
+
+    # Secondary images
+    if assets.secondaryImages:
+        for idx, ref in enumerate(assets.secondaryImages, start=1):
+            data, ext = _download_asset(ref)
+            if not data:
+                print(f"[INIT-ASSETS] Secondary image {ref} not downloaded")
+                continue
+            base = _safe_filename_from_url(ref, f"secondary_{idx}")
+            # Preserve original extension if available else inferred
+            final_name = base if Path(base).suffix else (base + (ext or ""))
+            target = assets_dir / final_name
+            _store_binary(target, data)
+            written.append(str(target.relative_to(session_dir)))
+
+    return written
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -362,7 +558,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                             for tc in msg.tool_calls:
                                 tool_calls_map[tc.get("id")] = tc
 
-                        # Handle tool messages specially
+                        # Handle tool messages with ultra-brief summaries
                         if (
                             node
                             in (
@@ -376,168 +572,92 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         ):
                             tool_name = getattr(msg, "name", None)
                             tool_call_id = getattr(msg, "tool_call_id", None)
-
-                            # Get the original tool call to extract arguments
                             tool_call = (
                                 tool_calls_map.get(tool_call_id)
                                 if tool_call_id
                                 else None
                             )
 
-                            # Debug logging
-                            if not tool_call and tool_call_id:
-                                print(
-                                    f"[STREAM] Warning: No tool_call found for ID {tool_call_id}"
+                            def brief_tool_summary(name: str, call: dict | None) -> str:
+                                args = (
+                                    call.get("args", {})
+                                    if isinstance(call, dict)
+                                    else {}
                                 )
-                                print(
-                                    f"[STREAM] Available IDs: {list(tool_calls_map.keys())}"
-                                )
-
-                            # Format summary with details from tool call arguments
-                            if tool_name == "read_file":
-                                if tool_call:
-                                    args = tool_call.get("args", {})
-                                    filename = args.get("name", "")
-                                    text_to_send = (
-                                        f"Read {filename}" if filename else "Read file"
+                                # Batch counts
+                                count = 0
+                                if name.startswith("batch_"):
+                                    files = (
+                                        args.get("files") or args.get("updates") or []
                                     )
-                                    print(f"[STREAM] read_file: {filename}")
-                                else:
-                                    text_to_send = "Read file"
-                                    print(f"[STREAM] read_file: No tool_call found")
-
-                            elif tool_name == "update_lines":
-                                if tool_call:
-                                    args = tool_call.get("args", {})
-                                    filename = args.get("name", "")
-                                    updates = args.get("updates", [])
-
-                                    # Calculate total lines added and removed
-                                    total_removed = 0
-                                    total_added = 0
-                                    for update in updates:
-                                        start = update.get("start_index", 0)
-                                        end = update.get("end_index", 0)
-                                        replacement = update.get(
-                                            "replacement_lines", []
-                                        )
-
-                                        lines_removed = end - start + 1
-                                        lines_added = len(replacement)
-
-                                        total_removed += lines_removed
-                                        total_added += lines_added
-
-                                    # Calculate net change
-                                    net_change = total_added - total_removed
-                                    if net_change > 0:
-                                        change_str = f"(+{net_change})"
-                                    elif net_change < 0:
-                                        change_str = f"({net_change})"
-                                    else:
-                                        change_str = f"(±{total_added})"
-
-                                    if filename:
-                                        text_to_send = (
-                                            f"Updated lines in {filename} {change_str}"
-                                        )
-                                    else:
-                                        text_to_send = f"Updated lines {change_str}"
-
-                                    print(
-                                        f"[STREAM] update_lines: {filename} {change_str} (from {len(updates)} updates)"
+                                    if isinstance(files, list):
+                                        count = len(files)
+                                simple_map = {
+                                    "create_file": "Created file",
+                                    "update_file": "Edited file",
+                                    "delete_file": "Deleted file",
+                                    "read_file": "Read file",
+                                    "insert_lines": "Edited file",
+                                    "remove_lines": "Edited file",
+                                    "update_lines": "Edited file",
+                                    "read_lines": "Read file",
+                                    "list_files": "Listed files",
+                                    "init_nextjs_app": "Initialized app",
+                                    "install_dependencies": "Installed dependencies",
+                                    "run_dev_server": "Started dev server",
+                                    "run_npm_command": "Ran npm command",
+                                    "run_npx_command": "Ran npx command",
+                                    "run_git_command": "Ran git command",
+                                    "git_log": "Viewed commit log",
+                                    "git_show": "Viewed commit",
+                                    "lint_project": "Ran linter",
+                                    "check_css": "Checked CSS",
+                                }
+                                if name == "batch_create_files":
+                                    return (
+                                        f"Created {count} file(s)..."
+                                        if count
+                                        else "Created files"
                                     )
-                                else:
-                                    text_to_send = format_tool_summary(msg)
-                                    print(
-                                        f"[STREAM] update_lines: No tool_call found, using fallback"
+                                if name == "batch_update_files":
+                                    return (
+                                        f"Edited {count} file(s)..."
+                                        if count
+                                        else "Edited files"
                                     )
-
-                            elif tool_name == "insert_lines":
-                                if tool_call:
-                                    args = tool_call.get("args", {})
-                                    filename = args.get("name", "")
-                                    lines_list = args.get("lines", [])
-
-                                    # Count total lines being inserted
-                                    total_lines = sum(
-                                        len(item.get("lines", []))
-                                        for item in lines_list
+                                if name == "batch_delete_files":
+                                    return (
+                                        f"Deleted {count} file(s)..."
+                                        if count
+                                        else "Deleted files"
                                     )
-
-                                    if filename and total_lines:
-                                        text_to_send = f"Inserted {total_lines} line(s) into {filename} (+{total_lines})"
-                                    else:
-                                        text_to_send = (
-                                            f"Inserted lines (+{total_lines})"
-                                            if total_lines
-                                            else "Inserted lines"
-                                        )
-
-                                    print(
-                                        f"[STREAM] insert_lines: {filename} (+{total_lines})"
+                                if name == "batch_read_files":
+                                    return (
+                                        f"Read {count} file(s)..."
+                                        if count
+                                        else "Read files"
                                     )
-                                else:
-                                    text_to_send = format_tool_summary(msg)
-                                    print(
-                                        f"[STREAM] insert_lines: No tool_call found, using fallback"
+                                if name == "batch_update_lines":
+                                    return (
+                                        f"Edited {count} file(s)..."
+                                        if count
+                                        else "Edited files"
                                     )
+                                return simple_map.get(name, "Ran tool")
 
-                            elif tool_name == "remove_lines":
-                                if tool_call:
-                                    args = tool_call.get("args", {})
-                                    filename = args.get("name", "")
-                                    indices = args.get("indices", [])
-                                    num_lines = len(indices)
-                                    if filename and num_lines:
-                                        text_to_send = f"Removed {num_lines} line(s) from {filename} (-{num_lines})"
-                                    else:
-                                        text_to_send = (
-                                            f"Removed {num_lines} line(s) (-{num_lines})"
-                                            if num_lines
-                                            else "Removed lines"
-                                        )
-
-                                    print(
-                                        f"[STREAM] remove_lines: {filename} (-{num_lines})"
-                                    )
-                                else:
-                                    text_to_send = format_tool_summary(msg)
-                                    print(
-                                        f"[STREAM] remove_lines: No tool_call found, using fallback"
-                                    )
-
-                            # Command tools
-                            elif tool_name == "init_nextjs_app":
-                                text_to_send = "Initializing Next.js app with TypeScript and Tailwind..."
-                                print(f"[STREAM] init_nextjs_app")
-
-                            elif tool_name == "install_dependencies":
-                                text_to_send = "Installing npm dependencies..."
-                                print(f"[STREAM] install_dependencies")
-
-                            elif tool_name == "run_dev_server":
-                                text_to_send = "Starting Next.js dev server..."
-                                print(f"[STREAM] run_dev_server")
-
-                            elif tool_name == "run_npm_command":
-                                if tool_call:
-                                    args = tool_call.get("args", {})
-                                    command = args.get("command", "")
-                                    text_to_send = f"Running npm {command}..."
-                                    print(f"[STREAM] run_npm_command: {command}")
-                                else:
-                                    text_to_send = "Running npm command..."
-                                    print(
-                                        f"[STREAM] run_npm_command: No tool_call found"
-                                    )
-
-                            elif tool_name == "lint_project":
-                                text_to_send = "Running ESLint to check for errors..."
-                                print(f"[STREAM] lint_project")
-
+                            if tool_name:
+                                text_to_send = brief_tool_summary(tool_name, tool_call)
+                                # Skip streaming for read operations - user doesn't want file content
+                                read_tools = {
+                                    "read_file",
+                                    "read_lines",
+                                    "batch_read_files",
+                                    "list_files",
+                                }
+                                if tool_name in read_tools:
+                                    text_to_send = "Reading files..."
                             else:
-                                text_to_send = format_tool_summary(msg)
+                                text_to_send = "Ran tool"
                         else:
                             content = getattr(msg, "content", "")
                             if isinstance(content, str) and content:
@@ -683,3 +803,310 @@ async def get_file(filename: str, session_id: str = Depends(get_session_id)):
         content_type = "application/json"
 
     return FileResponse(file_path, media_type=content_type)
+
+
+# ==============================================
+# Initialization Streaming Endpoint (/init/stream)
+# ==============================================
+
+
+def _flatten_init_payload(payload: InitPayload) -> str:
+    sections: list[str] = []
+
+    def add(title: str, lines: list[str]):
+        clean = [l for l in lines if l and l.strip() and not l.strip().endswith("None")]
+        if any(clean):
+            sections.append(f"## {title}\n" + "\n".join(clean))
+
+    if payload.campaign:
+        add(
+            "Campaign",
+            [
+                f"Objective: {payload.campaign.objective}",
+                f"Product: {payload.campaign.productName}",
+                f"Primary Offer: {payload.campaign.primaryOffer}",
+            ],
+        )
+    if payload.audience:
+        add(
+            "Audience",
+            [
+                f"Description: {payload.audience.description}",
+                f"Persona Keywords: {', '.join(payload.audience.personaKeywords or [])}",
+                f"UVP: {payload.audience.uvp}",
+            ],
+        )
+    if payload.benefits:
+        add(
+            "Benefits",
+            [
+                f"Top Benefits: {', '.join(payload.benefits.topBenefits or [])}",
+                f"Features: {', '.join(payload.benefits.features or [])}",
+                f"Emotional Triggers: {', '.join(payload.benefits.emotionalTriggers or [])}",
+            ],
+        )
+    if payload.trust:
+        add(
+            "Trust",
+            [
+                f"Objections: {', '.join(payload.trust.objections or [])}",
+                f"Testimonials: {', '.join(payload.trust.testimonials or [])}",
+                f"Indicators: {', '.join(payload.trust.indicators or [])}",
+            ],
+        )
+    if payload.conversion:
+        add(
+            "Conversion",
+            [
+                f"Primary CTA: {payload.conversion.primaryCTA}",
+                f"Secondary CTA: {payload.conversion.secondaryCTA}",
+                f"Primary KPI: {payload.conversion.primaryKPI}",
+            ],
+        )
+    if payload.messaging:
+        add(
+            "Messaging",
+            [
+                f"Tone: {payload.messaging.tone}",
+                f"SEO Keywords: {', '.join(payload.messaging.seoKeywords or [])}",
+                f"Event Tracking: {', '.join(payload.messaging.eventTracking or [])}",
+            ],
+        )
+    if payload.branding:
+        add(
+            "Branding",
+            [
+                f"Color Palette Raw: {(payload.branding.colorPalette or {}).get('raw')}",
+                f"Fonts: {payload.branding.fonts}",
+                f"Layout Preference: {payload.branding.layoutPreference}",
+            ],
+        )
+    if payload.media:
+        add(
+            "Media",
+            [
+                f"Video URL: {payload.media.videoUrl}",
+                f"Privacy Policy: {payload.media.privacyPolicyUrl}",
+                f"Consent Text: {payload.media.consentText}",
+            ],
+        )
+    if payload.advanced:
+        add(
+            "Advanced",
+            [
+                f"Form Fields: {', '.join(payload.advanced.formFields or [])}",
+                f"Analytics rawIDs: {(payload.advanced.analytics or {}).get('rawIDs')}",
+                f"Analytics gtag: {(payload.advanced.analytics or {}).get('gtag')}",
+                f"Custom Prompt: {payload.advanced.customPrompt}",
+            ],
+        )
+    if payload.assets:
+        add(
+            "Assets",
+            [
+                f"Logo: {payload.assets.logo}",
+                f"Hero Image: {payload.assets.heroImage}",
+                f"Secondary Images: {', '.join(payload.assets.secondaryImages or [])}",
+            ],
+        )
+    return "\n\n".join(sections)
+
+
+@router.post("/init/stream")
+async def init_stream(request: Request, session_id: str = Depends(get_session_id)):
+    """Initialization stream endpoint supporting both application/json and multipart/form-data.
+
+    Multipart format: field name 'payload' containing JSON blob.
+    Optional 'session_id' key inside JSON can override header.
+    """
+    content_type = request.headers.get("content-type", "")
+    raw_json: dict | None = None
+    session_override: str | None = None
+    try:
+        if "multipart/form-data" in content_type:
+            # Capture full body early for fallback extraction
+            full_body_bytes = await request.body()
+            form = await request.form()
+            raw_payload = form.get("payload")
+            if raw_payload is None:
+                raise HTTPException(
+                    status_code=422, detail="Missing 'payload' form part"
+                )
+            # Handle UploadFile vs text
+            if isinstance(raw_payload, UploadFile):
+                file_bytes = await raw_payload.read()
+                try:
+                    raw_text = file_bytes.decode("utf-8")
+                except Exception:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Unable to decode uploaded payload file as UTF-8",
+                    )
+            else:
+                if isinstance(raw_payload, bytes):
+                    raw_text = raw_payload.decode("utf-8")
+                else:
+                    raw_text = str(raw_payload)
+            # Fallback: try to recover JSON from raw multipart body if field looks empty
+            if not raw_text.strip() and full_body_bytes:
+                try:
+                    fb = full_body_bytes.decode("utf-8", errors="ignore")
+                    start = fb.find("{")
+                    end = fb.rfind("}")
+                    if start != -1 and end != -1 and end > start:
+                        candidate = fb[start : end + 1]
+                        if candidate.strip():
+                            raw_text = candidate
+                except Exception:
+                    pass
+            raw_text_stripped = raw_text.strip("\ufeff\n\r\t ")
+            if not raw_text_stripped:
+                raise HTTPException(
+                    status_code=422,
+                    detail="Form field 'payload' is empty after trimming.",
+                )
+            if raw_text_stripped == "[object Object]":
+                raise HTTPException(
+                    status_code=422,
+                    detail="Received literal '[object Object]'. Use JSON.stringify() on the object before sending.",
+                )
+            try:
+                parsed = json.loads(raw_text_stripped)
+            except json.JSONDecodeError as e:
+                # Attempt outer-quote strip fallback
+                if (
+                    raw_text_stripped.startswith('"')
+                    and raw_text_stripped.endswith('"')
+                ) or (
+                    raw_text_stripped.startswith("'")
+                    and raw_text_stripped.endswith("'")
+                ):
+                    candidate = raw_text_stripped[1:-1]
+                    try:
+                        parsed = json.loads(candidate)
+                    except Exception:
+                        raise HTTPException(
+                            status_code=422,
+                            detail=f"Invalid JSON in form field 'payload': {e}. Outer quote removal did not help.",
+                        )
+                else:
+                    raise HTTPException(
+                        status_code=422,
+                        detail=f"Invalid JSON in form field 'payload': {e}",
+                    )
+            raw_json = (
+                parsed.get("payload")
+                if isinstance(parsed, dict) and "payload" in parsed
+                else parsed
+            )
+            if isinstance(parsed, dict):
+                session_override = parsed.get("session_id")
+        else:
+            parsed = await request.json()
+            raw_json = (
+                parsed.get("payload")
+                if isinstance(parsed, dict) and "payload" in parsed
+                else parsed
+            )
+            if isinstance(parsed, dict):
+                session_override = parsed.get("session_id")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=422, detail=f"Unable to parse request body: {e}"
+        )
+
+    if raw_json is None:
+        raise HTTPException(status_code=422, detail="No JSON 'payload' provided")
+
+    # Override session id if present in body
+    if session_override:
+        session_id = session_override
+
+    # Build InitPayload pydantic model
+    try:
+        req_payload = InitPayload(**raw_json)
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Payload schema error: {e}")
+
+    # First message detection
+    try:
+        state_snapshot = agent.get_state(
+            config={"configurable": {"thread_id": session_id}}
+        )
+        is_first_message = not state_snapshot.values.get("messages", [])
+    except Exception:
+        is_first_message = True
+    app_ready = not is_first_message
+    if is_first_message:
+        clear_session_dir(session_id)
+        try:
+            result = subprocess.run(
+                ["bash", "scripts/init_app.sh", session_id],
+                cwd=str(WORKSPACE_ROOT),
+                capture_output=True,
+                text=True,
+                timeout=300,
+            )
+            if result.returncode == 0:
+                install_result = subprocess.run(
+                    ["bash", "scripts/install_base_dependencies.sh", session_id],
+                    cwd=str(WORKSPACE_ROOT),
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
+                app_ready = install_result.returncode == 0
+        except Exception as e:
+            print(f"[INIT] Exception during Next.js init: {e}")
+    if app_ready:
+        ensure_dev_server(session_id, "INIT")
+
+    written_assets = ingest_assets(session_id, req_payload.assets)
+    payload_text = _flatten_init_payload(req_payload)
+    combined = "INITIAL CREATION PAYLOAD\n" + payload_text
+    if written_assets:
+        combined += "\n\nAssets Stored: " + ", ".join(written_assets)
+
+    def sse(data: dict) -> str:
+        return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+    def event_gen():
+        try:
+            for event in agent.stream(
+                {
+                    "messages": [HumanMessage(content=combined)],
+                    "init_payload": req_payload.model_dump(),
+                    "init_payload_text": payload_text,
+                },
+                config={
+                    "configurable": {"thread_id": session_id, "session_id": session_id},
+                    "recursion_limit": 200,
+                },
+            ):
+                for node, update in event.items():
+                    if node in ("__start__", "__end__"):
+                        continue
+                    if not isinstance(update, dict):
+                        continue
+                    text_to_send = None
+                    if "coder_output" in update:
+                        text_to_send = update["coder_output"]
+                    elif "clarify_response" in update:
+                        text_to_send = update["clarify_response"]
+                    elif "messages" in update:
+                        msg = update["messages"][-1]
+                        c = getattr(msg, "content", "")
+                        if isinstance(c, str) and c:
+                            text_to_send = c
+                    if text_to_send:
+                        yield sse(
+                            {"type": "message", "node": node, "text": text_to_send}
+                        )
+        except Exception as e:
+            yield sse({"type": "error", "error": str(e)})
+        finally:
+            yield sse({"type": "done"})
+
+    return StreamingResponse(event_gen(), media_type="text/event-stream")

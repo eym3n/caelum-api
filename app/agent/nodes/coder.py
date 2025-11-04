@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
-from app.agent.prompts_new import CODER_SYSTEM_PROMPT
+from app.agent.prompts import CODER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
 
 from app.agent.tools.files import (
@@ -161,6 +161,6 @@ def coder(state: BuilderState) -> BuilderState:
         ).strip()
 
     if not output:
-        output = "Coder response completed. Refer to tool calls or message content."
+        return {}
 
     return {"messages": [coder_response], "coder_output": output}

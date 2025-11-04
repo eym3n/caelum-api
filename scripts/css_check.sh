@@ -20,9 +20,9 @@ fi
 
 CSS_INPUT="src/app/globals.css"
 if [ ! -f "$CSS_INPUT" ]; then
-  echo "ℹ️  globals.css not found at $CSS_INPUT — skipping CSS check."
+  echo "❌ ERROR: globals.css not found at $CSS_INPUT"
   popd >/dev/null
-  exit 0
+  exit 1
 fi
 
 echo "🧪 Checking Tailwind CSS in $CSS_INPUT for @apply errors and invalid utilities..."
