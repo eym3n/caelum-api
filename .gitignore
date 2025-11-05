@@ -35,3 +35,4 @@ checkpoints.sqlite-wal
 *.swp
 *.swo
 *~
+.vercel

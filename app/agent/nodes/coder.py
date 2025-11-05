@@ -6,7 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
-from app.agent.prompts_new import CODER_SYSTEM_PROMPT
+from app.agent.prompts_new import CODER_SYSTEM_PROMPT, CODER_DESIGN_BOOSTER
 from app.agent.state import BuilderState
 
 from app.agent.tools.files import (
@@ -46,7 +46,7 @@ tools = [
 ]
 
 _coder_llm_ = ChatOpenAI(
-    model="gpt-5", reasoning_effort="low", verbosity="low"
+    model="gpt-5", reasoning_effort="minimal", verbosity="low"
 ).bind_tools(tools, parallel_tool_calls=True)
 
 
@@ -61,9 +61,13 @@ def coder(state: BuilderState) -> BuilderState:
     )
 
     SYS = SystemMessage(
-        content=CODER_SYSTEM_PROMPT + project_spec + design_context_section
+        content=CODER_SYSTEM_PROMPT
+        + project_spec
+        + design_context_section
+        + CODER_DESIGN_BOOSTER
     )
-    messages = [SYS, *state.messages]
+    HUMAN = HumanMessage(content="Start coding the landing page for my project. ")
+    messages = [SYS, *state.messages, HUMAN]
 
     coder_response = _coder_llm_.invoke(messages)
 
@@ -91,7 +95,7 @@ def coder(state: BuilderState) -> BuilderState:
         print(
             f"[CODER] Calling {len(coder_response.tool_calls)} tool(s) to establish design system"
         )
-        return {"messages": [coder_response]}
+        return {"messages": [coder_response], "coder_run": True}
 
     # Extract content as string (handle both str and list responses)
     output = ""

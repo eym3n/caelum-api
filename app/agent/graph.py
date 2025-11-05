@@ -98,12 +98,30 @@ clarify_tools_node = ToolNode([batch_read_files, list_files])
 designer_tools_node = ToolNode(file_tools + command_tools)
 
 
+def edge_after_coder(
+    state: BuilderState,
+) -> Literal["router", "__end__"]:
+    coder_run = state.coder_run
+    if coder_run:
+        print("🔄 Coder made tool calls, ending.")
+        return "__end__"
+    else:
+        print("🔄 Coder made no tool calls, routing back to coder.")
+        return "coder"
+
+
+def noop(state: BuilderState) -> BuilderState:
+    print("⏭️ No operation node reached.")
+    return {}
+
+
 graph.add_node("router", router)
 graph.add_node("designer", designer)
 graph.add_node("designer_tools", designer_tools_node)
 graph.add_node("clarify", clarify)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
+graph.add_node("check", noop)
 graph.add_node("clarify_tools", clarify_tools_node)
 
 graph.add_edge(START, "router")
@@ -122,10 +140,12 @@ graph.add_conditional_edges(
     tools_condition,
     {
         "tools": "coder_tools",
-        "__end__": END,
+        "__end__": "check",
     },
 )
 graph.add_edge("coder_tools", "coder")
+graph.add_conditional_edges("check", edge_after_coder)
+graph.add_edge("check", END)
 
 graph.add_conditional_edges(
     "clarify", tools_condition, {"tools": "clarify_tools", "__end__": END}

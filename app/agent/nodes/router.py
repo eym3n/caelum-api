@@ -55,4 +55,5 @@ def router(state: BuilderState) -> BuilderState:
     next_node = router_response.next_node
     return {
         "user_intent": next_node,
+        "coder_run": state.coder_run,
     }

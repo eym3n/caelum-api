@@ -60,6 +60,7 @@ npm install \
   class-variance-authority \
   framer-motion \
   lucide-react \
+  pnpm \
   --no-audit --no-fund
 
 popd >/dev/null

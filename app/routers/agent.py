@@ -1225,3 +1225,69 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
             yield sse({"type": "done"})
 
     return StreamingResponse(event_gen(), media_type="text/event-stream")
+
+
+class DeployResponse(BaseModel):
+    status: str
+    message: str
+    url: str | None = None
+
+
+@router.post("/deploy/vercel", response_model=DeployResponse)
+async def deploy_to_vercel(session_id: str = Depends(get_session_id)):
+    """Deploy the current session project to Vercel."""
+    session_dir = get_session_dir(session_id)
+
+    if not session_dir.exists():
+        return DeployResponse(
+            status="error", message=f"Session directory not found: {session_id}"
+        )
+
+    if not (session_dir / "package.json").exists():
+        return DeployResponse(
+            status="error", message=f"No Next.js project found in session: {session_id}"
+        )
+
+    try:
+        print(f"[DEPLOY] Starting Vercel deployment for session: {session_id}")
+        result = subprocess.run(
+            ["bash", "scripts/deploy_to_vercel.sh", session_id],
+            cwd=str(WORKSPACE_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
+
+        if result.returncode == 0:
+            print(f"[DEPLOY] Deployment successful")
+            if result.stdout:
+                print(f"[DEPLOY] Output:\n{result.stdout}")
+
+            # Extract deployment URL from output
+            deployment_url = None
+            for line in result.stdout.split("\n"):
+                if "https://" in line and "vercel.app" in line:
+                    url_match = re.search(r"https://[^\s]+vercel\.app", line)
+                    if url_match:
+                        deployment_url = url_match.group(0)
+                        break
+
+            return DeployResponse(
+                status="success",
+                message=f"Successfully deployed {session_id} to Vercel",
+                url=deployment_url,
+            )
+        else:
+            error_msg = result.stderr or result.stdout or "Unknown deployment error"
+            print(f"[DEPLOY] Deployment failed: {error_msg}")
+            return DeployResponse(
+                status="error", message=f"Deployment failed: {error_msg}"
+            )
+
+    except subprocess.TimeoutExpired:
+        return DeployResponse(
+            status="error", message="Deployment timed out after 5 minutes"
+        )
+    except Exception as e:
+        print(f"[DEPLOY] Exception during deployment: {e}")
+        return DeployResponse(status="error", message=f"Deployment error: {str(e)}")
