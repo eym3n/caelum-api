@@ -498,7 +498,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                 {
                     "messages": [
                         HumanMessage(
-                            content="This is NOT your first time running: user prompt:\n"
+                            content="This is a follow-up request: user prompt:\n"
                             + req.message
                         )
                     ]

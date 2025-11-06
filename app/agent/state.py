@@ -19,6 +19,10 @@ class BuilderState(BaseModel):
     # 🧭 Intent management
     user_intent: Annotated[str, replace]
     found_error: Annotated[bool, replace]
+    is_followup: Annotated[bool, replace] = Field(
+        default=False,
+        description="Indicates whether the latest user message is a follow-up request.",
+    )
 
     # 🧰 Diff / change tracking (used by Coder Agent)
     lines_added: Annotated[int, replace]

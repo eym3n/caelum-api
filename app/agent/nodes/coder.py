@@ -6,7 +6,11 @@ from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 
-from app.agent.prompts_new import CODER_SYSTEM_PROMPT, CODER_DESIGN_BOOSTER
+from app.agent.prompts_new import (
+    CODER_SYSTEM_PROMPT,
+    CODER_DESIGN_BOOSTER,
+    FOLLOWUP_CODER_SYSTEM_PROMPT,
+)
 from app.agent.state import BuilderState
 
 from app.agent.tools.files import (
@@ -49,15 +53,22 @@ tools = [
 def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
 
-    if state.coder_run:
-        _coder_llm_ = ChatOpenAI(
-            model="gpt-5", reasoning_effort="minimal", verbosity="low"
-        ).bind_tools(tools, parallel_tool_calls=True)
+    print("\n\n[CODER] Follow-up condition met:", state.is_followup)
 
-    else:
-        _coder_llm_ = ChatOpenAI(
-            model="gpt-5", reasoning_effort="minimal", verbosity="low"
-        ).bind_tools(tools, parallel_tool_calls=True, tool_choice="any")
+    _coder_prompt = (
+        CODER_SYSTEM_PROMPT if not state.is_followup else FOLLOWUP_CODER_SYSTEM_PROMPT
+    )
+
+    print(
+        "\n\n[CODER] Using prompt: ",
+        "DEFAULT" if not state.is_followup else "FOLLOW-UP",
+    )
+
+    _coder_llm_ = ChatOpenAI(
+        model="gpt-5", reasoning_effort="low", verbosity="low"
+    ).bind_tools(
+        tools, parallel_tool_calls=True, tool_choice=None if state.coder_run else "any"
+    )
 
     design_context_section = "\n### Designer Notes:\n" + state.raw_designer_output
 
@@ -67,13 +78,12 @@ def coder(state: BuilderState) -> BuilderState:
     )
 
     SYS = SystemMessage(
-        content=CODER_SYSTEM_PROMPT
+        content=_coder_prompt
         + project_spec
         + design_context_section
         + CODER_DESIGN_BOOSTER
     )
-    HUMAN = HumanMessage(content="Start coding the landing page for my project. ")
-    messages = [SYS, *state.messages, HUMAN]
+    messages = [SYS, *state.messages]
 
     coder_response = _coder_llm_.invoke(messages)
 

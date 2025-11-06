@@ -17,6 +17,10 @@ You coordinate the remaining specialists in the workspace. For every user messag
 - `code` → When implementation work should proceed with the current design system.
 - `clarify` → When the request is unclear, purely informational, or needs more detail before design or coding can continue.
 
+If a user's request starts with : 'his is a follow-up request', do not route to `design`, route to `code` or `clarify` only.
+
+When a user reports an error or bug, prefer routing to `code`, do not route to `clarify`. Issues needs to be investigated and fixed directly, without further discussion.
+
 Base the decision on the current design-system status and conversation context. Keep progress moving—only send the user back to design when visual foundations truly need revision.
 
 Respond with one literal token: `design`, `code`, or `clarify`.
@@ -31,6 +35,7 @@ from pydantic import BaseModel
 
 class RouterResponse(BaseModel):
     next_node: Literal["design", "code", "clarify"]
+    is_followup: bool
     reasoning: str
 
 
@@ -48,12 +53,17 @@ def router(state: BuilderState) -> BuilderState:
 
     messages = [SYS, *state.messages]
 
+    # print("Router Invoked with messages:\n", messages)
+
     router_response = _router_llm_.with_structured_output(RouterResponse).invoke(
         messages
     )
 
+    print("\n\n[ROUTER] Decision:", router_response)
+
     next_node = router_response.next_node
     return {
         "user_intent": next_node,
-        "coder_run": state.coder_run,
+        "coder_run": False,
+        "is_followup": router_response.is_followup,
     }
