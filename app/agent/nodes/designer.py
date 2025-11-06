@@ -3,7 +3,6 @@ from __future__ import annotations
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_openai import ChatOpenAI
-from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.state import BuilderState
 from app.agent.tools.commands import (
     init_nextjs_app,
@@ -86,7 +85,7 @@ You are the **Design System Architect (Designer Agent)** for a Next.js project. 
 
 ## Directory Targets (create if missing)
 - `/app` or `/src/app` (prefer `/src/app` if a `/src` folder already exists)
-- `/components/ui/primitives`
+- `src/components/ui/primitives`
 - `/design`
 - `/design/component_specs`
 - `/design/sections`
@@ -105,52 +104,60 @@ Create **`<APP_ROOT>/globals.css`** (`/app/globals.css` or `/src/app/globals.css
 @plugin "@tailwindcss/typography";
 @plugin "@tailwindcss/forms";
 
-/* Design Tokens for ECOMANAGER */
+/* Design Tokens for TASKFLOW */
 :root {
-  /* Brand: ECOMANAGER Orange (rgb(233,72,0)) and neutrals */
-  --brand-50:  #fff4ec;
-  --brand-100: #ffe6d8;
-  --brand-200: #ffc7ad;
-  --brand-300: #ffa178;
-  --brand-400: #ff7a40;
-  --brand-500: #e94800; /* Primary */
-  --brand-600: #c83f00;
-  --brand-700: #a03700;
-  --brand-800: #7d2b00;
-  --brand-900: #521c00;
+  /* Brand: TaskFlow Primary Blue (#3B82F6), Accent Orange (#F97316), dark neutrals */
+  --brand-50:  #ebf2ff;
+  --brand-100: #dbeafe;
+  --brand-200: #bfdbfe;
+  --brand-300: #93c5fd;
+  --brand-400: #60a5fa;
+  --brand-500: #3b82f6; /* Primary */
+  --brand-600: #2563eb;
+  --brand-700: #1d4ed8;
+  --brand-800: #1e40af;
+  --brand-900: #1e3a8a;
 
-  /* Neutrals (very, very light gray theme) */
-  --neutral-25:  #fcfcfd;
-  --neutral-50:  #f9fafb;
-  --neutral-100: #f3f4f6;
-  --neutral-200: #e5e7eb;
-  --neutral-300: #d1d5db;
-  --neutral-400: #9ca3af;
-  --neutral-500: #6b7280;
-  --neutral-600: #4b5563;
-  --neutral-700: #374151;
-  --neutral-800: #1f2937;
-  --neutral-900: #111827;
+  --accent-400: #fb923c;
+  --accent-500: #f97316;
+  --accent-600: #ea580c;
+
+  /* Neutrals (dark theme base) */
+  --neutral-25:  #0a0a0b;
+  --neutral-50:  #0f0f12;
+  --neutral-100: #18181b; /* Raw neutral provided */
+  --neutral-200: #27272a;
+  --neutral-300: #3f3f46;
+  --neutral-400: #71717a;
+  --neutral-500: #a1a1aa;
+  --neutral-600: #d4d4d8;
+  --neutral-700: #e4e4e7;
+  --neutral-800: #f4f4f5;
+  --neutral-900: #fafafa;
 
   /* Semantic */
-  --success-500: #16a34a;
+  --success-500: #22c55e;
   --warning-500: #f59e0b;
   --danger-500:  #ef4444;
-  --info-500:    #0ea5e9;
+  --info-500:    #38bdf8;
 
-  /* Base surface tokens */
-  --background: var(--neutral-25);
-  --foreground: var(--neutral-900);
-  --muted-foreground: var(--neutral-600);
-  --card: #ffffff;
+  /* Base surface tokens (dark default per brief) */
+  --background: var(--neutral-100);
+  --foreground: var(--neutral-800);
+  --muted-foreground: var(--neutral-500);
+  --card: #0b0b0e; /* jet black + glass */
   --border: var(--neutral-200);
   --ring: var(--brand-500);
 
   /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
   --radius: var(--radius-md);
+
+  /* Optical spacing tokens */
+  --space-6: 1.5rem;
+  --space-8: 2rem;
 }
 
 @theme inline {
@@ -161,7 +168,7 @@ Create **`<APP_ROOT>/globals.css`** (`/app/globals.css` or `/src/app/globals.css
   --color-card: var(--card);
   --color-ring: var(--ring);
 
-  /* Primary scale mapped to Tailwind colors */
+  /* Primary scale */
   --color-primary-50: var(--brand-50);
   --color-primary-100: var(--brand-100);
   --color-primary-200: var(--brand-200);
@@ -181,13 +188,13 @@ Create **`<APP_ROOT>/globals.css`** (`/app/globals.css` or `/src/app/globals.css
   --radius-lg: var(--radius-lg);
 }
 
-/* Dark mode tokens (class-based) */
-:root.dark, .dark :root {
-  --background: #0b1220;
-  --foreground: #e5e7eb;
-  --muted-foreground: #9ca3af;
-  --card: #0f172a;
-  --border: #1f2937;
+/* Light mode tokens (class-based override) */
+:root.light, .light :root {
+  --background: #fcfcfd;
+  --foreground: #111827;
+  --muted-foreground: #6b7280;
+  --card: #ffffff;
+  --border: #e5e7eb;
 }
 
 /* Base */
@@ -206,20 +213,33 @@ body {
 /***** Focus styles *****/
 :focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--brand-500);
-  border-radius: 8px;
+  box-shadow: 0 0 0 2px #000, 0 0 0 4px var(--brand-500);
+  border-radius: 10px;
 }
+
+/***** Visual FX helpers for "liquid glass" *****/
+/***** Always use '@utility' for custom utilities do not just apply like this .glass .shadow-btn, tailwind v4 will allow you to use these utilities anywhere *****/
+@utility glass {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  backdrop-filter: saturate(140%) blur(16px);
+  border: 1px solid color-mix(in oklab, var(--color-border), transparent 60%);
+}
+@utility shadow-soft { box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04); }
 
 /***** Utilities *****/
 @layer utilities {
   .container-max { @apply mx-auto max-w-7xl; }
   .layout-gutter { @apply px-6 md:px-8; }
   .section-y { @apply py-12 md:py-16; }
+  .beams { background-image: radial-gradient(1200px 400px at 10% -10%, rgba(59,130,246,0.2), transparent), radial-gradient(1000px 300px at 110% 10%, rgba(249,115,22,0.18), transparent); background-repeat: no-repeat; }
 }
 
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
+  .card { @apply bg-[color:var(--color-card)] glass; }
+  .input-base { @apply w-full bg-[color:var(--color-card)] border border-[color:var(--color-border)] text-[color:var(--color-foreground)] placeholder:text-[color:var(--color-muted)] focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] focus-visible:ring-offset-0; }
+  .btn-base { @apply inline-flex items-center justify-center gap-2 font-medium transition-colors; }
 }
 --- CANONICAL EXAMPLE END ---
 
@@ -252,7 +272,7 @@ Create or update **`<APP_ROOT>/layout.tsx`** (`/src/app/layout.tsx` preferred if
   - `<body className="\${inter.variable} \${display.variable} bg-[color:var(--color-background)] text-[color:var(--color-foreground)] antialiased">`
 
 ### 5) UI Primitives (skeletons)
-Create **`/components/ui/primitives/`**:
+Create **`src/components/ui/primitives/`**:
 - `button.tsx`, `card.tsx`, `input.tsx`
 - Minimal accessible components wired to tokens via Tailwind (use the `.card`, `.input-base` helpers and/or className bridges to CSS vars).
 - No business logic; just structure + a11y.
@@ -368,7 +388,6 @@ This is CRITICAL for readability. You MUST format ALL text responses using markd
 """
 
 
-# _designer_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
 _designer_llm_ = ChatOpenAI(
     model="gpt-5", reasoning_effort="minimal", verbosity="low"
 ).bind_tools(tools)

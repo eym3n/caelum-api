@@ -432,88 +432,62 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
         return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
 
     def format_tool_summary(msg) -> str | None:
-        """Generate a user-friendly summary for tool executions."""
+        """Generate a user-friendly progressive summary for tool executions."""
         tool_name = getattr(msg, "name", None)
         if not tool_name:
             return None
-
-        # Parse the content to extract relevant info
         content = getattr(msg, "content", "")
 
-        # Try to get the tool call ID to look up arguments
-        tool_call_id = getattr(msg, "tool_call_id", None)
-
-        # Map tool names to friendly messages
         if tool_name == "list_files":
-            # Parse the list if content is a list
             if isinstance(content, list):
-                return f"Listed {len(content)} file(s)"
-            return "Listed files in directory"
-
+                return f"Listing {len(content)} file(s)..."
+            return "Listing files..."
         elif tool_name == "create_file":
-            # Content format: "File {name} created successfully."
             if (
                 isinstance(content, str)
                 and "File " in content
                 and " created" in content
             ):
-                # Extract filename
                 filename = content.split("File ")[1].split(" created")[0]
-                return f"Created {filename}"
-            return "Created file"
-
+                return f"Creating {filename}..."
+            return "Creating file..."
         elif tool_name == "read_file":
-            # For read_file, content is the actual file content
-            # We need to extract the filename from somewhere
-            # The content is the file content itself, not a message
-            # We need to look at the previous message to get the filename
-            return "Read file"
-
+            return "Reading file..."
         elif tool_name == "update_file":
-            # Content format: "File {name} updated successfully."
             if (
                 isinstance(content, str)
                 and "File " in content
                 and " updated" in content
             ):
                 filename = content.split("File ")[1].split(" updated")[0]
-                return f"Updated {filename}"
-            return "Updated file"
-
+                return f"Editing {filename}..."
+            return "Editing file..."
         elif tool_name == "delete_file":
-            # Content format: "File {name} deleted successfully."
             if (
                 isinstance(content, str)
                 and "File " in content
                 and " deleted" in content
             ):
                 filename = content.split("File ")[1].split(" deleted")[0]
-                return f"Deleted {filename}"
-            return "Deleted file"
-
+                return f"Deleting {filename}..."
+            return "Deleting file..."
         elif tool_name == "insert_lines":
-            # Content format: "Lines inserted successfully into {name}."
             if isinstance(content, str) and "inserted successfully into" in content:
                 filename = content.split("inserted successfully into ")[1].rstrip(".")
-                return f"Inserted lines into {filename}"
-            return "Inserted lines"
-
+                return f"Editing {filename}..."
+            return "Editing file..."
         elif tool_name == "remove_lines":
-            # Content format: "Lines removed successfully from {name}."
             if isinstance(content, str) and "removed successfully from" in content:
                 filename = content.split("removed successfully from ")[1].rstrip(".")
-                return f"Removed lines from {filename}"
-            return "Removed lines"
-
+                return f"Editing {filename}..."
+            return "Editing file..."
         elif tool_name == "update_lines":
-            # Content format: "Lines updated successfully in {name}."
             if isinstance(content, str) and "updated successfully in" in content:
                 filename = content.split("updated successfully in ")[1].rstrip(".")
-                return f"Updated lines in {filename}"
-            return "Updated lines"
-
+                return f"Editing {filename}..."
+            return "Editing file..."
         else:
-            return f"Executed {tool_name}"
+            return "Running tool..."
 
     def event_gen():
         # Track tool calls to extract arguments for summaries
@@ -592,58 +566,59 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                                     )
                                     if isinstance(files, list):
                                         count = len(files)
-                                simple_map = {
-                                    "create_file": "Created file",
-                                    "update_file": "Edited file",
-                                    "delete_file": "Deleted file",
-                                    "read_file": "Read file",
-                                    "insert_lines": "Edited file",
-                                    "remove_lines": "Edited file",
-                                    "update_lines": "Edited file",
-                                    "read_lines": "Read file",
-                                    "list_files": "Listed files",
-                                    "init_nextjs_app": "Initialized app",
-                                    "install_dependencies": "Installed dependencies",
-                                    "run_dev_server": "Started dev server",
-                                    "run_npm_command": "Ran npm command",
-                                    "run_npx_command": "Ran npx command",
-                                    "run_git_command": "Ran git command",
-                                    "git_log": "Viewed commit log",
-                                    "git_show": "Viewed commit",
-                                    "lint_project": "Ran linter",
-                                    "check_css": "Checked CSS",
-                                }
-                                if name == "batch_create_files":
-                                    return (
-                                        f"Created {count} file(s)..."
-                                        if count
-                                        else "Created files"
-                                    )
-                                if name == "batch_update_files":
-                                    return (
-                                        f"Edited {count} file(s)..."
-                                        if count
-                                        else "Edited files"
-                                    )
-                                if name == "batch_delete_files":
-                                    return (
-                                        f"Deleted {count} file(s)..."
-                                        if count
-                                        else "Deleted files"
-                                    )
-                                if name == "batch_read_files":
-                                    return (
-                                        f"Read {count} file(s)..."
-                                        if count
-                                        else "Read files"
-                                    )
-                                if name == "batch_update_lines":
-                                    return (
-                                        f"Edited {count} file(s)..."
-                                        if count
-                                        else "Edited files"
-                                    )
-                                return simple_map.get(name, "Ran tool")
+                                    # Present-progressive mapping with ellipsis for consistency
+                                    simple_map = {
+                                        "create_file": "Creating file...",
+                                        "update_file": "Editing file...",
+                                        "delete_file": "Deleting file...",
+                                        "read_file": "Reading file...",
+                                        "insert_lines": "Editing file...",
+                                        "remove_lines": "Editing file...",
+                                        "update_lines": "Editing file...",
+                                        "read_lines": "Reading file...",
+                                        "list_files": "Listing files...",
+                                        "init_nextjs_app": "Initializing app...",
+                                        "install_dependencies": "Installing dependencies...",
+                                        "run_dev_server": "Starting dev server...",
+                                        "run_npm_command": "Running npm command...",
+                                        "run_npx_command": "Running npx command...",
+                                        "run_git_command": "Running git command...",
+                                        "git_log": "Viewing commit log...",
+                                        "git_show": "Viewing commit...",
+                                        "lint_project": "Running linter...",
+                                        "check_css": "Checking CSS...",
+                                    }
+                                    if name == "batch_create_files":
+                                        return (
+                                            f"Creating {count} file(s)..."
+                                            if count
+                                            else "Creating files..."
+                                        )
+                                    if name == "batch_update_files":
+                                        return (
+                                            f"Editing {count} file(s)..."
+                                            if count
+                                            else "Editing files..."
+                                        )
+                                    if name == "batch_delete_files":
+                                        return (
+                                            f"Deleting {count} file(s)..."
+                                            if count
+                                            else "Deleting files..."
+                                        )
+                                    if name == "batch_read_files":
+                                        return (
+                                            f"Reading {count} file(s)..."
+                                            if count
+                                            else "Reading files..."
+                                        )
+                                    if name == "batch_update_lines":
+                                        return (
+                                            f"Editing {count} file(s)..."
+                                            if count
+                                            else "Editing files..."
+                                        )
+                                    return simple_map.get(name, "Running tool...")
 
                             # Skip streaming for read operations - user doesn't want file content
                             read_tools = {
@@ -1144,57 +1119,57 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
                                     if isinstance(files, list):
                                         count = len(files)
                                 simple_map = {
-                                    "create_file": "Created file",
-                                    "update_file": "Edited file",
-                                    "delete_file": "Deleted file",
-                                    "read_file": "Read file",
-                                    "insert_lines": "Edited file",
-                                    "remove_lines": "Edited file",
-                                    "update_lines": "Edited file",
-                                    "read_lines": "Read file",
-                                    "list_files": "Listed files",
-                                    "init_nextjs_app": "Initialized app",
-                                    "install_dependencies": "Installed dependencies",
-                                    "run_dev_server": "Started dev server",
-                                    "run_npm_command": "Ran npm command",
-                                    "run_npx_command": "Ran npx command",
-                                    "run_git_command": "Ran git command",
-                                    "git_log": "Viewed commit log",
-                                    "git_show": "Viewed commit",
-                                    "lint_project": "Ran linter",
-                                    "check_css": "Checked CSS",
+                                    "create_file": "Creating file...",
+                                    "update_file": "Editing file...",
+                                    "delete_file": "Deleting file...",
+                                    "read_file": "Reading file...",
+                                    "insert_lines": "Editing file...",
+                                    "remove_lines": "Editing file...",
+                                    "update_lines": "Editing file...",
+                                    "read_lines": "Reading file...",
+                                    "list_files": "Listing files...",
+                                    "init_nextjs_app": "Initializing app...",
+                                    "install_dependencies": "Installing dependencies...",
+                                    "run_dev_server": "Starting dev server...",
+                                    "run_npm_command": "Running npm command...",
+                                    "run_npx_command": "Running npx command...",
+                                    "run_git_command": "Running git command...",
+                                    "git_log": "Viewing commit log...",
+                                    "git_show": "Viewing commit...",
+                                    "lint_project": "Running linter...",
+                                    "check_css": "Checking CSS...",
                                 }
                                 if name == "batch_create_files":
                                     return (
-                                        f"Created {count} file(s)"
+                                        f"Creating {count} file(s)..."
                                         if count
-                                        else "Created files"
+                                        else "Creating files..."
                                     )
                                 if name == "batch_update_files":
                                     return (
-                                        f"Edited {count} file(s)"
+                                        f"Editing {count} file(s)..."
                                         if count
-                                        else "Edited files"
+                                        else "Editing files..."
                                     )
                                 if name == "batch_delete_files":
                                     return (
-                                        f"Deleted {count} file(s)"
+                                        f"Deleting {count} file(s)..."
                                         if count
-                                        else "Deleted files"
+                                        else "Deleting files..."
                                     )
                                 if name == "batch_read_files":
                                     return (
-                                        f"Read {count} file(s)"
+                                        f"Reading {count} file(s)..."
                                         if count
-                                        else "Read files"
+                                        else "Reading files..."
                                     )
                                 if name == "batch_update_lines":
                                     return (
-                                        f"Edited {count} file(s)"
+                                        f"Editing {count} file(s)..."
                                         if count
-                                        else "Edited files"
+                                        else "Editing files..."
                                     )
-                                return simple_map.get(name, "Ran tool")
+                                return simple_map.get(name, "Running tool...")
 
                             # Skip streaming for read operations - user doesn't want file content
                             read_tools = {

@@ -22,7 +22,7 @@ Base the decision on the current design-system status and conversation context. 
 Respond with one literal token: `design`, `code`, or `clarify`.
 """
 
-_router_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+_router_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14")
 
 
 # Structured Output

@@ -45,13 +45,19 @@ tools = [
     check_css,
 ]
 
-_coder_llm_ = ChatOpenAI(
-    model="gpt-5", reasoning_effort="minimal", verbosity="low"
-).bind_tools(tools, parallel_tool_calls=True)
-
 
 def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
+
+    if state.coder_run:
+        _coder_llm_ = ChatOpenAI(
+            model="gpt-5", reasoning_effort="minimal", verbosity="low"
+        ).bind_tools(tools, parallel_tool_calls=True)
+
+    else:
+        _coder_llm_ = ChatOpenAI(
+            model="gpt-5", reasoning_effort="minimal", verbosity="low"
+        ).bind_tools(tools, parallel_tool_calls=True, tool_choice="any")
 
     design_context_section = "\n### Designer Notes:\n" + state.raw_designer_output
 

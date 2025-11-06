@@ -12,9 +12,9 @@ export function Nav({ className = "" }: { className?: string }) {
           </span>
         </Link>
         <nav className="hidden sm:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="#features" className="hover:text-foreground">Features</Link>
-          <Link href="#pricing" className="hover:text-foreground">Pricing</Link>
-          <Link href="#contact" className="hover:text-foreground">Contact</Link>
+          <Link href="#features" className="hover:text-foreground"></Link>
+          <Link href="#pricing" className="hover:text-foreground"></Link>
+          <Link href="#contact" className="hover:text-foreground"></Link>
         </nav>
       </div>
     </header>
