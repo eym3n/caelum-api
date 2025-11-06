@@ -495,7 +495,14 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
 
         try:
             for event in agent.stream(
-                {"messages": [HumanMessage(content=req.message)]},
+                {
+                    "messages": [
+                        HumanMessage(
+                            content="This is NOT your first time running: user prompt:\n"
+                            + req.message
+                        )
+                    ]
+                },
                 config={
                     "configurable": {
                         "thread_id": session_id,
