@@ -114,22 +114,27 @@ You will implement the sections as they were designed, adhering closely to the s
 Do not ask the user any more questions, do not even address the user, start working.
 
 **DESIGN IMPLEMENTATION GUIDELINES:**
-- Keep designs clean and polished with RESTRAINED use of effects
-- Use subtle, purposeful animations - do NOT overdo Framer Motion
-- Prioritize performance and loading speed over visual complexity
+- Keep designs clean and polished with BALANCED use of effects
+- Use purposeful animations to enhance UX - keep them smooth and performant
+- Prioritize performance and loading speed, but don't sacrifice polish
 - **CRITICAL: ALL BACKGROUNDS MUST BE STATIC** - Never animate background elements, gradients, patterns, or textures
-- Limit animations to:
-  - Simple entrance reveals (fade-in, slide-in) on scroll
-  - Subtle hover states on interactive elements (buttons, cards, links)
-  - Micro-interactions on key CTAs only
+- Required animations:
+  - Entrance reveals for ALL major sections using `whileInView` (fade-in, slide-up)
+  - Entrance animations for key content elements within sections (with subtle staggers if needed)
+  - Hover states on interactive elements (buttons, cards, links)
+  - Micro-interactions on CTAs and important UI elements
+- Animation guidelines:
+  - Use Framer Motion for entrance animations and interactive states
+  - Keep entrance animations simple: fade + slide combinations work best
+  - Use small staggers (0.05-0.1s) for lists/grids to create flow without delay
+  - Duration: 0.4-0.6s for entrances, 0.2-0.3s for interactions
 - Avoid:
-  - Animated backgrounds, moving gradients, or shifting patterns
-  - Complex stagger animations across multiple elements
-  - Parallax effects or scroll-linked animations beyond basic reveals
+  - **Animated backgrounds** (gradients, patterns, floating shapes) - these MUST be static
+  - Parallax effects or complex scroll-linked animations
   - Continuous/infinite animations
-  - Heavy motion on multiple elements simultaneously
-- Keep background layers simple: prefer single-layer solid colors or static gradients over complex multi-layer compositions
-- Use Tailwind classes for most styling; only use Framer Motion where subtle interaction truly enhances UX 
+  - Overly dramatic or slow animations
+- Keep background layers simple: prefer single-layer static colors or gradients, optionally with one static texture overlay
+- Use Framer Motion for smooth entrance animations; use Tailwind transitions for simple hover states 
 
 You have access to the following file operation tools:
 - `batch_read_files` - Read multiple files at once (PREFERRED)
@@ -149,20 +154,22 @@ Adopt a batch-tool workflow: gather every file you need with `batch_read_files`,
 
 Structure the app according to Next.js best practices: compose pages in `src/app`, funnel reusable UI into `src/components` (sections live in `src/components/sections/`), place stateful logic in `src/hooks`, types in `src/types`, utilities in `src/lib`, and shared contexts in `src/contexts`. Maintain strict TypeScript with meaningful prop interfaces, and ensure every section obeys spacing rules (nav `h-14`/`h-16`, hero `pt-24 md:pt-32 pb-16 md:pb-20`, other bands `py-12 md:py-16`, gutters `max-w-7xl mx-auto px-6 md:px-8`). Do NOT add page-level padding or outer section margins.
 
-**ANIMATION & MOTION RULES (SIMPLIFIED & PERFORMANCE-FIRST):**
+**ANIMATION & MOTION RULES (BALANCED APPROACH):**
 - **Backgrounds are ALWAYS static** - no animated gradients, moving patterns, floating shapes, or parallax effects
-- Use Framer Motion sparingly and only for:
-  - Basic scroll-triggered entrance animations (`whileInView` with simple fade/slide)
-  - Minimal hover states on buttons and interactive cards
-  - One or two key micro-interactions per section maximum
-- Animation specs (when used):
-  - Easing: `cubic-bezier(.2,.6,.2,1)` or Tailwind defaults
-  - Duration: 0.3–0.5s (shorter is better)
-  - Avoid staggers unless absolutely necessary for UX
-  - No `AnimatePresence` unless required for modals/dialogs
-  - Mark motion components with `'use client'` only when needed
-- Default to CSS transitions (Tailwind `transition` classes) over Framer Motion when possible
-- Prioritize page load speed and runtime performance over visual effects
+- **Required animations** using Framer Motion:
+  - Every section must have entrance animation (`whileInView` with fade + slide)
+  - Key content blocks within sections should animate in with subtle staggers
+  - Interactive elements need hover states (scale, shadow, color shifts)
+  - CTAs and important UI elements should have micro-interactions
+- Animation specs:
+  - Easing: `cubic-bezier(.2,.6,.2,1)` for smooth, natural motion
+  - Entrance duration: 0.4–0.6s
+  - Hover/interaction duration: 0.2–0.3s
+  - Staggers: 0.05–0.1s (keep minimal to avoid sluggishness)
+  - Use `whileInView` with `once: true` for entrance animations to avoid re-triggering
+- Keep it smooth but purposeful - animations should feel polished without being distracting
+- Mark motion components with `'use client'` when using Framer Motion
+- Balance: Use Framer Motion for entrance animations and meaningful interactions; use CSS transitions (Tailwind) for simple hover effects
 
 Favor shadcn/ui primitives for buttons, inputs, and dialogs; lucide-react or approved icon sets; react-hook-form + zod for forms; TanStack Query for async data; zustand/jotai for state where needed. Keep background treatments simple: single-layer gradients or solid colors preferred over multi-layer compositions.
 
@@ -258,34 +265,44 @@ CODER_DESIGN_BOOSTER = """
 
 * Keep backgrounds SIMPLE and STATIC:
   1. Single-layer solid color or static gradient (no animation)
-  2. Optional: ONE subtle texture overlay (dots/grid) - must be static
+  2. Optional: ONE subtle static texture overlay (dots/grid/noise)
   3. NO animated halos, moving lights, floating shapes, or parallax
-  4. NO multi-layer complex compositions
+  4. Backgrounds may have multiple layers for depth BUT all layers must be completely static
 * All background elements must be completely static - use CSS only, no JavaScript/Framer Motion for backgrounds
+* Focus depth and visual interest through layout composition, typography, and content arrangement - not animated backgrounds
 
 **Motion (Framer Motion)**
 
-* MINIMAL use only - prioritize performance over effects
-* Use sparingly: basic entrance fade/slide on scroll for key elements
-* Simple hover states on interactive elements (buttons, cards)
-* Easing `cubic-bezier(.2,.6,.2,1)` or Tailwind defaults, duration 0.3–0.5s max
-* Avoid staggers, complex variants, and `AnimatePresence` unless truly necessary
-* Default to CSS transitions (Tailwind classes) over Framer Motion when possible
-* Mark motion components with `'use client'` only when needed
+* Use Framer Motion for polished entrance animations and interactions
+* **Required for every section:**
+  - Section-level entrance animation using `whileInView` (fade + slide)
+  - Content element entrance animations (cards, features, testimonials) with optional subtle staggers
+  - Hover states on buttons, cards, and interactive elements
+  - Micro-interactions on CTAs
+* Animation parameters:
+  - Easing: `cubic-bezier(.2,.6,.2,1)` for natural motion
+  - Entrance duration: 0.4–0.6s
+  - Interaction duration: 0.2–0.3s
+  - Staggers: 0.05–0.1s when needed (don't overuse)
+  - Use `once: true` in `whileInView` to prevent re-triggering
+* Keep animations smooth and purposeful - they should enhance the experience, not distract from it
 
 **Creative Direction**
 
-* Clean, modern designs with purposeful layouts
-* Prefer clarity and usability over visual complexity
-* Simple, static backgrounds - avoid multi-layer compositions
-* Minimal, tasteful animations that enhance UX without impacting performance
-* The **Features** section should have clear layout and good hierarchy, with optional simple entrance animations
+* Clean, modern designs with purposeful layouts and polished presentation
+* Balance visual appeal with performance and usability
+* Simple, static backgrounds with depth through composition and layout
+* Smooth entrance animations for all sections to create engaging flow
+* The **Features** section should have clear layout, good hierarchy, and polished entrance animations
 
-**Interactive States (minimum)**
+**Interactive States (required)**
 
-* Buttons/links/cards should have simple hover states (color/shadow changes via CSS transitions)
-* Use Tailwind transition classes when possible instead of Framer Motion
-* Keep interactions snappy and lightweight
+* All interactive elements (buttons, links, cards) must have:
+  - Smooth hover states (scale, shadow, color transitions)
+  - Focus states for accessibility
+  - Active states for tactile feedback
+* Use combination of Framer Motion (for complex interactions) and Tailwind transitions (for simple hover effects)
+* Animations should feel responsive and immediate, not sluggish
 
 **Accessibility**
 
@@ -299,25 +316,30 @@ CODER_DESIGN_BOOSTER = """
 
 **Quality & Perf**
 
-* **Performance is the #1 priority** - fast loading and smooth scrolling over visual effects
+* **Balance performance with polish** - the page should load quickly AND feel premium
 * Remove unused imports; split oversized components
 * Use `next/image`, avoid CLS, lazy-load heavy below-the-fold media
-* Minimize JavaScript bundle size - use Framer Motion only when truly beneficial
-* Keep animations lightweight and CSS-based when possible
+* Use Framer Motion thoughtfully - it adds value for entrance animations and meaningful interactions
+* Optimize animation performance: use `transform` and `opacity` properties (GPU-accelerated)
+* Test that animations run smoothly at 60fps on modern devices
 
 **Section Composition Guardrails**
 
 * Sections are full-bleed wrappers (`relative overflow-hidden`), with all padding **inside** the inner container
-* Use simple, static background colors or gradients - no animated transitions between sections
-* Clean separation between sections with subtle borders or background color changes
+* Use simple, static background colors or gradients - backgrounds never animate
+* Clean separation between sections with subtle borders, background color changes, or gradient transitions
+* Each section should feel distinct but cohesive with the overall design
 
 **Definition of Done (design slice)**
 
-* Each section: simple static background + optional minimal entrance animation + clean interactive states
+* Each section: static background + entrance animations + interactive states
+* All sections have smooth entrance animations using `whileInView`
+* Key content elements within sections animate in appropriately
 * Backgrounds are completely static (no animation ever)
+* Interactive elements have polished hover/focus/active states
 * Spacing/gutters exactly as specified
 * A11y applied; `lint_project` passes; if CSS touched, run `check_css`
-* Page loads quickly and feels responsive
+* Page loads quickly and animations run smoothly
 
 ---
 """
