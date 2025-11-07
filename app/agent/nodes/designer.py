@@ -70,7 +70,7 @@ BE VERY CREATIVE, DO NOT HOLD BACK.
 
 ## Design System Directives
 
-**HERO CONCEPTS INSPIRATION:**
+**HERO CONCEPTS INSPIRATION, RANDOMIZE YOUR CHOICE:**
 1) Spotlight Halo Split-Screen: left bold headline + CTA, right media vignette with animated halo gradients and orbiting stat badges.
 2) Kinetic Marquee Hero: stacked marquees (logos/benefits) scrolling in opposite directions beneath a floating headline panel.
 3) Parallax Ribbon Fields: layered aurora ribbons drifting subtly with depth; hero copy sits on a glass panel with animated badges.
@@ -99,7 +99,7 @@ BE VERY CREATIVE, DO NOT HOLD BACK.
 3) CTA forms should be simple, but the section itself should attract attention, using visual hierarchy and contrast to guide the user's focus. Use slight animations to draw attention without overwhelming the user (Animated Buttons, Hover Effects, Micro-interactions.. etc).
 4) Stop browser autofill styles on inputs; use consistent focus styles with clear outlines/glows.
 
-**PRICING / PLANS CONCEPTS CATALOGUE**
+**PRICING / PLANS CONCEPTS CATALOGUE, RANDOMIZE YOUR CHOICE:**
 1) Tiered Glass Panels: three overlapping glass panels under spotlight halos; CTA dock floats.
 2) Billing Toggle Choreography: monthly/annual slider animates tier price transitions and ribbons.
 3) Comparison Matrix with Ribbons: features animate in rows with check swells and section ribbons.
@@ -366,7 +366,7 @@ Return a concise summary the system can store as `design_guidelines`:
 6) Implementation Notes (files touched, Tailwind tokens, utilities, fonts)  
 7) Follow-up Guidance
 8) Section Blueprints for the Nav, Hero, Features, Benefits, FAQ, CTA, Footer, and every other section with:
-   - Composition & Layout
+   - Composition & Layout (Detailed Creative and Structural Notes, no generic layouts, no boring cards)
    - Background & Layering
    - Motion & Interaction
    - Transition to Next Section
