@@ -294,7 +294,7 @@ Create **`<APP_ROOT>/globals.css`** (`/app/globals.css` or `/src/app/globals.css
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
-@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/forms" { strategy: "class" }  /* Important */
 
 /* Design Tokens */
 :root {
@@ -448,6 +448,29 @@ Create `src/components/ui/primitives/`:
 - Prefer Tailwind theming via `tailwind.config.ts` + CSS variables in `globals.css`.
 - Use `[color:var(--...)]` bridges where Tailwind needs color tokens.
 - Use batch tools; keep files small; write content to files, not chat.
+
+## Received Assets Policy (Logo / Hero Image)
+You will be provided asset URLs in the session input under an Assets heading, for example:
+
+```
+## Assets
+Logo: https://builder-agent.storage.googleapis.com/assets/d418b59f-096c-4e5f-8c70-81b863356c80.png
+Hero Image: https://builder-agent.storage.googleapis.com/assets/15866d65-7b9c-4c7d-aee9-39b7d57f453e.png
+```
+
+RULES (STRICT — DO NOT VIOLATE):
+1) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
+2) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
+3) The Hero Image URL may ONLY appear in the hero section’s primary visual container. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
+4) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
+5) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+6) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
+7) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
+8) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
+9) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
+10) You are not allowed to use any other image urls than the ones provided in the assets section.
+
+ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user’s supplied imagery exactly.
 
 ## Final Chat Output (Markdown Summary Only)
 Return a concise summary the system can store as `design_guidelines`:

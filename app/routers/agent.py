@@ -8,10 +8,7 @@ from app.agent.tools.files import get_session_dir, clear_session_dir
 from pathlib import Path
 import json
 import subprocess
-import mimetypes
 import re
-from urllib.parse import urlparse
-import requests
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 
@@ -155,112 +152,6 @@ def ensure_dev_server(session_id: str, context_label: str) -> None:
             )
     except Exception as exc:
         print(f"[{context_label}] WARNING: Exception while managing dev server: {exc}")
-
-
-# =============================
-# Asset Handling Helpers
-# =============================
-
-
-def _safe_filename_from_url(url: str, fallback: str) -> str:
-    try:
-        parsed = urlparse(url)
-        name = Path(parsed.path).name
-        return name or fallback
-    except Exception:
-        return fallback
-
-
-def _infer_ext_from_mime(mime: str) -> str:
-    if not mime:
-        return ""
-    ext = mimetypes.guess_extension(mime.split(";")[0].strip()) or ""
-    return ext.replace(".jpeg", ".jpg")  # normalize
-
-
-def _download_asset(ref: str) -> tuple[bytes | None, str | None]:
-    """Download asset if ref looks like a URL; return (bytes, inferred_ext)."""
-    if not ref or not re.match(r"https?://", ref):
-        return None, None
-    try:
-        resp = requests.get(ref, timeout=15)
-        if resp.status_code == 200:
-            mime = resp.headers.get("Content-Type", "")
-            ext = _infer_ext_from_mime(mime)
-            return resp.content, ext
-    except Exception as e:
-        print(f"[INIT-ASSETS] Download failed for {ref}: {e}")
-    return None, None
-
-
-def _store_binary(path: Path, data: bytes) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("wb") as f:
-        f.write(data)
-    print(f"[INIT-ASSETS] Stored asset {path}")
-
-
-def ingest_assets(session_id: str, assets: AssetsSection | None) -> list[str]:
-    """Ingest logo, heroImage, secondaryImages into session public/ folder.
-
-    Naming rules:
-      - logo → public/logo.<ext>
-      - heroImage → public/hero.<ext>
-      - secondaryImages → public/assets/<original or generated name>
-    If ext not derivable, default to original filename extension; else omit.
-    """
-    written: list[str] = []
-    if not assets:
-        return written
-
-    session_dir = get_session_dir(session_id)
-    public_dir = session_dir / "public"
-    public_dir.mkdir(parents=True, exist_ok=True)
-    assets_dir = public_dir / "assets"
-    assets_dir.mkdir(parents=True, exist_ok=True)
-
-    # Handle logo
-    if assets.logo:
-        data, ext = _download_asset(assets.logo)
-        if data:
-            use_ext = ext or Path(_safe_filename_from_url(assets.logo, "logo")).suffix
-            target = public_dir / f"logo{use_ext}"
-            _store_binary(target, data)
-            written.append(str(target.relative_to(session_dir)))
-        else:
-            # If it's not a URL we don't have binary; placeholder note
-            print(f"[INIT-ASSETS] Logo ref not downloaded (non-URL): {assets.logo}")
-
-    # Handle hero
-    if assets.heroImage:
-        data, ext = _download_asset(assets.heroImage)
-        if data:
-            use_ext = (
-                ext or Path(_safe_filename_from_url(assets.heroImage, "hero")).suffix
-            )
-            target = public_dir / f"hero{use_ext}"
-            _store_binary(target, data)
-            written.append(str(target.relative_to(session_dir)))
-        else:
-            print(
-                f"[INIT-ASSETS] Hero ref not downloaded (non-URL or failed): {assets.heroImage}"
-            )
-
-    # Secondary images
-    if assets.secondaryImages:
-        for idx, ref in enumerate(assets.secondaryImages, start=1):
-            data, ext = _download_asset(ref)
-            if not data:
-                print(f"[INIT-ASSETS] Secondary image {ref} not downloaded")
-                continue
-            base = _safe_filename_from_url(ref, f"secondary_{idx}")
-            # Preserve original extension if available else inferred
-            final_name = base if Path(base).suffix else (base + (ext or ""))
-            target = assets_dir / final_name
-            _store_binary(target, data)
-            written.append(str(target.relative_to(session_dir)))
-
-    return written
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -892,6 +783,7 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                 f"Secondary Images: {', '.join(payload.assets.secondaryImages or [])}",
             ],
         )
+    print(f"[INIT] Flattened payload:\n" + "\n\n".join(sections))
     return "\n\n".join(sections)
 
 
@@ -1046,11 +938,8 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
     if app_ready:
         ensure_dev_server(session_id, "INIT")
 
-    written_assets = ingest_assets(session_id, req_payload.assets)
     payload_text = _flatten_init_payload(req_payload)
     combined = "INITIAL CREATION PAYLOAD\n" + payload_text
-    if written_assets:
-        combined += "\n\nAssets Stored: " + ", ".join(written_assets)
 
     def sse(data: dict) -> str:
         return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"

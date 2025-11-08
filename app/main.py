@@ -2,6 +2,7 @@ import logging
 import os
 from fastapi import FastAPI
 from app.routers import agent as agent_router
+from app.routers import uploads as uploads_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(agent_router.router, prefix="/v1/agent")
+app.include_router(uploads_router.router, prefix="/v1/uploads")
 
 
 # Basic health
