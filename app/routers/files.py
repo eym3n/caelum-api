@@ -73,7 +73,10 @@ async def get_files(session_id: str = Depends(get_session_id)):
         for p in dir_path.rglob("*"):
             if p.is_file():
                 relative_path = str(p.relative_to(dir_path))
-                content = p.read_text(encoding="utf-8")
+                try:
+                    content = p.read_text(encoding="utf-8")
+                except UnicodeDecodeError:
+                    content = p.read_bytes().decode("utf-8", errors="replace")
                 files[relative_path] = content
         return {"files": files}
     except Exception as e:
