@@ -29,7 +29,6 @@ RUN pip install .
 
 # Copy application source.
 COPY app ./app
-COPY convert.py ./convert.py
 COPY entrypoint.sh ./entrypoint.sh
 
 # Expose app port (FastAPI served by uvicorn) - matches uvicorn.run port=8080
