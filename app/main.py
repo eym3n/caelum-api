@@ -3,6 +3,7 @@ import os
 from fastapi import FastAPI
 from app.routers import agent as agent_router
 from app.routers import uploads as uploads_router
+from app.routers import files as files_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -27,6 +28,7 @@ app.add_middleware(
 )
 app.include_router(agent_router.router, prefix="/v1/agent")
 app.include_router(uploads_router.router, prefix="/v1/uploads")
+app.include_router(files_router.router, prefix="/v1/files")
 
 
 # Basic health
