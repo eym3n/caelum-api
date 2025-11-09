@@ -30,5 +30,5 @@ class Config:
 
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", None)
 
-    GCS_CLIENT = storage.Client()
+    GCS_CLIENT = storage.Client() if ENV != "local" else None
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", "builder-agent")

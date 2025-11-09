@@ -1,45 +1,53 @@
-# Use Python 3.11 slim image for smaller size
-FROM python:3.11-slim as base
+# syntax=docker/dockerfile:1.7
 
-# Set environment variables
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+# Multi-stage build for FastAPI + Uvicorn app defined in app/main.py
+# Uses Python 3.12 slim image for smaller footprint. Adjust if specific version needed.
 
-# Install uv for faster dependency management
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+ARG PYTHON_VERSION=3.12
+FROM python:${PYTHON_VERSION}-slim AS base
 
-# Set working directory
+ENV PYTHONDONTWRITEBYTECODE=1 \
+		PYTHONUNBUFFERED=1 \
+		PIP_NO_CACHE_DIR=off \
+		PIP_DISABLE_PIP_VERSION_CHECK=on \
+		PIP_ROOT_USER_ACTION=ignore
+
+# System deps (add build-essential if wheels fail)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		curl ca-certificates build-essential && \
+		rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
-# Copy dependency files first (better layer caching)
-COPY pyproject.toml uv.lock ./
+# Separate layer for dependency metadata for better caching.
+COPY pyproject.toml ./
+# If you have a lock file (e.g., uv.lock or requirements.txt generated) copy it here for reproducible builds.
 
-# Install dependencies using uv
-RUN uv sync --frozen --no-dev
+# Install build backend if needed (PEP 517). We use pip directly; consider uv or poetry if available.
+RUN pip install --upgrade pip && pip wheel --no-deps . -w /tmp/wheels || true
+RUN pip install .
 
-# Copy application code
+# Copy application source.
 COPY app ./app
-COPY __init__.py ./
+COPY convert.py ./convert.py
+COPY entrypoint.sh ./entrypoint.sh
 
-# Create output directory for generated files
-RUN mkdir -p __out__ && chmod 777 __out__
-
-# Create a non-root user for security
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-
-# Expose port
+# Expose app port (FastAPI served by uvicorn) - matches uvicorn.run port=8080
 EXPOSE 8080
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import requests; requests.get('http://localhost:8080/health')" || exit 1
+# Healthcheck hitting /health endpoint
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+	CMD curl -fsS http://127.0.0.1:8080/health || exit 1
 
-# Run the application
-CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8080"]
+# Default environment can be overridden at runtime
+ENV APP_ENV=production
+
+# Ensure entrypoint script is executable (helpful for local context before build)
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]
+
+# Development notes:
+#   For local iterative dev you can mount the source and override CMD with --reload.
+#   docker run -p 8080:8080 -v $(pwd)/app:/app/app <image> python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8080
 
