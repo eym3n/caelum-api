@@ -15,13 +15,13 @@ if ENV == "local":
 elif ENV == "testing" and os.getenv("TRAVIS"):
     # Travis CI: Do nothing, use predefined env variables from .travis.yml
     pass
-else:
-    # Fetch `.env`-formatted secret from the dummy function
-    secret_data = get_secret("CAELLUM_API_SETTINGS")
+# else:
+#     # Fetch `.env`-formatted secret from the dummy function
+#     secret_data = get_secret("CAELLUM_API_SETTINGS")
 
-    # Load the secret variables into the environment
-    env_buffer = io.StringIO(secret_data)  # Convert string to file-like object
-    load_dotenv(stream=env_buffer, override=True)  # Load environment variables
+#     # Load the secret variables into the environment
+#     env_buffer = io.StringIO(secret_data)  # Convert string to file-like object
+#     load_dotenv(stream=env_buffer, override=True)  # Load environment variables
 
 
 class Config:
