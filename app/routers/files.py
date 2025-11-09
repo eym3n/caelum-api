@@ -27,6 +27,7 @@ async def test_write_file(request: TestWriteFileRequest):
         file_path = Path(MOUNT_PATH) / FOLDER_PATH / request.file_name
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(request.content, encoding="utf-8")
+        print(f"Wrote file at {file_path}")
         return TestWriteFileResponse(
             message="File written successfully", file_path=str(file_path)
         )
