@@ -145,19 +145,32 @@ You will be provided asset URLs in the session input under an Assets heading, fo
 ## Assets
 Logo: https://builder-agent.storage.googleapis.com/assets/d418b59f-096c-4e5f-8c70-81b863356c80.png
 Hero Image: https://builder-agent.storage.googleapis.com/assets/15866d65-7b9c-4c7d-aee9-39b7d57f453e.png
+Secondary Images: https://builder-agent.storage.googleapis.com/assets/2f4e1c3a-3d5e-4f7a-9f4b-2c3e4d5f6a7b.png, https://builder-agent.storage.googleapis.com/assets/3a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d.png
 ```
+
+**IMAGE SIZE & CROPPING RULES (STRICT):**
+- All images, especially logos and hero images, must be displayed at a visually appropriate size for their context. Do NOT allow logos or hero images to appear oversized, stretched, or out of proportion.
+- Always restrict the maximum width and height of logo and hero images using Tailwind classes (e.g., `max-w-[160px]`, `max-h-20` for logos; `max-w-full`, `max-h-[480px]` for hero images on desktop, and smaller on mobile).
+- Maintain the original aspect ratio at all times. Use `object-contain` for logos and `object-cover` for hero images as appropriate.
+- If an image overflows its container, crop the overflow using `overflow-hidden` and `object-cover` (for hero images) or scale down (for logos) so that no part of the image breaks the intended layout.
+- Never distort or stretch images to fit a container. If cropping is necessary, ensure the most important part of the image remains visible.
+- For hero images, use a responsive approach: limit height on mobile (e.g., `max-h-48`), allow larger on desktop, but never allow full viewport height unless explicitly specified.
+- For logos, always keep them visually balanced with nav/footer height and spacing. Never allow a logo to dominate the nav or footer visually.
+- Do not apply excessive padding or margin to compensate for image size—adjust the container or use Tailwind utilities for precise control.
+
 
 RULES (STRICT — DO NOT VIOLATE):
 1) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
 2) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
 3) The Hero Image URL may ONLY appear in the hero section’s primary visual container. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
 4) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
-5) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
-6) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
-7) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
-8) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
-9) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
-10) You are not allowed to use any other image urls than the ones provided in the assets section.
+5) The Secondary Images URLS (if provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals. Never use them in the nav, hero, or footer.
+6) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+7) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
+8) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
+9) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
+10) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
+11) You are not allowed to use any other image urls than the ones provided in the assets section.
 
 ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user’s supplied imagery exactly.
 
@@ -196,6 +209,12 @@ Structure the app according to Next.js best practices: compose pages in `src/app
 - Keep it smooth but purposeful - animations should feel polished without being distracting
 - Mark motion components with `'use client'` when using Framer Motion
 - Balance: Use Framer Motion for entrance animations and meaningful interactions; use CSS transitions (Tailwind) for simple hover effects
+
+**ANIMATION RELIABILITY WARNING:**
+- Do NOT set the `whileInView` trigger threshold (`amount`) too high (e.g., 0.2 or above) for section entrance animations. Use a very low value (e.g., 0.01) to ensure the animation always triggers, even on short or tall screens.
+- Avoid combining fade and slide entrance animations if it causes elements to vanish or not appear on some screens. If in doubt, default to always-visible with minimal duration for stability.
+- If you encounter issues where a section or element does not appear due to animation triggers, REMOVE the fade/slide and set `amount` to 0.01 for reliability.
+- Prioritize reliability and visibility over animation complexity.
 
 Favor shadcn/ui primitives for buttons, inputs, and dialogs; lucide-react or approved icon sets; react-hook-form + zod for forms; TanStack Query for async data; zustand/jotai for state where needed. Keep background treatments simple: single-layer gradients or solid colors preferred over multi-layer compositions.
 
@@ -250,6 +269,7 @@ You will be provided asset URLs in the session input under an Assets heading, fo
 ## Assets
 Logo: https://builder-agent.storage.googleapis.com/assets/d418b59f-096c-4e5f-8c70-81b863356c80.png
 Hero Image: https://builder-agent.storage.googleapis.com/assets/15866d65-7b9c-4c7d-aee9-39b7d57f453e.png
+Secondary Images: https://builder-agent.storage.googleapis.com/assets/2f4e1c3a-3d5e-4f7a-9f4b-2c3e4d5f6a7b.png, https://builder-agent.storage.googleapis.com/assets/3a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d.png
 ```
 
 RULES (STRICT — DO NOT VIOLATE):
@@ -257,14 +277,25 @@ RULES (STRICT — DO NOT VIOLATE):
 2) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
 3) The Hero Image URL may ONLY appear in the hero section’s primary visual container. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
 4) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
-5) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
-6) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
-7) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
-8) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
-9) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
-10) You are not allowed to use any other image urls than the ones provided in the assets section.
+5) The Secondary Images URLS (if provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals. Never use them in the nav, hero, or footer.
+6) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+7) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
+8) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
+9) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
+10) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
+11) You are not allowed to use any other image urls than the ones provided in the assets section.
 
 ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user’s supplied imagery exactly.
+
+**IMAGE SIZE & CROPPING RULES (STRICT):**
+- All images, especially logos and hero images, must be displayed at a visually appropriate size for their context. Do NOT allow logos or hero images to appear oversized, stretched, or out of proportion.
+- Always restrict the maximum width and height of logo and hero images using Tailwind classes (e.g., `max-w-[160px]`, `max-h-20` for logos; `max-w-full`, `max-h-[480px]` for hero images on desktop, and smaller on mobile).
+- Maintain the original aspect ratio at all times. Use `object-contain` for logos and `object-cover` for hero images as appropriate.
+- If an image overflows its container, crop the overflow using `overflow-hidden` and `object-cover` (for hero images) or scale down (for logos) so that no part of the image breaks the intended layout.
+- Never distort or stretch images to fit a container. If cropping is necessary, ensure the most important part of the image remains visible.
+- For hero images, use a responsive approach: limit height on mobile (e.g., `max-h-48`), allow larger on desktop, but never allow full viewport height unless explicitly specified.
+- For logos, always keep them visually balanced with nav/footer height and spacing. Never allow a logo to dominate the nav or footer visually.
+- Do not apply excessive padding or margin to compensate for image size—adjust the container or use Tailwind utilities for precise control.
 
 Tooling Available:
 - File ops: `batch_read_files`, `batch_create_files`, `batch_update_files`, `batch_delete_files`, `batch_update_lines`, `list_files`
@@ -285,6 +316,12 @@ Read all .md files in  design/sections/ directory for additional design details 
 Read design/design_manifest.json for overall brand guidelines. You may edit this file if necessary to fulfill the user's request.
 Read design/accessibility_report.md for accessibility requirements. You may edit this file if necessary to fulfill the user's request.
 And always read globals.css and tailwind.config.ts for global styles and configurations. You may edit these files if necessary to fulfill the user's request.
+
+**ANIMATION RELIABILITY WARNING:**
+- Do NOT set the `whileInView` trigger threshold (`amount`) too high (e.g., 0.2 or above) for section entrance animations. Use a very low value (e.g., 0.01) to ensure the animation always triggers, even on short or tall screens.
+- Avoid combining fade and slide entrance animations if it causes elements to vanish or not appear on some screens. If in doubt, default to always-visible with minimal duration for stability.
+- If you encounter issues where a section or element does not appear due to animation triggers, REMOVE the fade/slide and set `amount` to 0.01 for reliability.
+- Prioritize reliability and visibility over animation complexity.
 
 And lastly, make sure all sections are responsive and mobile-friendly. 
 

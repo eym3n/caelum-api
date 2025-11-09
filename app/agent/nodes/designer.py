@@ -1,4 +1,5 @@
 from __future__ import annotations
+import random
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
@@ -52,6 +53,73 @@ tools = [
     check_css,
 ]
 
+PRICING_PLANS_OPTIONS = [
+    "Sliding Comparison: Plans in horizontal scrollable track, active plan enlarges/highlights",
+    "Layered Tiers: Plans stack with perspective, higher tiers literally elevated and larger",
+    "Feature Matrix Table: Bold table design with animated checkmarks, sticky headers, color-coded rows",
+    "Spotlight Circles: Each plan in circular containers with size indicating value, arranged creatively",
+    "Timeline Pricing: Plans as timeline events showing progression from basic to premium",
+    "Split Hero Pricing: One dominant recommended plan takes 60%, others share 40% with compact styling",
+    "Interactive Feature Builder: Users select features, price updates, shows matching plan",
+    "Comparison Slider: Drag slider to compare 2 plans side-by-side with highlighting differences",
+]
+
+CTA_SECTION_GUIDELINES = [
+    "Forms must be clear and usable, but section design should be BOLD",
+    "Consider: diagonal split with form on one side, floating form over striking background, centered card with dramatic backdrop",
+    "Creative CTAs: button with icon animation, multi-step micro-wizard, benefit reminder sidebar",
+    "Use strong visual hierarchy and whitespace to make form inviting",
+    "Static backgrounds but can use bold colors, gradients, geometric shapes",
+]
+
+TESTIMONIALS_SOCIAL_PROOF_OPTIONS = [
+    "Bento Testimonial Grid: Varied-size testimonial boxes in asymmetric grid, some with photos, some text-only, different heights",
+    "Floating Quote Cards: Testimonials as overlapping cards at angles with subtle shadows creating depth",
+    "Split Narrative: Large featured testimonial split-screen with smaller supporting quotes in sidebar",
+    "Timeline Stories: Customer journey testimonials in timeline format with connecting path",
+    "Stat-Heavy Grid: Mix testimonials with impressive numbers/stats in unified grid design",
+    "Magazine Layout: Editorial-style with pull quotes, author photos, large text excerpts",
+]
+
+HERO_CONCEPTS = [
+    "Bento Grid Hero: Headline dominates left 60%, right splits into 4-6 asymmetric cells showing benefits/stats/media with varied sizes and colors",
+    "Diagonal Shatter: Page splits diagonally; content on one triangle, striking visual/illustration on the other with overlapping badge clusters",
+    "Circular Spotlight: Massive circular gradient spotlight (static) centers hero content with orbiting stat cards positioned around perimeter",
+    "Stacked Perspective Cards: Headline floats over 3-4 stacked cards in 3D perspective (CSS transform) showing features/benefits with parallax-like depth",
+    "Full-Bleed Typography: Massive oversized headline fills viewport, CTA and benefits peek from corners, minimal centered media",
+    "Split Asymmetric: 40/60 or 30/70 split with one side solid color block + text, other side full-bleed image/illustration with text overlay",
+    "Radial Feature Wheel: Content in center, 6-8 feature pods arranged in circle around it (static positions), connected by subtle lines",
+    "Layered Depth Panels: 3 overlapping panels at slight angles, each revealing different info (headline→benefits→CTA), creates depth without animation",
+    "Corner Anchored: Content anchored to corners (top-left headline, top-right stats, bottom-left CTA, bottom-right media) with connecting lines/shapes",
+    "Newspaper Editorial: Magazine-style layout with oversized numbers, pull quotes, eyebrow text, multi-column composition",
+]
+
+FEATURES_LAYOUT_OPTIONS = [
+    "Alternating Diagonal Rows: Features in diagonal bands alternating left/right, each with unique background color/texture",
+    "Radial Timeline: Features arranged in circular/spiral timeline pattern with connecting pathways",
+    "Bento Feature Grid: Varied-size boxes in bento/masonry layout, some boxes 1x1, others 2x1 or 1x2, mixed content types",
+    "Stepping Stones: Features in staggered overlapping panels creating stepping-stone visual path down page",
+    "Split-Screen Sticky: Left side sticky feature navigation, right side scrolling feature details with media",
+    "Isometric Grid: Features in isometric/3D grid perspective (CSS transforms), creates dimensional depth",
+    "Serpentine Flow: Zigzag S-curve layout with features alternating sides, connected by flowing line",
+    "Card Cascade: Features in overlapping cascade like falling cards, each slightly offset and rotated",
+    "Spotlight Gallery: Dark background with individual spotlight circles (static) highlighting each feature area",
+    "Magazine Spread: Two-page magazine layout with dominant feature + smaller supporting features in columns",
+]
+
+NAV_STYLE_INSPIRATION = [
+    "Floating Island Nav: Small rounded pill/island container floating at top with blur backdrop, centered or offset",
+    "Liquid Glass Nav: Frosted glass effect with blur, subtle border, spans full width or contained",
+    "Sticky Minimal: Clean sticky nav that appears/hides on scroll, simple border bottom",
+    "Split Navigation: Logo left side, primary links center, CTA/actions right in separate groups",
+    "Inline Nav: Logo and links inline in single row, ultra-minimal, no background",
+    "Rounded Container Nav: Nav wrapped in rounded container with subtle shadow, sits within page margins",
+    "Borderless Floating: No background/border, just links floating on transparent backdrop, becomes solid on scroll",
+    "Pill Links Nav: Individual nav links as rounded pills with hover states, spaced apart",
+    "Compact Bar: Slim height bar (h-12) with tight spacing, minimal padding, very subtle",
+    "Elevated Nav: Subtle shadow/elevation, clean white/dark background depending on theme",
+]
+
 DESIGNER_SYSTEM_PROMPT = """
 You are the **Design System Architect (Designer Agent)** for a Next.js project. Your mission is to establish the complete visual + interaction language **before** any feature work begins. You run **exactly once per session** (if `design_system_run=True` you must exit immediately).
 
@@ -80,16 +148,7 @@ Your job is to design a comprehensive, premium-quality design system with CREATI
 Choose ONE nav style that fits the brand (keep it simple and functional):
 
 **NAV STYLE INSPIRATION:**
-1) **Floating Island Nav**: Small rounded pill/island container floating at top with blur backdrop, centered or offset
-2) **Liquid Glass Nav**: Frosted glass effect with blur, subtle border, spans full width or contained
-3) **Sticky Minimal**: Clean sticky nav that appears/hides on scroll, simple border bottom
-4) **Split Navigation**: Logo left side, primary links center, CTA/actions right in separate groups
-5) **Inline Nav**: Logo and links inline in single row, ultra-minimal, no background
-6) **Rounded Container Nav**: Nav wrapped in rounded container with subtle shadow, sits within page margins
-7) **Borderless Floating**: No background/border, just links floating on transparent backdrop, becomes solid on scroll
-8) **Pill Links Nav**: Individual nav links as rounded pills with hover states, spaced apart
-9) **Compact Bar**: Slim height bar (h-12) with tight spacing, minimal padding, very subtle
-10) **Elevated Nav**: Subtle shadow/elevation, clean white/dark background depending on theme
+**_nav_inspiration_**
 
 Requirements (all nav styles):
 1) Nav should be simple, clean, and functional - this is NOT the place to get creative. Make sure it is not cluttered, and is perfectly responsive on all screen sizes.
@@ -107,29 +166,10 @@ Requirements (all nav styles):
 8) Avoid bottom navigation (no fixed bottom nav bars)
 
 **HERO CONCEPTS - PICK ONE AND MAKE IT EXTRAORDINARY:**
-1) **Bento Grid Hero**: Headline dominates left 60%, right splits into 4-6 asymmetric cells showing benefits/stats/media with varied sizes and colors
-2) **Diagonal Shatter**: Page splits diagonally; content on one triangle, striking visual/illustration on the other with overlapping badge clusters
-3) **Circular Spotlight**: Massive circular gradient spotlight (static) centers hero content with orbiting stat cards positioned around perimeter
-4) **Stacked Perspective Cards**: Headline floats over 3-4 stacked cards in 3D perspective (CSS transform) showing features/benefits with parallax-like depth
-5) **Full-Bleed Typography**: Massive oversized headline fills viewport, CTA and benefits peek from corners, minimal centered media
-6) **Split Asymmetric**: 40/60 or 30/70 split with one side solid color block + text, other side full-bleed image/illustration with text overlay
-7) **Radial Feature Wheel**: Content in center, 6-8 feature pods arranged in circle around it (static positions), connected by subtle lines
-8) **Layered Depth Panels**: 3 overlapping panels at slight angles, each revealing different info (headline→benefits→CTA), creates depth without animation
-9) **Corner Anchored**: Content anchored to corners (top-left headline, top-right stats, bottom-left CTA, bottom-right media) with connecting lines/shapes
-10) **Newspaper Editorial**: Magazine-style layout with oversized numbers, pull quotes, eyebrow text, multi-column composition
+**_hero_inspiration_**
 
 **FEATURES SECTION - MUST BE INNOVATIVE:**
-Choose ONE creative approach (not basic card grids):
-1) **Alternating Diagonal Rows**: Features in diagonal bands alternating left/right, each with unique background color/texture
-2) **Radial Timeline**: Features arranged in circular/spiral timeline pattern with connecting pathways
-3) **Bento Feature Grid**: Varied-size boxes in bento/masonry layout, some boxes 1x1, others 2x1 or 1x2, mixed content types
-4) **Stepping Stones**: Features in staggered overlapping panels creating stepping-stone visual path down page
-5) **Split-Screen Sticky**: Left side sticky feature navigation, right side scrolling feature details with media
-6) **Isometric Grid**: Features in isometric/3D grid perspective (CSS transforms), creates dimensional depth
-7) **Serpentine Flow**: Zigzag S-curve layout with features alternating sides, connected by flowing line
-8) **Card Cascade**: Features in overlapping cascade like falling cards, each slightly offset and rotated
-9) **Spotlight Gallery**: Dark background with individual spotlight circles (static) highlighting each feature area
-10) **Magazine Spread**: Two-page magazine layout with dominant feature + smaller supporting features in columns
+**_features_inspiration_**
 
 Animation Guidelines for Features:
 - Smooth scroll-triggered entrance animations (fade + slide)
@@ -158,15 +198,7 @@ Animation Guidelines for Benefits:
 - Performance-first: use `will-change: transform` sparingly, prefer CSS transitions over JavaScript
 
 **PRICING / PLANS - CREATIVE PRESENTATION:**
-Move beyond standard 3-column cards:
-1) **Sliding Comparison**: Plans in horizontal scrollable track, active plan enlarges/highlights
-2) **Layered Tiers**: Plans stack with perspective, higher tiers literally elevated and larger
-3) **Feature Matrix Table**: Bold table design with animated checkmarks, sticky headers, color-coded rows
-4) **Spotlight Circles**: Each plan in circular containers with size indicating value, arranged creatively
-5) **Timeline Pricing**: Plans as timeline events showing progression from basic to premium
-6) **Split Hero Pricing**: One dominant recommended plan takes 60%, others share 40% with compact styling
-7) **Interactive Feature Builder**: Users select features, price updates, shows matching plan
-8) **Comparison Slider**: Drag slider to compare 2 plans side-by-side with highlighting differences
+**_pricing_inspiration_**
 
 **CTA SECTION GUIDELINES**
 1) Forms must be clear and usable, but section design should be BOLD
@@ -176,13 +208,7 @@ Move beyond standard 3-column cards:
 5) Static backgrounds but can use bold colors, gradients, geometric shapes
 
 **TESTIMONIALS / SOCIAL PROOF - AVOID BORING CAROUSELS:**
-Creative alternatives:
-1) **Bento Testimonial Grid**: Varied-size testimonial boxes in asymmetric grid, some with photos, some text-only, different heights
-2) **Floating Quote Cards**: Testimonials as overlapping cards at angles with subtle shadows creating depth
-3) **Split Narrative**: Large featured testimonial split-screen with smaller supporting quotes in sidebar
-4) **Timeline Stories**: Customer journey testimonials in timeline format with connecting path
-5) **Stat-Heavy Grid**: Mix testimonials with impressive numbers/stats in unified grid design
-6) **Magazine Layout**: Editorial-style with pull quotes, author photos, large text excerpts
+**_testimonials_inspiration_**
 
 **FOOTER - MORE THAN JUST LINKS:**
 1) Consider bold footer treatments: wave divider, gradient fade, large typography
@@ -420,9 +446,9 @@ Create `src/components/ui/primitives/`:
 
 ## Validation & Guardrails (MUST PASS before writing)
 - Search the `globals.css` candidate for **forbidden patterns**:
-  - `@apply\s+glass\b`
-  - `@apply\s+btn(-[a-z0-9_-]+)?\b`
-  - `@apply\s+[a-zA-Z][\w-]*\b` where the token is **not** a Tailwind core utility or an arbitrary value
+  - `@apply\\s+glass\b`
+  - `@apply\\s+btn(-[a-z0-9_-]+)?\\b`
+  - `@apply\\s+[a-zA-Z][\\w-]*\\b` where the token is **not** a Tailwind core utility or an arbitrary value
 - If any matches → rewrite to **compose in markup** instead of `@apply`.
 - Ensure all `@utility` blocks are **outside** `@layer base/components/utilities` and not nested.
 - Ensure `@plugin` lines correspond to actually used utilities/components.
@@ -456,6 +482,7 @@ You will be provided asset URLs in the session input under an Assets heading, fo
 ## Assets
 Logo: https://builder-agent.storage.googleapis.com/assets/d418b59f-096c-4e5f-8c70-81b863356c80.png
 Hero Image: https://builder-agent.storage.googleapis.com/assets/15866d65-7b9c-4c7d-aee9-39b7d57f453e.png
+Secondary Images: https://builder-agent.storage.googleapis.com/assets/2f4e1c3a-3d5e-4f7a-9f4b-2c3e4d5f6a7b.png, https://builder-agent.storage.googleapis.com/assets/3a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d.png
 ```
 
 RULES (STRICT — DO NOT VIOLATE):
@@ -463,12 +490,13 @@ RULES (STRICT — DO NOT VIOLATE):
 2) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
 3) The Hero Image URL may ONLY appear in the hero section’s primary visual container. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
 4) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
-5) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
-6) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
-7) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
-8) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
-9) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
-10) You are not allowed to use any other image urls than the ones provided in the assets section.
+5) The Secondary Images URLS (if provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals. Never use them in the nav, hero, or footer.
+6) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+7) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
+8) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
+9) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
+10) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
+11) You are not allowed to use any other image urls than the ones provided in the assets section.
 
 ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user’s supplied imagery exactly.
 
@@ -492,6 +520,9 @@ Return a concise summary the system can store as `design_guidelines`:
   Always include Nav in your initial design blueprints, they're small but important, be creative with Nav designs.
 9) Any other important notes for the codegen agent.
 
+The content of the sections should always follow the user's preferred language, but your generated instructions should always be in ENGLISH, regardless of the user's preferred language.
+If you're working in a different language, provide the copywriting in that language, but the design instructions should always be in ENGLISH.
+
 Address the codegen agent directly with the next steps.
 Be detailed about what files it needs to read first and then create.
 
@@ -504,18 +535,58 @@ Be detailed about what files it needs to read first and then create.
 
 
 _designer_llm_ = ChatOpenAI(
-    model="gpt-5", reasoning_effort="minimal", verbosity="low", temperature=0.5
+    model="gpt-5", reasoning_effort="low", verbosity="low"
 ).bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
-    SYS = SystemMessage(content=DESIGNER_SYSTEM_PROMPT)
+    # Use followup prompt if this is a followup run
+    if getattr(state, "is_followup", False):
+        prompt = FOLLOWUP_DESIGNER_SYSTEM_PROMPT
+    else:
+        prompt = (
+            DESIGNER_SYSTEM_PROMPT.replace(
+                "**_nav_inspiration_**",
+                "\n".join(
+                    random.sample(NAV_STYLE_INSPIRATION, len(NAV_STYLE_INSPIRATION))
+                ),
+            )
+            .replace(
+                "**_hero_inspiration_**",
+                "\n".join(random.sample(HERO_CONCEPTS, len(HERO_CONCEPTS))),
+            )
+            .replace(
+                "**_features_inspiration_**",
+                "\n".join(
+                    random.sample(FEATURES_LAYOUT_OPTIONS, len(FEATURES_LAYOUT_OPTIONS))
+                ),
+            )
+            .replace(
+                "**_pricing_inspiration_**",
+                "\n".join(
+                    random.sample(PRICING_PLANS_OPTIONS, len(PRICING_PLANS_OPTIONS))
+                ),
+            )
+            .replace(
+                "**_cta_inspiration_**",
+                "\n".join(
+                    random.sample(CTA_SECTION_GUIDELINES, len(CTA_SECTION_GUIDELINES))
+                ),
+            )
+            .replace(
+                "**_testimonials_inspiration_**",
+                "\n".join(
+                    random.sample(
+                        TESTIMONIALS_SOCIAL_PROOF_OPTIONS,
+                        len(TESTIMONIALS_SOCIAL_PROOF_OPTIONS),
+                    )
+                ),
+            )
+        )
+
+    SYS = SystemMessage(content=prompt)
     messages = [SYS, *state.messages]
     designer_response = _designer_llm_.invoke(messages)
-
-    print(
-        f"[DESIGNER] Response has tool_calls: {bool(getattr(designer_response, 'tool_calls', []))}"
-    )
 
     # Check for malformed function call
     finish_reason = getattr(designer_response, "response_metadata", {}).get(
@@ -553,4 +624,49 @@ def designer(state: BuilderState) -> BuilderState:
     return {
         "messages": [designer_response],
         "raw_designer_output": guidelines,
+        "design_system_run": True,
     }
+
+
+FOLLOWUP_DESIGNER_SYSTEM_PROMPT = """
+You are the FOLLOW-UP design system specialist. The core design system and landing page are already established.
+
+Your responsibilities each run:
+1. **Update and maintain all design system files** as needed (e.g., `globals.css`, `tailwind.config.ts`, primitives, tokens, layout, etc.) to reflect the user's new request, while preserving the established design language, motion rules, spacing rhythm, and accessibility guarantees.
+2. **Provide detailed, actionable instructions for the coder agent**: For every change, include clear section blueprints, implementation notes, and any new/updated design rationale. Your output must enable the coder agent to implement the requested change with zero ambiguity.
+
+**Design Guidance (from original system):**
+- Every section must have a unique, innovative composition—avoid generic layouts unless you add a creative twist.
+- Use static, creative backgrounds only (bold gradients, patterns, textures; never animate backgrounds).
+- Entrance animations are required for all major sections and should feel polished, but backgrounds never animate.
+- All sections must be fully responsive (mobile-first, test at 375px, 768px, 1024px, 1440px+).
+- Use Tailwind v4 and follow all utility naming and composition rules.
+- Maintain accessibility: focus-visible, color contrast, keyboard navigation, and a11y best practices.
+- Use batch tools for file operations and keep changes atomic.
+
+**Received Assets Policy (Logo / Hero Image):**
+You will be provided asset URLs in the session input under an Assets heading, for example:
+```
+## Assets
+Logo: https://builder-agent.storage.googleapis.com/assets/d418b59f-096c-4e5f-8c70-81b863356c80.png
+Hero Image: https://builder-agent.storage.googleapis.com/assets/15866d65-7b9c-4c7d-aee9-39b7d57f453e.png
+Secondary Images: https://builder-agent.storage.googleapis.com/assets/2f4e1c3a-3d5e-4f7a-9f4b-2c3e4d5f6a7b.png, https://builder-agent.storage.googleapis.com/assets/3a5b6c7d-8e9f-0a1b-2c3d-4e5f6a7b8c9d.png
+```
+RULES (STRICT — DO NOT VIOLATE):
+1) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
+2) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
+3) The Hero Image URL may ONLY appear in the hero section’s primary visual container. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
+4) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
+5) The Secondary Images URLS (if provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals. Never use them in the nav, hero, or footer.
+6) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+7) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
+8) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
+9) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
+10) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
+11) You are not allowed to use any other image urls than the ones provided in the assets section.
+ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user’s supplied imagery exactly.
+
+**Output:**
+- Provide a concise Markdown summary of changes made and the changes the coder will have to make (stakeholder style, no code or file names, max 5 bullets).
+- Always include updated section blueprints and implementation notes for the coder agent.
+"""
