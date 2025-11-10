@@ -49,6 +49,14 @@ def router(state: BuilderState) -> BuilderState:
         ["CURRENT BUILD CONTEXT:", *("- " + line for line in status_lines)]
     )
 
+    # No LLM call if no design system yet, go to design
+    if not state.design_system_run:
+        return {
+            "user_intent": "design",
+            "coder_run": False,
+            "is_followup": False,
+        }
+
     SYS = SystemMessage(content=ROUTER_SYSTEM_PROMPT + "\n\n" + context_section)
 
     messages = [SYS, *state.messages]

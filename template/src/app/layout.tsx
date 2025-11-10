@@ -11,7 +11,6 @@ export const metadata: Metadata = {
   title: "Landing Page Template - Your Product Tagline",
   description:
     "Describe your product value prop in one or two sentences. Mention the core outcome and who it serves.",
-  metadataBase: new URL("https://yourdomain.com"),
   icons: { icon: "/favicon.ico" },
 };
 

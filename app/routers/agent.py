@@ -6,11 +6,39 @@ from langchain_core.messages import HumanMessage
 from app.agent.graph import agent
 from app.agent.tools.files import get_session_dir, clear_session_dir
 from pathlib import Path
+import os
 import json
 import subprocess
 import re
+from typing import Sequence
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
+# Repository root (backend code lives here)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# Resolve storage root similar to shell scripts (manage_dev_server.sh, init_app.sh)
+# Priority order:
+# 1. Explicit OUTPUT_PATH env var
+# 2. ./storage for local/development/testing
+# 3. /mnt/storage for other envs
+# 4. Fallback to __out__ (backward compatibility) if specified root doesn't exist
+ENV = os.getenv("ENV", "local")
+output_path_env = os.getenv("OUTPUT_PATH")
+if output_path_env:
+    STORAGE_ROOT = Path(output_path_env)
+else:
+    if ENV in ("local", "development", "testing"):
+        STORAGE_ROOT = REPO_ROOT / "storage"
+    else:
+        STORAGE_ROOT = Path("/mnt/storage")
+
+if not STORAGE_ROOT.exists() and (REPO_ROOT / "__out__").exists():
+    STORAGE_ROOT = REPO_ROOT / "__out__"
+
+# Keep WORKSPACE_ROOT for script cwd usage (expects access to ./scripts, ./template, etc.)
+WORKSPACE_ROOT = REPO_ROOT
+
+print(f"[AGENT] ENV={ENV} REPO_ROOT={REPO_ROOT} STORAGE_ROOT={STORAGE_ROOT}")
 
 router = APIRouter()
 
@@ -131,24 +159,63 @@ class InitRequest(BaseModel):
     session_id: str | None = None
 
 
+def _run_with_live_logs(
+    cmd: Sequence[str], cwd: Path, label: str, timeout: int = 300
+) -> subprocess.CompletedProcess:
+    """Run a command streaming stdout lines immediately to logs.
+
+    Returns a CompletedProcess-like object with aggregated stdout/stderr for later inspection.
+    """
+    print(f"[{label}] EXEC: {' '.join(cmd)} (cwd={cwd})")
+    try:
+        process = subprocess.Popen(
+            list(cmd),
+            cwd=str(cwd),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+    except Exception as e:
+        print(f"[{label}] ERROR: Failed to start process: {e}")
+        raise
+
+    lines: list[str] = []
+    try:
+        for line in process.stdout:  # type: ignore
+            if line is None:
+                break
+            clean = line.rstrip("\n")
+            lines.append(line)
+            if clean:
+                print(f"[{label}] {clean}")
+        ret_code = process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        print(f"[{label}] ERROR: Timeout after {timeout}s; process killed")
+        ret_code = -1
+    except Exception as e:
+        print(f"[{label}] ERROR: Exception while streaming logs: {e}")
+        ret_code = -1
+
+    stdout_all = "".join(lines)
+    # Build a CompletedProcess surrogate
+    return subprocess.CompletedProcess(cmd, ret_code, stdout_all, None)
+
+
 def ensure_dev_server(session_id: str, context_label: str) -> None:
     try:
-        result = subprocess.run(
+        result = _run_with_live_logs(
             ["bash", "scripts/manage_dev_server.sh", session_id],
-            cwd=str(WORKSPACE_ROOT),
-            capture_output=True,
-            text=True,
+            WORKSPACE_ROOT,
+            f"{context_label}-DEV",
             timeout=45,
         )
         if result.returncode == 0:
-            if result.stdout.strip():
-                print(f"[{context_label}] manage_dev_server → {result.stdout.strip()}")
+            print(f"[{context_label}] Dev server ensured for session {session_id}")
         else:
-            combined = (result.stderr or "") + (
-                "\n" + result.stdout if result.stdout else ""
-            )
             print(
-                f"[{context_label}] WARNING: manage_dev_server failed (code {result.returncode}): {combined.strip()}"
+                f"[{context_label}] WARNING: manage_dev_server exit {result.returncode}. Raw output follows:\n{result.stdout}"  # type: ignore
             )
     except Exception as exc:
         print(f"[{context_label}] WARNING: Exception while managing dev server: {exc}")
@@ -173,43 +240,31 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
         # Initialize Next.js project
         print(f"[CHAT] Initializing Next.js app for session {session_id}")
         try:
-            result = subprocess.run(
+            result = _run_with_live_logs(
                 ["bash", "scripts/init_app.sh", session_id],
-                cwd=str(WORKSPACE_ROOT),
-                capture_output=True,
-                text=True,
+                WORKSPACE_ROOT,
+                "CHAT-init",
                 timeout=300,
             )
             if result.returncode == 0:
                 print(f"[CHAT] Next.js app initialized successfully")
-                if result.stdout:
-                    print(f"[CHAT] Init output:\n{result.stdout}")
-
-                # Install base dependencies in a separate step
-                install_result = subprocess.run(
+                install_result = _run_with_live_logs(
                     ["bash", "scripts/install_base_dependencies.sh", session_id],
-                    cwd=str(WORKSPACE_ROOT),
-                    capture_output=True,
-                    text=True,
+                    WORKSPACE_ROOT,
+                    "CHAT-install",
                     timeout=300,
                 )
                 if install_result.returncode == 0:
                     print(f"[CHAT] Base dependencies installed successfully")
-                    if install_result.stdout:
-                        print(f"[CHAT] Install output:\n{install_result.stdout}")
+                    app_ready = True
                 else:
                     print(
-                        f"[CHAT] WARNING: Failed to install base dependencies: {install_result.stderr}"
+                        f"[CHAT] WARNING: install_base_dependencies exit {install_result.returncode}"
                     )
-                    if install_result.stdout:
-                        print(f"[CHAT] Install stdout:\n{install_result.stdout}")
-                app_ready = True
             else:
                 print(
-                    f"[CHAT] WARNING: Failed to initialize Next.js app: {result.stderr}"
+                    f"[CHAT] WARNING: init_app failed exit {result.returncode}. Output captured above."
                 )
-                if result.stdout:
-                    print(f"[CHAT] Stdout:\n{result.stdout}")
         except Exception as e:
             print(f"[CHAT] WARNING: Exception during Next.js init: {e}")
     else:
@@ -275,42 +330,31 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
         # Initialize Next.js project
         print(f"[STREAM] Initializing Next.js app for session {session_id}")
         try:
-            result = subprocess.run(
+            result = _run_with_live_logs(
                 ["bash", "scripts/init_app.sh", session_id],
-                cwd=str(WORKSPACE_ROOT),
-                capture_output=True,
-                text=True,
+                WORKSPACE_ROOT,
+                "STREAM-init",
                 timeout=300,
             )
             if result.returncode == 0:
                 print(f"[STREAM] Next.js app initialized successfully")
-                if result.stdout:
-                    print(f"[STREAM] Init output:\n{result.stdout}")
-
-                install_result = subprocess.run(
+                install_result = _run_with_live_logs(
                     ["bash", "scripts/install_base_dependencies.sh", session_id],
-                    cwd=str(WORKSPACE_ROOT),
-                    capture_output=True,
-                    text=True,
+                    WORKSPACE_ROOT,
+                    "STREAM-install",
                     timeout=300,
                 )
                 if install_result.returncode == 0:
                     print(f"[STREAM] Base dependencies installed successfully")
-                    if install_result.stdout:
-                        print(f"[STREAM] Install output:\n{install_result.stdout}")
+                    app_ready = True
                 else:
                     print(
-                        f"[STREAM] WARNING: Failed to install base dependencies: {install_result.stderr}"
+                        f"[STREAM] WARNING: install_base_dependencies exit {install_result.returncode}"
                     )
-                    if install_result.stdout:
-                        print(f"[STREAM] Install stdout:\n{install_result.stdout}")
-                app_ready = True
             else:
                 print(
-                    f"[STREAM] WARNING: Failed to initialize Next.js app: {result.stderr}"
+                    f"[STREAM] WARNING: init_app failed exit {result.returncode}. Output captured above."
                 )
-                if result.stdout:
-                    print(f"[STREAM] Stdout:\n{result.stdout}")
         except Exception as e:
             print(f"[STREAM] WARNING: Exception during Next.js init: {e}")
     else:
@@ -917,19 +961,17 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
     if is_first_message:
         clear_session_dir(session_id)
         try:
-            result = subprocess.run(
+            result = _run_with_live_logs(
                 ["bash", "scripts/init_app.sh", session_id],
-                cwd=str(WORKSPACE_ROOT),
-                capture_output=True,
-                text=True,
+                WORKSPACE_ROOT,
+                "INIT-init",
                 timeout=300,
             )
             if result.returncode == 0:
-                install_result = subprocess.run(
+                install_result = _run_with_live_logs(
                     ["bash", "scripts/install_base_dependencies.sh", session_id],
-                    cwd=str(WORKSPACE_ROOT),
-                    capture_output=True,
-                    text=True,
+                    WORKSPACE_ROOT,
+                    "INIT-install",
                     timeout=300,
                 )
                 app_ready = install_result.returncode == 0

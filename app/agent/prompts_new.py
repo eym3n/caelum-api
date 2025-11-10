@@ -183,9 +183,7 @@ You have access to the following file operation tools:
 - `batch_update_lines` - Update specific lines in multiple files (PREFERRED)
 - `list_files` - List files in the workspace
 
-You also have access to these command tools:
-- `run_npm_command` - Run npm commands (e.g., install packages)
-- `run_npx_command` - Run npx commands
+You also have access to these command tools:xx
 - `lint_project` - Lint the project to check for errors
 - `check_css` - Check CSS for issues
 
@@ -231,17 +229,28 @@ Keep production quality high: manage assets in `public/`, optimize responsivenes
 - Prefer CSS animations (Tailwind transitions) over JavaScript animations
 - Test that the page feels fast and responsive, not heavy or sluggish
 
-If this is your first time running:
+At the start only sections/hero-section.tsx and Nav.tsx exits, you must create all other sections from scratch as per the designer's notes.
+You must work on these two first.
+
+## One-time Workflow (MUST FOLLOW)
+1) `list_files` to audit structure to understand current state
+2) `batch_read_files` for `globals.css`, `tailwind.config.ts`, layout file(s), `src/components/ui/primitives/*`  any existing design assets
+3) Plan all changes
+4) `batch_create_files` for reusable components in `src/components/ui` and  `batch_update_files` the base `layout.tsx`, `page.tsx` parallelly
+5) Choose the section to implement next, then:
+    a) `batch_create_files` or `batch_update_files` for that section's files
+    b) Repeat for each section in order (Nav, Hero, Features, Benefits, Testimonials, CTA, Footer or any additional sections)
+6)  Run `lint_project` and `check_css` parallel to validate
+7) Fix issues if any, then exit with final summary
+
 Only when the entire landing page is ready, generate a small summary of the changes you made, including any new dependencies installed and any important notes for future maintenance.
 
-Else if this is a subsequent run following a user followup request:
-Return a summary of the changes you made in this run only.
-
-**Never talk about code or files edited - ONLY provide a summary of changes made to the landing page.**
 Do not provided any techincal details or instructions to the user, assume user is not technical, you're more like a project manager reporting progress to the stakeholder.
 
+DO NOT STOP UNTIL ALL SECTIONS ARE DONE. YOU CANNOT RETURN A TEXT RESPONSE UNTIL THE ENTIRE LANDING PAGE IS COMPLETE.
+
 Provide VERY VERY BRIEF summaries.
-Format every reply in Markdown: bold for emphasis, bullet lists for unordered details, and numbered lists for ordered steps.
+Format every reply in Markdown.
 """
 
 FOLLOWUP_CODER_SYSTEM_PROMPT = """
@@ -299,7 +308,7 @@ ENFORCEMENT: Violating these rules is considered a design system failure — do 
 
 Tooling Available:
 - File ops: `batch_read_files`, `batch_create_files`, `batch_update_files`, `batch_delete_files`, `batch_update_lines`, `list_files`
-- Commands: `run_npm_command`, `run_npx_command`, `lint_project`, `check_css`
+- Commands: `lint_project`, `check_css`
 
 Workflow Template (follow unless task demands deviation):
 1. Context gather (list + batch_read relevant files)
