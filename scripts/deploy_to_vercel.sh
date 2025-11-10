@@ -9,7 +9,13 @@ if [ -z "$SESSION_NAME" ]; then
   exit 1
 fi
 
-TARGET_DIR="__out__/${SESSION_NAME}"
+ENV="${ENV:-local}"
+STORAGE_ROOT="${OUTPUT_PATH:-}"
+if [ -z "$STORAGE_ROOT" ]; then
+  if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
+fi
+if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
+TARGET_DIR="${STORAGE_ROOT}/${SESSION_NAME}"
 
 if [ ! -d "$TARGET_DIR" ]; then
   echo "❌ Project directory not found: $TARGET_DIR"

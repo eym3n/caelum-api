@@ -12,7 +12,22 @@ if [ -z "$SESSION_ID" ]; then
   exit 1
 fi
 
-APP_DIR="$ROOT_DIR/__out__/$SESSION_ID"
+# Determine storage root based on ENV / OUTPUT_PATH
+ENV="${ENV:-local}"
+STORAGE_ROOT="${OUTPUT_PATH:-}"
+if [ -z "$STORAGE_ROOT" ]; then
+  if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then
+    STORAGE_ROOT="$ROOT_DIR/storage"
+  else
+    STORAGE_ROOT="/mnt/storage"
+  fi
+fi
+if [ ! -d "$STORAGE_ROOT" ] && [ -d "$ROOT_DIR/__out__" ]; then
+  STORAGE_ROOT="$ROOT_DIR/__out__" # backward compatibility
+fi
+mkdir -p "$STORAGE_ROOT"
+
+APP_DIR="$STORAGE_ROOT/$SESSION_ID"
 if [ ! -d "$APP_DIR" ]; then
   echo "❌ App directory '$APP_DIR' not found. Run init_app.sh first." >&2
   exit 1

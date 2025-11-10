@@ -2,9 +2,15 @@
 
 set -euo pipefail
 
-PROJECT_NAME="$1"
-
-APP_DIR="__out__/${PROJECT_NAME}"
+PROJECT_NAME="${1:-}"
+if [ -z "$PROJECT_NAME" ]; then echo "Usage: $0 <project-name>"; exit 1; fi
+ENV="${ENV:-local}"
+STORAGE_ROOT="${OUTPUT_PATH:-}"
+if [ -z "$STORAGE_ROOT" ]; then
+  if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
+fi
+if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
+APP_DIR="${STORAGE_ROOT}/${PROJECT_NAME}"
 if [ ! -d "$APP_DIR" ]; then
   echo "❌ Project '$PROJECT_NAME' not found!"
   exit 1

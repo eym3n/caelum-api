@@ -2,10 +2,20 @@
 
 set -euo pipefail
 
-SESSION_NAME="$1"
-TARGET_DIR="__out__/${SESSION_NAME}"
-
-mkdir -p "__out__"
+SESSION_NAME="${1:-}"
+if [ -z "$SESSION_NAME" ]; then echo "Usage: $0 <session-name>"; exit 1; fi
+ENV="${ENV:-local}"
+STORAGE_ROOT="${OUTPUT_PATH:-}"
+if [ -z "$STORAGE_ROOT" ]; then
+  if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then
+    STORAGE_ROOT="./storage"
+  else
+    STORAGE_ROOT="/mnt/storage"
+  fi
+fi
+if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
+mkdir -p "$STORAGE_ROOT"
+TARGET_DIR="${STORAGE_ROOT}/${SESSION_NAME}"
 
 if [ -d "${TARGET_DIR}" ] && [ -f "${TARGET_DIR}/package.json" ]; then
   echo "✅ Next.js app already exists at ${TARGET_DIR}. Skipping initialization."
