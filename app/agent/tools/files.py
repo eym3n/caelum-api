@@ -7,8 +7,10 @@ from typing import Annotated
 from langchain_core.tools import tool, InjectedToolArg
 from langchain_core.runnables import RunnableConfig
 from pydantic import BaseModel
+from app.config import Config
 
-OUTPUT_DIR = "__out__"
+OUTPUT_DIR = Config.OUTPUT_PATH
+print(f"[FILES] Using OUTPUT_DIR: {OUTPUT_DIR}")
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 

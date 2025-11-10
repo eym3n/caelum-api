@@ -10,6 +10,8 @@ load_dotenv()
 # Determine environment
 ENV = os.getenv("ENV", "local")  # Default to local
 
+print(f"Loading configuration for ENV: {ENV}")
+
 if ENV == "local":
     load_dotenv()
 elif ENV == "testing" and os.getenv("TRAVIS"):
@@ -32,3 +34,5 @@ class Config:
 
     GCS_CLIENT = storage.Client() if ENV != "local" else None
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", "builder-agent")
+
+    OUTPUT_PATH = "./storage" if ENV in ["local", "testing"] else "/mnt/storage"
