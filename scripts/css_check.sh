@@ -13,11 +13,20 @@ if [ -z "$STORAGE_ROOT" ]; then
     STORAGE_ROOT="/mnt/storage"
   fi
 fi
+# If running in container (has /mnt/storage) but chosen root is ./storage and project absent, prefer /mnt/storage
+if [ -d "/mnt/storage" ] && [[ "$STORAGE_ROOT" == "./storage" || "$STORAGE_ROOT" == "__out__" ]]; then
+  ALT_DIR="/mnt/storage/${PROJECT_NAME}"
+fi
 if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
-echo "[css_check] Using STORAGE_ROOT='$STORAGE_ROOT' (ENV=$ENV OUTPUT_PATH='${OUTPUT_PATH:-}')"
 APP_DIR="${STORAGE_ROOT}/${PROJECT_NAME}"
+if [ ! -d "$APP_DIR" ] && [ -n "${ALT_DIR:-}" ] && [ -d "$ALT_DIR" ]; then
+  echo "[css_check] Fallback: switching STORAGE_ROOT to /mnt/storage"
+  STORAGE_ROOT="/mnt/storage"
+  APP_DIR="$ALT_DIR"
+fi
+echo "[css_check] Using STORAGE_ROOT='$STORAGE_ROOT' (ENV=$ENV OUTPUT_PATH='${OUTPUT_PATH:-}')"
 if [ ! -d "$APP_DIR" ]; then
-  echo "❌ Project '$PROJECT_NAME' not found!"
+  echo "❌ Project '$PROJECT_NAME' not found in '$STORAGE_ROOT' (checked ALT='${ALT_DIR:-none}')"
   exit 1
 fi
 
@@ -29,9 +38,18 @@ if [ ! -d "node_modules" ]; then
   exit 1
 fi
 
-CSS_INPUT="src/app/globals.css"
-if [ ! -f "$CSS_INPUT" ]; then
-  echo "❌ ERROR: globals.css not found at $CSS_INPUT"
+CSS_CANDIDATES=(
+  "src/app/globals.css"
+  "app/globals.css"
+  "src/styles/globals.css"
+  "styles/globals.css"
+)
+CSS_INPUT=""
+for f in "${CSS_CANDIDATES[@]}"; do
+  if [ -f "$f" ]; then CSS_INPUT="$f"; break; fi
+done
+if [ -z "$CSS_INPUT" ]; then
+  echo "❌ ERROR: globals.css not found in any candidate path (${CSS_CANDIDATES[*]})"
   popd >/dev/null
   exit 1
 fi

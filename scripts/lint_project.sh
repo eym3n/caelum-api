@@ -12,10 +12,16 @@ if [ -z "$STORAGE_ROOT" ]; then
     fi
 fi
 if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
-echo "[lint_project] Using STORAGE_ROOT='$STORAGE_ROOT' (ENV=$ENV OUTPUT_PATH='${OUTPUT_PATH:-}')"
 TARGET_DIR="$STORAGE_ROOT/$PROJECT_NAME"
+ALT_DIR="/mnt/storage/$PROJECT_NAME"
+if [ ! -d "$TARGET_DIR" ] && [ -d "/mnt/storage" ] && [ -d "$ALT_DIR" ]; then
+    echo "[lint_project] Fallback: switching STORAGE_ROOT to /mnt/storage"
+    STORAGE_ROOT="/mnt/storage"
+    TARGET_DIR="$ALT_DIR"
+fi
+echo "[lint_project] Using STORAGE_ROOT='$STORAGE_ROOT' (ENV=$ENV OUTPUT_PATH='${OUTPUT_PATH:-}')"
 if [ ! -d "$TARGET_DIR" ]; then
-    echo "❌ Project '$PROJECT_NAME' not found in $STORAGE_ROOT"
+    echo "❌ Project '$PROJECT_NAME' not found (checked '$STORAGE_ROOT' ALT='/mnt/storage')"
     exit 1
 fi
 cd "$TARGET_DIR"

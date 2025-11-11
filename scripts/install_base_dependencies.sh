@@ -31,13 +31,20 @@ if [ ! -d "$TEMPLATE_DIR" ]; then
 fi
 
 if ! command -v rsync >/dev/null 2>&1; then
-  echo "❌ rsync command not found. Please install rsync."
-  exit 1
+  echo "⚠️  rsync not found; falling back to 'cp -R' (less efficient, no delete sync)."
+  USE_RSYNC=0
+else
+  USE_RSYNC=1
 fi
 
 if [ ! -f "$STAMP_FILE" ]; then
   echo "🧱 Applying base template to '${SESSION_NAME}'..."
-  rsync -a --delete "$TEMPLATE_DIR"/ "$TARGET_DIR"/
+  if [ "$USE_RSYNC" -eq 1 ]; then
+    rsync -a --delete "$TEMPLATE_DIR"/ "$TARGET_DIR"/
+  else
+    cp -R "$TEMPLATE_DIR"/. "$TARGET_DIR"/
+    # Emulate delete semantics minimally: remove package-lock if present
+  fi
   rm -f "${TARGET_DIR}/package-lock.json"
   touch "$STAMP_FILE"
 else
