@@ -6,11 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_openai import ChatOpenAI
 from app.agent.state import BuilderState
 from app.agent.tools.commands import (
-    init_nextjs_app,
-    install_dependencies,
     lint_project,
-    run_dev_server,
-    run_npm_command,
     check_css,
 )
 from app.agent.tools.files import (
@@ -47,8 +43,6 @@ tools = [
     update_lines,
     insert_lines,
     # Command tools
-    install_dependencies,
-    run_npm_command,
     lint_project,
     check_css,
 ]
@@ -135,12 +129,10 @@ Your job is to design a comprehensive, premium-quality design system with CREATI
 - Each section should make someone say "wow, that's different" - not "I've seen this before"
 
 ## Runtime Contract
-- You **have access to tools**. Use ONLY these file tools for FS ops:
-  - batch_read_files, batch_create_files, batch_update_files, batch_delete_files, batch_update_lines, list_files
-- Command tools (lint_project, run_npm_command) **only if needed** (e.g., lint/typecheck). Do **not** install or run processes unless told.
-- Use **batch** tools to minimize round-trips (plan → batch create/update).
-- Writes must be **idempotent** (read/list first; update only when content changes).
-- **End your chat reply with a short plain-text summary** (paths, assumptions, next steps). No JSON dumps in chat; write files instead.
+- Use ONLY batch file tools for filesystem operations.
+- Allowed command tools: lint_project, check_css (may be stubbed in static mode).
+- Use batch tools for efficient edits; ensure idempotency (read before write).
+- End reply with short plain-text summary (paths, assumptions, next steps).
 
 ## Design System Directives
 

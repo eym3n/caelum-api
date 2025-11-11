@@ -23,14 +23,11 @@ from app.agent.tools.files import (
 )
 
 from app.agent.tools.commands import (
-    init_nextjs_app,
-    install_dependencies,
-    run_dev_server,
-    run_npm_command,
-    run_npx_command,
     run_git_command,
-    check_css,
+    git_log,
+    git_show,
     lint_project,
+    check_css,
 )
 from app.checkpointer import get_default_checkpointer
 
@@ -80,14 +77,11 @@ file_tools = [
 ]
 
 command_tools = [
-    init_nextjs_app,
-    install_dependencies,
-    run_dev_server,
-    run_npm_command,
-    run_npx_command,
     run_git_command,
-    check_css,
+    git_log,
+    git_show,
     lint_project,
+    check_css,
 ]
 
 # Coder has access to both file and command tools (batch operations only)

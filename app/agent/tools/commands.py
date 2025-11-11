@@ -68,213 +68,49 @@ def _run_with_live_logs(
 
 
 @tool
-def init_nextjs_app(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
-    """Initialize a new Next.js application with TypeScript, Tailwind CSS, and ESLint.
+def create_static_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
+    """Create (copy) a static Next.js project from the internal template.
 
-    This creates a complete Next.js project structure in the session directory.
-    Only call this ONCE at the start of a new project.
-
-    Returns:
-        Success message with project details or error message.
+    This simply copies the contents of the `template/` directory into the
+    session's storage directory. Safe to call multiple times (idempotent via stamp file).
+    No npm installs, linting, or builds are performed.
     """
     session_id = _get_session_from_config(config)
-
     print(
-        f"[COMMANDS] init_nextjs_app → Initializing Next.js app for session {session_id}"
+        f"[COMMANDS] create_static_project → Copying template for session {session_id}"
     )
-
     try:
         result = _run_with_live_logs(
-            ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
-            label="init_nextjs_app",
-            timeout=240,
+            ["bash", str(SCRIPTS_DIR / "copy_template.sh"), session_id],
+            label="create_static_project",
+            timeout=60,
         )
         if result.returncode == 0:
-            output = (
-                "✓ Next.js app initialized successfully!\n\nProject includes:\n"
-                "- TypeScript\n- Tailwind CSS\n- App Router\n- ESLint\n- src/ directory structure\n\n"
-                "You can now create and edit files in the project."
-            )
-            print("[COMMANDS] init_nextjs_app → SUCCESS")
-            return output
+            print("[COMMANDS] create_static_project → SUCCESS")
+            return "✓ Static project ready (template copied)."
         else:
-            print(f"[COMMANDS] init_nextjs_app → ERROR exit {result.returncode}")
-            return f"Error initializing Next.js app (exit {result.returncode}).\n\n" + (
+            print(f"[COMMANDS] create_static_project → ERROR exit {result.returncode}")
+            return f"Error copying template (exit {result.returncode}).\n\n" + (
                 result.stdout or "(no output)"
             )
     except subprocess.TimeoutExpired:
-        print("[COMMANDS] init_nextjs_app → TIMEOUT")
-        return "Error: Command timed out after 240 seconds"
+        print("[COMMANDS] create_static_project → TIMEOUT")
+        return "Error: Template copy timed out after 60 seconds"
     except Exception as e:
-        print(f"[COMMANDS] init_nextjs_app → EXCEPTION: {e}")
+        print(f"[COMMANDS] create_static_project → EXCEPTION: {e}")
         return f"Error: {str(e)}"
 
 
-@tool
-def install_dependencies(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
-    """Install npm dependencies for the Next.js project.
-
-    Run this after initializing the app or when package.json is modified.
-
-    Returns:
-        Success message or error message.
-    """
-    session_id = _get_session_from_config(config)
-
-    print(f"[COMMANDS] install_dependencies → Installing for session {session_id}")
-
-    try:
-        result = _run_with_live_logs(
-            ["bash", str(SCRIPTS_DIR / "install.sh"), session_id],
-            label="install_dependencies",
-            timeout=240,
-        )
-        if result.returncode == 0:
-            print("[COMMANDS] install_dependencies → SUCCESS")
-            return "✓ Dependencies installed successfully!\n\n" + (result.stdout or "")
-        else:
-            print(f"[COMMANDS] install_dependencies → ERROR exit {result.returncode}")
-            return f"Error installing dependencies (exit {result.returncode}).\n\n" + (
-                result.stdout or "(no output)"
-            )
-    except subprocess.TimeoutExpired:
-        print("[COMMANDS] install_dependencies → TIMEOUT")
-        return "Error: Command timed out after 240 seconds."
-    except Exception as e:
-        print(f"[COMMANDS] install_dependencies → EXCEPTION: {e}")
-        return f"Error: {str(e)}"
+# Removed: install_dependencies (no npm operations in static template mode)
 
 
-@tool
-def run_dev_server(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
-    """Start the Next.js development server.
-
-    This runs 'npm run dev' to start the development server.
-    Note: The server will run in the background. Use this to test the app.
-
-    Returns:
-        Success message or error message.
-    """
-    session_id = _get_session_from_config(config)
-
-    print(f"[COMMANDS] run_dev_server → Starting dev server for session {session_id}")
-
-    try:
-        process = subprocess.Popen(
-            ["bash", str(SCRIPTS_DIR / "run_app.sh"), session_id],
-            cwd=str(REPO_ROOT),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        try:
-            stdout, stderr = process.communicate(timeout=5)
-            if process.returncode and process.returncode != 0:
-                print(f"[COMMANDS] run_dev_server → ERROR exit {process.returncode}")
-                return (
-                    f"Error starting dev server (exit {process.returncode}).\n{stderr}"
-                )
-        except subprocess.TimeoutExpired:
-            print("[COMMANDS] run_dev_server → Server starting (background)")
-            return (
-                "✓ Development server is starting!\n\n"
-                "App should be available at http://localhost:3000 (once ready).\n"
-                "Server runs in background."
-            )
-        print("[COMMANDS] run_dev_server → SUCCESS")
-        return "✓ Development server started!\n\n" + (stdout or "")
-
-    except Exception as e:
-        print(f"[COMMANDS] run_dev_server → EXCEPTION: {e}")
-        return f"Error: {str(e)}"
+# Removed: run_dev_server (static project; no dev server management)
 
 
-@tool
-def run_npm_command(
-    command: str, config: Annotated[RunnableConfig, InjectedToolArg]
-) -> str:
-    """Run any npm command in the Next.js project directory.
-
-    Use this to run npm scripts, install packages, or execute any npm command.
-
-    Args:
-        command: The npm command to run (e.g., "run build", "install react-icons", "list")
-
-    Returns:
-        Command output or error message.
-    """
-    session_id = _get_session_from_config(config)
-
-    print(
-        f"[COMMANDS] run_npm_command → Running 'npm {command}' for session {session_id}"
-    )
-
-    try:
-        result = _run_with_live_logs(
-            ["bash", str(SCRIPTS_DIR / "run_npm_command.sh"), session_id, command],
-            label="run_npm_command",
-            timeout=180,
-        )
-        output = result.stdout or ""
-        if result.returncode == 0:
-            print("[COMMANDS] run_npm_command → SUCCESS")
-            return "✓ Command completed successfully!\n\n" + output
-        else:
-            print(f"[COMMANDS] run_npm_command → ERROR exit {result.returncode}")
-            return f"Error running command (exit {result.returncode}).\n\n" + output
-    except subprocess.TimeoutExpired:
-        print("[COMMANDS] run_npm_command → TIMEOUT")
-        return "Error: Command timed out after 180 seconds"
-    except Exception as e:
-        print(f"[COMMANDS] run_npm_command → EXCEPTION: {e}")
-        return f"Error: {str(e)}"
+# Removed: run_npm_command
 
 
-@tool
-def run_npx_command(
-    command: str, config: Annotated[RunnableConfig, InjectedToolArg]
-) -> str:
-    """Run any npx command in the project directory.
-
-    Ideal for installing shadcn components or executing CLI utilities.
-
-    Args:
-        command: npx command arguments (e.g., "shadcn@latest add @shadcn/ui/spotlight")
-
-    Returns:
-        Command output or error details.
-    """
-
-    session_id = _get_session_from_config(config)
-
-    print(
-        f"[COMMANDS] run_npx_command → Running 'npx {command}' for session {session_id}"
-    )
-
-    try:
-        result = _run_with_live_logs(
-            [
-                "bash",
-                str(SCRIPTS_DIR / "run_npx_command.sh"),
-                session_id,
-                *command.split(),
-            ],
-            label="run_npx_command",
-            timeout=240,
-        )
-        output = result.stdout or ""
-        if result.returncode == 0:
-            print("[COMMANDS] run_npx_command → SUCCESS")
-            return "✓ npx command completed successfully!\n\n" + output
-        else:
-            print(f"[COMMANDS] run_npx_command → ERROR exit {result.returncode}")
-            return f"Error running npx command (exit {result.returncode}).\n\n" + output
-    except subprocess.TimeoutExpired:
-        print("[COMMANDS] run_npx_command → TIMEOUT")
-        return "Error: npx command timed out after 240 seconds"
-    except Exception as e:
-        print(f"[COMMANDS] run_npx_command → EXCEPTION: {e}")
-        return f"Error: {str(e)}"
+# Removed: run_npx_command
 
 
 @tool
@@ -488,13 +324,66 @@ def check_css(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
 
 # Export all command tools
 command_tools = [
-    install_dependencies,
-    run_dev_server,
-    run_npm_command,
-    run_npx_command,
     run_git_command,
-    check_css,
     git_log,
     git_show,
-    lint_project,
 ]
+
+# Reintroduce lint_project and check_css as stub tools (Node tooling removed).
+from langchain_core.tools import tool as _tool_alias  # reuse decorator
+
+
+@_tool_alias
+def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
+    """Run oxlint + CSS check via lint_project.sh script."""
+    session_id = _get_session_from_config(config)
+    print(f"[COMMANDS] lint_project → oxlint lint for session {session_id}")
+    try:
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "lint_project.sh"), session_id],
+            label="lint_project",
+            timeout=180,
+        )
+        output = result.stdout or ""
+        if result.returncode == 0:
+            print("[COMMANDS] lint_project → SUCCESS")
+            return "✓ oxlint + CSS checks passed.\n\n" + output
+        else:
+            print(f"[COMMANDS] lint_project → ERROR exit {result.returncode}")
+            return f"❌ Lint/CSS checks failed (exit {result.returncode}).\n\n" + output
+    except subprocess.TimeoutExpired:
+        print("[COMMANDS] lint_project → TIMEOUT")
+        return "Error: lint timed out after 180s"
+    except Exception as e:
+        print(f"[COMMANDS] lint_project → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
+
+@_tool_alias
+def check_css(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
+    """Run globals.css validation script."""
+    session_id = _get_session_from_config(config)
+    print(f"[COMMANDS] check_css → CSS check for session {session_id}")
+    try:
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "css_check.sh"), session_id],
+            label="check_css",
+            timeout=120,
+        )
+        output = result.stdout or ""
+        if result.returncode == 0:
+            print("[COMMANDS] check_css → SUCCESS")
+            return "✓ CSS check passed.\n\n" + output
+        else:
+            print(f"[COMMANDS] check_css → ERROR exit {result.returncode}")
+            return f"❌ CSS check failed (exit {result.returncode}).\n\n" + output
+    except subprocess.TimeoutExpired:
+        print("[COMMANDS] check_css → TIMEOUT")
+        return "Error: CSS check timed out after 120s"
+    except Exception as e:
+        print(f"[COMMANDS] check_css → EXCEPTION: {e}")
+        return f"Error: {str(e)}"
+
+
+# Update command_tools with lint & css
+command_tools.extend([lint_project, check_css])

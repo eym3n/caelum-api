@@ -28,6 +28,7 @@ RUN set -eux; \
 	apt-get update; \
 	apt-get install -y nodejs rsync; \
 	node -v; npm -v; rsync --version | head -n 1; \
+	npm install -D oxlint; \
 	rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

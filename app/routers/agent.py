@@ -206,22 +206,24 @@ def _run_with_live_logs(
     return subprocess.CompletedProcess(cmd, ret_code, stdout_all, None)
 
 
-def ensure_dev_server(session_id: str, context_label: str) -> None:
+def _copy_static_project(session_id: str, label: str) -> bool:
+    """Copy static Next.js template for session. Returns True if ready."""
     try:
         result = _run_with_live_logs(
-            ["bash", str(SCRIPTS_DIR / "manage_dev_server.sh"), session_id],
+            ["bash", str(SCRIPTS_DIR / "copy_template.sh"), session_id],
             WORKSPACE_ROOT,
-            f"{context_label}-DEV",
-            timeout=45,
+            f"{label}-copy",
+            timeout=120,
         )
         if result.returncode == 0:
-            print(f"[{context_label}] Dev server ensured for session {session_id}")
+            print(f"[{label}] Static project copied for session {session_id}")
+            return True
         else:
-            print(
-                f"[{context_label}] WARNING: manage_dev_server exit {result.returncode}. Raw output follows:\n{result.stdout}"  # type: ignore
-            )
+            print(f"[{label}] WARNING: copy_template exit {result.returncode}")
+            return False
     except Exception as exc:
-        print(f"[{context_label}] WARNING: Exception while managing dev server: {exc}")
+        print(f"[{label}] WARNING: Exception during template copy: {exc}")
+        return False
 
 
 @router.post("/chat", response_model=ChatResponse)
@@ -240,45 +242,11 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
     if is_first_message:
         print(f"[CHAT] First message detected for session: {session_id}")
         clear_session_dir(session_id)
-        # Initialize Next.js project
-        print(f"[CHAT] Initializing Next.js app for session {session_id}")
-        try:
-            result = _run_with_live_logs(
-                ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
-                WORKSPACE_ROOT,
-                "CHAT-init",
-                timeout=300,
-            )
-            if result.returncode == 0:
-                print(f"[CHAT] Next.js app initialized successfully")
-                install_result = _run_with_live_logs(
-                    [
-                        "bash",
-                        str(SCRIPTS_DIR / "install_base_dependencies.sh"),
-                        session_id,
-                    ],
-                    WORKSPACE_ROOT,
-                    "CHAT-install",
-                    timeout=300,
-                )
-                if install_result.returncode == 0:
-                    print(f"[CHAT] Base dependencies installed successfully")
-                    app_ready = True
-                else:
-                    print(
-                        f"[CHAT] WARNING: install_base_dependencies exit {install_result.returncode}"
-                    )
-            else:
-                print(
-                    f"[CHAT] WARNING: init_app failed exit {result.returncode}. Output captured above."
-                )
-        except Exception as e:
-            print(f"[CHAT] WARNING: Exception during Next.js init: {e}")
+        print(f"[CHAT] Copying static project template for session {session_id}")
+        app_ready = _copy_static_project(session_id, "CHAT")
     else:
         print(f"[CHAT] Continuing session: {session_id}")
-
-    if app_ready:
-        ensure_dev_server(session_id, "CHAT")
+    # No dev server management in static mode
 
     last_text = ""
     for event in agent.stream(
@@ -334,45 +302,11 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
     if is_first_message:
         print(f"[STREAM] First message detected for session: {session_id}")
         clear_session_dir(session_id)
-        # Initialize Next.js project
-        print(f"[STREAM] Initializing Next.js app for session {session_id}")
-        try:
-            result = _run_with_live_logs(
-                ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
-                WORKSPACE_ROOT,
-                "STREAM-init",
-                timeout=300,
-            )
-            if result.returncode == 0:
-                print(f"[STREAM] Next.js app initialized successfully")
-                install_result = _run_with_live_logs(
-                    [
-                        "bash",
-                        str(SCRIPTS_DIR / "install_base_dependencies.sh"),
-                        session_id,
-                    ],
-                    WORKSPACE_ROOT,
-                    "STREAM-install",
-                    timeout=300,
-                )
-                if install_result.returncode == 0:
-                    print(f"[STREAM] Base dependencies installed successfully")
-                    app_ready = True
-                else:
-                    print(
-                        f"[STREAM] WARNING: install_base_dependencies exit {install_result.returncode}"
-                    )
-            else:
-                print(
-                    f"[STREAM] WARNING: init_app failed exit {result.returncode}. Output captured above."
-                )
-        except Exception as e:
-            print(f"[STREAM] WARNING: Exception during Next.js init: {e}")
+        print(f"[STREAM] Copying static project template for session {session_id}")
+        app_ready = _copy_static_project(session_id, "STREAM")
     else:
         print(f"[STREAM] Continuing session: {session_id}")
-
-    if app_ready:
-        ensure_dev_server(session_id, "STREAM")
+    # No dev server management in static mode
 
     def sse(data: dict) -> str:
         return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
@@ -971,29 +905,9 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
     app_ready = not is_first_message
     if is_first_message:
         clear_session_dir(session_id)
-        try:
-            result = _run_with_live_logs(
-                ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
-                WORKSPACE_ROOT,
-                "INIT-init",
-                timeout=300,
-            )
-            if result.returncode == 0:
-                install_result = _run_with_live_logs(
-                    [
-                        "bash",
-                        str(SCRIPTS_DIR / "install_base_dependencies.sh"),
-                        session_id,
-                    ],
-                    WORKSPACE_ROOT,
-                    "INIT-install",
-                    timeout=300,
-                )
-                app_ready = install_result.returncode == 0
-        except Exception as e:
-            print(f"[INIT] Exception during Next.js init: {e}")
-    if app_ready:
-        ensure_dev_server(session_id, "INIT")
+        print(f"[INIT] Copying static project template for session {session_id}")
+        app_ready = _copy_static_project(session_id, "INIT")
+    # No dev server management in static mode
 
     payload_text = _flatten_init_payload(req_payload)
     combined = "INITIAL CREATION PAYLOAD\n" + payload_text
