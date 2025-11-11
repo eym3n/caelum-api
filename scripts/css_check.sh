@@ -32,12 +32,6 @@ fi
 
 pushd "$APP_DIR" >/dev/null
 
-if [ ! -d "node_modules" ]; then
-  echo "⚠️  node_modules not found. Run install_dependencies first."
-  popd >/dev/null
-  exit 1
-fi
-
 CSS_CANDIDATES=(
   "src/app/globals.css"
   "app/globals.css"
