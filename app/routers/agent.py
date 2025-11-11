@@ -15,6 +15,7 @@ from typing import Sequence
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 # Repository root (backend code lives here)
 REPO_ROOT = Path(__file__).resolve().parents[2]
+SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 # Resolve storage root similar to shell scripts (manage_dev_server.sh, init_app.sh)
 # Priority order:
@@ -38,7 +39,9 @@ if not STORAGE_ROOT.exists() and (REPO_ROOT / "__out__").exists():
 # Keep WORKSPACE_ROOT for script cwd usage (expects access to ./scripts, ./template, etc.)
 WORKSPACE_ROOT = REPO_ROOT
 
-print(f"[AGENT] ENV={ENV} REPO_ROOT={REPO_ROOT} STORAGE_ROOT={STORAGE_ROOT}")
+print(
+    f"[AGENT] ENV={ENV} REPO_ROOT={REPO_ROOT} STORAGE_ROOT={STORAGE_ROOT} SCRIPTS_DIR={SCRIPTS_DIR}"
+)
 
 router = APIRouter()
 
@@ -206,7 +209,7 @@ def _run_with_live_logs(
 def ensure_dev_server(session_id: str, context_label: str) -> None:
     try:
         result = _run_with_live_logs(
-            ["bash", "scripts/manage_dev_server.sh", session_id],
+            ["bash", str(SCRIPTS_DIR / "manage_dev_server.sh"), session_id],
             WORKSPACE_ROOT,
             f"{context_label}-DEV",
             timeout=45,
@@ -241,7 +244,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
         print(f"[CHAT] Initializing Next.js app for session {session_id}")
         try:
             result = _run_with_live_logs(
-                ["bash", "scripts/init_app.sh", session_id],
+                ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
                 WORKSPACE_ROOT,
                 "CHAT-init",
                 timeout=300,
@@ -249,7 +252,11 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
             if result.returncode == 0:
                 print(f"[CHAT] Next.js app initialized successfully")
                 install_result = _run_with_live_logs(
-                    ["bash", "scripts/install_base_dependencies.sh", session_id],
+                    [
+                        "bash",
+                        str(SCRIPTS_DIR / "install_base_dependencies.sh"),
+                        session_id,
+                    ],
                     WORKSPACE_ROOT,
                     "CHAT-install",
                     timeout=300,
@@ -331,7 +338,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
         print(f"[STREAM] Initializing Next.js app for session {session_id}")
         try:
             result = _run_with_live_logs(
-                ["bash", "scripts/init_app.sh", session_id],
+                ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
                 WORKSPACE_ROOT,
                 "STREAM-init",
                 timeout=300,
@@ -339,7 +346,11 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
             if result.returncode == 0:
                 print(f"[STREAM] Next.js app initialized successfully")
                 install_result = _run_with_live_logs(
-                    ["bash", "scripts/install_base_dependencies.sh", session_id],
+                    [
+                        "bash",
+                        str(SCRIPTS_DIR / "install_base_dependencies.sh"),
+                        session_id,
+                    ],
                     WORKSPACE_ROOT,
                     "STREAM-install",
                     timeout=300,
@@ -962,14 +973,18 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
         clear_session_dir(session_id)
         try:
             result = _run_with_live_logs(
-                ["bash", "scripts/init_app.sh", session_id],
+                ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
                 WORKSPACE_ROOT,
                 "INIT-init",
                 timeout=300,
             )
             if result.returncode == 0:
                 install_result = _run_with_live_logs(
-                    ["bash", "scripts/install_base_dependencies.sh", session_id],
+                    [
+                        "bash",
+                        str(SCRIPTS_DIR / "install_base_dependencies.sh"),
+                        session_id,
+                    ],
                     WORKSPACE_ROOT,
                     "INIT-install",
                     timeout=300,

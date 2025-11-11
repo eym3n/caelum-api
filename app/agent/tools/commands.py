@@ -1,7 +1,14 @@
-"""Command execution tools for running shell scripts and npm commands."""
+"""Command execution tools for running shell scripts and npm commands.
+
+Refactored to use dynamic repository root resolution with absolute script paths so
+they work both locally and inside containers where CWD may differ. Adds a helper
+to stream logs line-by-line for better observability.
+"""
 
 import subprocess
-from typing import Annotated
+from pathlib import Path
+import os
+from typing import Annotated, Sequence
 
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import InjectedToolArg, tool
@@ -10,6 +17,54 @@ from langchain_core.tools import InjectedToolArg, tool
 def _get_session_from_config(config: RunnableConfig) -> str:
     """Extract session_id from config."""
     return config.get("configurable", {}).get("session_id", "default")
+
+
+# Resolve repository root (four levels up: /repo/app/agent/tools/commands.py → /repo)
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SCRIPTS_DIR = REPO_ROOT / "scripts"
+ENV = os.getenv("ENV", "local")
+print(f"[COMMANDS] ENV={ENV} REPO_ROOT={REPO_ROOT} SCRIPTS_DIR={SCRIPTS_DIR}")
+
+
+def _run_with_live_logs(
+    cmd: Sequence[str], label: str, timeout: int = 180
+) -> subprocess.CompletedProcess:
+    """Run a shell command streaming stdout lines immediately.
+
+    Returns a CompletedProcess surrogate with aggregated stdout for downstream parsing.
+    """
+    print(f"[{label}] EXEC: {' '.join(cmd)} (cwd={REPO_ROOT})")
+    try:
+        process = subprocess.Popen(
+            list(cmd),
+            cwd=str(REPO_ROOT),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+    except Exception as e:
+        print(f"[{label}] ERROR: Failed to start process: {e}")
+        raise
+    lines: list[str] = []
+    try:
+        for line in process.stdout:  # type: ignore[attr-defined]
+            if line is None:
+                break
+            lines.append(line)
+            clean = line.rstrip("\n")
+            if clean:
+                print(f"[{label}] {clean}")
+        ret_code = process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        print(f"[{label}] ERROR: Timeout after {timeout}s; process killed")
+        ret_code = -1
+    except Exception as e:
+        print(f"[{label}] ERROR: Exception while streaming: {e}")
+        ret_code = -1
+    stdout_all = "".join(lines)
+    return subprocess.CompletedProcess(cmd, ret_code, stdout_all, None)
 
 
 @tool
@@ -29,26 +84,27 @@ def init_nextjs_app(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     )
 
     try:
-        result = subprocess.run(
-            ["bash", "scripts/init_app.sh", session_id],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "init_app.sh"), session_id],
+            label="init_nextjs_app",
+            timeout=240,
         )
-
         if result.returncode == 0:
-            output = f"✓ Next.js app initialized successfully!\n\nProject includes:\n- TypeScript\n- Tailwind CSS\n- App Router\n- ESLint\n- src/ directory structure\n\nYou can now create and edit files in the project."
-            print(f"[COMMANDS] init_nextjs_app → SUCCESS")
+            output = (
+                "✓ Next.js app initialized successfully!\n\nProject includes:\n"
+                "- TypeScript\n- Tailwind CSS\n- App Router\n- ESLint\n- src/ directory structure\n\n"
+                "You can now create and edit files in the project."
+            )
+            print("[COMMANDS] init_nextjs_app → SUCCESS")
             return output
         else:
-            error_msg = f"Error initializing Next.js app:\n{result.stderr}"
-            print(f"[COMMANDS] init_nextjs_app → ERROR: {result.stderr}")
-            return error_msg
-
+            print(f"[COMMANDS] init_nextjs_app → ERROR exit {result.returncode}")
+            return f"Error initializing Next.js app (exit {result.returncode}).\n\n" + (
+                result.stdout or "(no output)"
+            )
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] init_nextjs_app → TIMEOUT")
-        return "Error: Command timed out after 75 seconds"
+        print("[COMMANDS] init_nextjs_app → TIMEOUT")
+        return "Error: Command timed out after 240 seconds"
     except Exception as e:
         print(f"[COMMANDS] init_nextjs_app → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -68,26 +124,22 @@ def install_dependencies(config: Annotated[RunnableConfig, InjectedToolArg]) -> 
     print(f"[COMMANDS] install_dependencies → Installing for session {session_id}")
 
     try:
-        result = subprocess.run(
-            ["bash", "scripts/install.sh", session_id],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "install.sh"), session_id],
+            label="install_dependencies",
+            timeout=240,
         )
-
         if result.returncode == 0:
-            output = f"✓ Dependencies installed successfully!\n\n{result.stdout}"
-            print(f"[COMMANDS] install_dependencies → SUCCESS")
-            return output
+            print("[COMMANDS] install_dependencies → SUCCESS")
+            return "✓ Dependencies installed successfully!\n\n" + (result.stdout or "")
         else:
-            error_msg = f"Error installing dependencies:\n{result.stderr}"
-            print(f"[COMMANDS] install_dependencies → ERROR: {result.stderr}")
-            return error_msg
-
+            print(f"[COMMANDS] install_dependencies → ERROR exit {result.returncode}")
+            return f"Error installing dependencies (exit {result.returncode}).\n\n" + (
+                result.stdout or "(no output)"
+            )
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] install_dependencies → TIMEOUT")
-        return "Error: Command timed out after 75 seconds. Try again or the installation may still be running in the background."
+        print("[COMMANDS] install_dependencies → TIMEOUT")
+        return "Error: Command timed out after 240 seconds."
     except Exception as e:
         print(f"[COMMANDS] install_dependencies → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -108,31 +160,29 @@ def run_dev_server(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     print(f"[COMMANDS] run_dev_server → Starting dev server for session {session_id}")
 
     try:
-        # Start the dev server in the background
         process = subprocess.Popen(
-            ["bash", "scripts/run_app.sh", session_id],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
+            ["bash", str(SCRIPTS_DIR / "run_app.sh"), session_id],
+            cwd=str(REPO_ROOT),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
         )
-
-        # Give it a moment to start
         try:
             stdout, stderr = process.communicate(timeout=5)
             if process.returncode and process.returncode != 0:
-                error_msg = f"Error starting dev server:\n{stderr}"
-                print(f"[COMMANDS] run_dev_server → ERROR: {stderr}")
-                return error_msg
+                print(f"[COMMANDS] run_dev_server → ERROR exit {process.returncode}")
+                return (
+                    f"Error starting dev server (exit {process.returncode}).\n{stderr}"
+                )
         except subprocess.TimeoutExpired:
-            # Server is still running, which is expected
-            output = "✓ Development server is starting!\n\nThe Next.js app should be available at http://localhost:3000\n\nNote: The server is running in the background."
-            print(f"[COMMANDS] run_dev_server → Server started")
-            return output
-
-        output = f"✓ Development server started!\n\n{stdout}"
-        print(f"[COMMANDS] run_dev_server → SUCCESS")
-        return output
+            print("[COMMANDS] run_dev_server → Server starting (background)")
+            return (
+                "✓ Development server is starting!\n\n"
+                "App should be available at http://localhost:3000 (once ready).\n"
+                "Server runs in background."
+            )
+        print("[COMMANDS] run_dev_server → SUCCESS")
+        return "✓ Development server started!\n\n" + (stdout or "")
 
     except Exception as e:
         print(f"[COMMANDS] run_dev_server → EXCEPTION: {e}")
@@ -160,26 +210,21 @@ def run_npm_command(
     )
 
     try:
-        result = subprocess.run(
-            ["bash", "scripts/run_npm_command.sh", session_id, command],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "run_npm_command.sh"), session_id, command],
+            label="run_npm_command",
+            timeout=180,
         )
-
-        output = result.stdout if result.stdout else result.stderr
-
+        output = result.stdout or ""
         if result.returncode == 0:
-            print(f"[COMMANDS] run_npm_command → SUCCESS")
-            return f"✓ Command completed successfully!\n\n{output}"
+            print("[COMMANDS] run_npm_command → SUCCESS")
+            return "✓ Command completed successfully!\n\n" + output
         else:
-            print(f"[COMMANDS] run_npm_command → ERROR: {result.stderr}")
-            return f"Error running command:\n{output}"
-
+            print(f"[COMMANDS] run_npm_command → ERROR exit {result.returncode}")
+            return f"Error running command (exit {result.returncode}).\n\n" + output
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] run_npm_command → TIMEOUT")
-        return "Error: Command timed out after 75 seconds"
+        print("[COMMANDS] run_npm_command → TIMEOUT")
+        return "Error: Command timed out after 180 seconds"
     except Exception as e:
         print(f"[COMMANDS] run_npm_command → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -207,26 +252,26 @@ def run_npx_command(
     )
 
     try:
-        result = subprocess.run(
-            ["bash", "scripts/run_npx_command.sh", session_id, *command.split()],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            [
+                "bash",
+                str(SCRIPTS_DIR / "run_npx_command.sh"),
+                session_id,
+                *command.split(),
+            ],
+            label="run_npx_command",
+            timeout=240,
         )
-
-        output = result.stdout if result.stdout else result.stderr
-
+        output = result.stdout or ""
         if result.returncode == 0:
-            print(f"[COMMANDS] run_npx_command → SUCCESS")
-            return f"✓ npx command completed successfully!\n\n{output}"
+            print("[COMMANDS] run_npx_command → SUCCESS")
+            return "✓ npx command completed successfully!\n\n" + output
         else:
-            print(f"[COMMANDS] run_npx_command → ERROR: {result.stderr}")
-            return f"Error running npx command:\n{output}"
-
+            print(f"[COMMANDS] run_npx_command → ERROR exit {result.returncode}")
+            return f"Error running npx command (exit {result.returncode}).\n\n" + output
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] run_npx_command → TIMEOUT")
-        return "Error: npx command timed out after 75 seconds"
+        print("[COMMANDS] run_npx_command → TIMEOUT")
+        return "Error: npx command timed out after 240 seconds"
     except Exception as e:
         print(f"[COMMANDS] run_npx_command → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -252,26 +297,26 @@ def run_git_command(
     )
 
     try:
-        result = subprocess.run(
-            ["bash", "scripts/run_git_command.sh", session_id, *command.split()],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            [
+                "bash",
+                str(SCRIPTS_DIR / "run_git_command.sh"),
+                session_id,
+                *command.split(),
+            ],
+            label="run_git_command",
+            timeout=120,
         )
-
-        output = result.stdout if result.stdout else result.stderr
-
+        output = result.stdout or ""
         if result.returncode == 0:
-            print(f"[COMMANDS] run_git_command → SUCCESS")
-            return f"✓ git command completed successfully!\n\n{output}"
+            print("[COMMANDS] run_git_command → SUCCESS")
+            return "✓ git command completed successfully!\n\n" + output
         else:
-            print(f"[COMMANDS] run_git_command → ERROR: {result.stderr}")
-            return f"Error running git command:\n{output}"
-
+            print(f"[COMMANDS] run_git_command → ERROR exit {result.returncode}")
+            return f"Error running git command (exit {result.returncode}).\n\n" + output
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] run_git_command → TIMEOUT")
-        return "Error: git command timed out after 75 seconds"
+        print("[COMMANDS] run_git_command → TIMEOUT")
+        return "Error: git command timed out after 120 seconds"
     except Exception as e:
         print(f"[COMMANDS] run_git_command → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -298,28 +343,30 @@ def lint_project(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     print(f"[COMMANDS] lint_project → Linting project for session {session_id}")
 
     try:
-        result = subprocess.run(
-            ["bash", "scripts/lint_project.sh", session_id],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "lint_project.sh"), session_id],
+            label="lint_project",
+            timeout=180,
         )
-
-        output = result.stdout if result.stdout else result.stderr
-
+        output = result.stdout or ""
         if result.returncode == 0:
-            print(f"[COMMANDS] lint_project → SUCCESS - No issues found")
-            return f"✅ Linting passed! No syntax errors or linting issues found.\n\n{output}"
+            print("[COMMANDS] lint_project → SUCCESS - No issues found")
+            return (
+                "✅ Linting passed! No syntax errors or linting issues found.\n\n"
+                + output
+            )
         else:
-            print(f"[COMMANDS] lint_project → ❌ ERRORS FOUND - Must be fixed!")
+            print("[COMMANDS] lint_project → ❌ ERRORS FOUND - Must be fixed!")
             error_count = output.count("error")
             warning_count = output.count("warning")
-            return f"❌ LINTING FAILED - {error_count} error(s), {warning_count} warning(s)\n\n{output}\n\n🚨 CRITICAL: You MUST fix these errors before proceeding. Read the files mentioned in the errors, identify the issues, and fix them using update_lines or insert_lines. After fixing, run lint_project again to verify."
-
+            return (
+                f"❌ LINTING FAILED - {error_count} error(s), {warning_count} warning(s)\n\n"
+                + output
+                + "\n\n🚨 CRITICAL: Fix these errors before proceeding."
+            )
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] lint_project → TIMEOUT")
-        return "Error: Linting timed out after 75 seconds"
+        print("[COMMANDS] lint_project → TIMEOUT")
+        return "Error: Linting timed out after 180 seconds"
     except Exception as e:
         print(f"[COMMANDS] lint_project → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -338,32 +385,30 @@ def git_log(limit: int, config: Annotated[RunnableConfig, InjectedToolArg]) -> s
     session_id = _get_session_from_config(config)
     print(f"[COMMANDS] git_log → Showing last {limit} commits for {session_id}")
     try:
-        result = subprocess.run(
+        result = _run_with_live_logs(
             [
                 "bash",
-                "scripts/run_git_command.sh",
+                str(SCRIPTS_DIR / "run_git_command.sh"),
                 session_id,
                 "log",
-                f"-n",
+                "-n",
                 str(limit),
                 "--pretty=format:%h %ad %an %s",
                 "--date=short",
             ],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+            label="git_log",
+            timeout=90,
         )
-        output = result.stdout if result.stdout else result.stderr
+        output = result.stdout or ""
         if result.returncode == 0:
-            print(f"[COMMANDS] git_log → SUCCESS")
+            print("[COMMANDS] git_log → SUCCESS")
             return output
         else:
-            print(f"[COMMANDS] git_log → ERROR: {result.stderr}")
-            return f"Error running git log:\n{output}"
+            print(f"[COMMANDS] git_log → ERROR exit {result.returncode}")
+            return f"Error running git log (exit {result.returncode}).\n\n{output}"
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] git_log → TIMEOUT")
-        return "Error: git log timed out after 75 seconds"
+        print("[COMMANDS] git_log → TIMEOUT")
+        return "Error: git log timed out after 90 seconds"
     except Exception as e:
         print(f"[COMMANDS] git_log → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -382,10 +427,10 @@ def git_show(commit: str, config: Annotated[RunnableConfig, InjectedToolArg]) ->
     session_id = _get_session_from_config(config)
     print(f"[COMMANDS] git_show → Showing commit {commit} for {session_id}")
     try:
-        result = subprocess.run(
+        result = _run_with_live_logs(
             [
                 "bash",
-                "scripts/run_git_command.sh",
+                str(SCRIPTS_DIR / "run_git_command.sh"),
                 session_id,
                 "show",
                 "--stat",
@@ -393,21 +438,19 @@ def git_show(commit: str, config: Annotated[RunnableConfig, InjectedToolArg]) ->
                 "--format=fuller",
                 commit,
             ],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+            label="git_show",
+            timeout=120,
         )
-        output = result.stdout if result.stdout else result.stderr
+        output = result.stdout or ""
         if result.returncode == 0:
-            print(f"[COMMANDS] git_show → SUCCESS")
+            print("[COMMANDS] git_show → SUCCESS")
             return output
         else:
-            print(f"[COMMANDS] git_show → ERROR: {result.stderr}")
-            return f"Error running git show:\n{output}"
+            print(f"[COMMANDS] git_show → ERROR exit {result.returncode}")
+            return f"Error running git show (exit {result.returncode}).\n\n{output}"
     except subprocess.TimeoutExpired:
-        print(f"[COMMANDS] git_show → TIMEOUT")
-        return "Error: git show timed out after 75 seconds"
+        print("[COMMANDS] git_show → TIMEOUT")
+        return "Error: git show timed out after 120 seconds"
     except Exception as e:
         print(f"[COMMANDS] git_show → EXCEPTION: {e}")
         return f"Error: {str(e)}"
@@ -423,23 +466,21 @@ def check_css(config: Annotated[RunnableConfig, InjectedToolArg]) -> str:
     session_id = _get_session_from_config(config)
     print(f"[COMMANDS] check_css → Checking globals.css for session {session_id}")
     try:
-        result = subprocess.run(
-            ["bash", "scripts/css_check.sh", session_id],
-            cwd="/Users/maystro/Documents/langgraph-app-builder/api",
-            capture_output=True,
-            text=True,
-            timeout=75,
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "css_check.sh"), session_id],
+            label="check_css",
+            timeout=120,
         )
-        output = result.stdout if result.stdout else result.stderr
+        output = result.stdout or ""
         if result.returncode == 0:
             print("[COMMANDS] check_css → SUCCESS")
             return f"✓ CSS check passed.\n\n{output}"
         else:
             print("[COMMANDS] check_css → ERROR")
-            return f"❌ CSS check failed.\n\n{output}"
+            return f"❌ CSS check failed (exit {result.returncode}).\n\n{output}"
     except subprocess.TimeoutExpired:
         print("[COMMANDS] check_css → TIMEOUT")
-        return "Error: CSS check timed out after 75 seconds"
+        return "Error: CSS check timed out after 120 seconds"
     except Exception as e:
         print(f"[COMMANDS] check_css → EXCEPTION: {e}")
         return f"Error: {str(e)}"
