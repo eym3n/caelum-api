@@ -11,7 +11,7 @@ echo "[init_app] === Starting init_app.sh at $(date -u '+%Y-%m-%dT%H:%M:%SZ') ==
 echo "[init_app] Incoming SESSION_NAME='$SESSION_NAME' ENV='$ENV' OUTPUT_PATH='${OUTPUT_PATH:-}'"
 
 if [ -z "$STORAGE_ROOT" ]; then
-  if [[ "$ENV" == "local" || "$ENV" == "development" || "$ENV" == "testing" ]]; then
+  if [[ "$ENV" == "local" || "$ENV" == "testing" ]]; then
     STORAGE_ROOT="./storage"
   else
     STORAGE_ROOT="/mnt/storage"

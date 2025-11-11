@@ -12,7 +12,7 @@ fi
 ENV="${ENV:-local}"
 STORAGE_ROOT="${OUTPUT_PATH:-}"
 if [ -z "$STORAGE_ROOT" ]; then
-  if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
+  if [[ "$ENV" == "local" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
 fi
 if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
 mkdir -p "$STORAGE_ROOT"

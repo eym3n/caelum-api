@@ -7,7 +7,7 @@ if [ -z "$PROJECT_NAME" ]; then echo "Usage: $0 <project-name>"; exit 1; fi
 ENV="${ENV:-local}"
 STORAGE_ROOT="${OUTPUT_PATH:-}"
 if [ -z "$STORAGE_ROOT" ]; then
-  if [[ "$ENV" == "local" || "$ENV" == "development" || "$ENV" == "testing" ]]; then
+  if [[ "$ENV" == "local" || "$ENV" == "testing" ]]; then
     STORAGE_ROOT="./storage"
   else
     STORAGE_ROOT="/mnt/storage"

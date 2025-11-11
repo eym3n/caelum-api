@@ -16,7 +16,7 @@ case "${LOWER_LOG_LEVEL}" in
   *) echo "[entrypoint] Invalid LOG_LEVEL='${LOG_LEVEL}', falling back to 'info'"; LOWER_LOG_LEVEL=info ;;
 esac
 
-if [ "${APP_ENV}" = "local" ] || [ "${APP_ENV}" = "development" ]; then
+if [ "${APP_ENV}" = "local" ] ]; then
   echo "[entrypoint] Starting development server (reload) for ${APP_MODULE} on ${HOST}:${PORT}"
   exec python -m uvicorn "${APP_MODULE}" --host "${HOST}" --port "${PORT}" --reload --reload-dir app --log-level "${LOWER_LOG_LEVEL}"  
 else

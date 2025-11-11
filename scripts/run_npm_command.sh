@@ -7,7 +7,7 @@ if [ -z "$PROJECT_NAME" ] || [ -z "$CMD" ]; then echo "Usage: $0 <project-name> 
 ENV="${ENV:-local}"
 STORAGE_ROOT="${OUTPUT_PATH:-}"
 if [ -z "$STORAGE_ROOT" ]; then
-	if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
+	if [[ "$ENV" == "local" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
 fi
 if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
 cd "$STORAGE_ROOT/$PROJECT_NAME" || { echo "❌ Project '$PROJECT_NAME' not found in $STORAGE_ROOT"; exit 1; }

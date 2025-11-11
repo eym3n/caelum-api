@@ -10,7 +10,7 @@ if [ -z "$PROJECT_NAME" ]; then
 ENV="${ENV:-local}"
 STORAGE_ROOT="${OUTPUT_PATH:-}"
 if [ -z "$STORAGE_ROOT" ]; then
-	if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then
+	if [[ "$ENV" == "local"  ]]; then
 		STORAGE_ROOT="./storage"
 	else
 		STORAGE_ROOT="/mnt/storage"

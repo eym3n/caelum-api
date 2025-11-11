@@ -28,7 +28,7 @@ output_path_env = os.getenv("OUTPUT_PATH")
 if output_path_env:
     STORAGE_ROOT = Path(output_path_env)
 else:
-    if ENV in ("local", "development", "testing"):
+    if ENV in ("local", "testing"):
         STORAGE_ROOT = REPO_ROOT / "storage"
     else:
         STORAGE_ROOT = Path("/mnt/storage")
