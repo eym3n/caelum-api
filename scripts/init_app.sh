@@ -48,17 +48,33 @@ fi
 
 echo "[init_app] Running create-next-app..."
 START_TS=$(date +%s)
-npx create-next-app@latest "${TARGET_DIR}" \
-  --typescript \
-  --tailwind \
-  --eslint \
-  --app \
-  --src-dir \
-  --import-alias "@/*" \
-  --use-npm \
-  --yes \
-  --no-turbo \
-  --no-compiler || { echo "[init_app] ERROR: create-next-app failed"; exit 1; }
+if ! command -v npx >/dev/null 2>&1; then
+  echo "[init_app] WARNING: npx missing. Falling back to template copy." 
+  if [ -d "template" ]; then
+    echo "[init_app] Copying base template to ${TARGET_DIR}" 
+    mkdir -p "${TARGET_DIR}" 
+    rsync -a --delete template/ "${TARGET_DIR}/" || { echo "[init_app] ERROR: rsync template copy failed"; exit 1; }
+    if [ -f "${TARGET_DIR}/package.json" ]; then
+      echo "[init_app] ✅ Template fallback succeeded." 
+    else
+      echo "[init_app] ❌ Template fallback incomplete (package.json missing)."; exit 1
+    fi
+  else
+    echo "[init_app] ❌ Neither npx nor template directory available. Cannot initialize app."; exit 1
+  fi
+else
+  npx create-next-app@latest "${TARGET_DIR}" \
+    --typescript \
+    --tailwind \
+    --eslint \
+    --app \
+    --src-dir \
+    --import-alias "@/*" \
+    --use-npm \
+    --yes \
+    --no-turbo \
+    --no-compiler || { echo "[init_app] ERROR: create-next-app failed"; exit 1; }
+fi
 END_TS=$(date +%s)
 echo "[init_app] create-next-app completed in $((END_TS-START_TS))s"
 

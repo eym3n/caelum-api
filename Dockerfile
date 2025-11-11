@@ -14,8 +14,21 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 # System deps (add build-essential if wheels fail)
 RUN apt-get update && apt-get install -y --no-install-recommends \
-		curl ca-certificates build-essential && \
+		curl ca-certificates build-essential gnupg && \
 		rm -rf /var/lib/apt/lists/*
+
+# Install Node.js (for create-next-app, npm, npx). Using NodeSource setup for latest LTS (20.x)
+RUN set -eux; \
+	export NODE_MAJOR=20; \
+	apt-get update; \
+	apt-get install -y ca-certificates curl gnupg; \
+	mkdir -p /etc/apt/keyrings; \
+	curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg; \
+	echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" > /etc/apt/sources.list.d/nodesource.list; \
+	apt-get update; \
+	apt-get install -y nodejs; \
+	node -v; npm -v; \
+	rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

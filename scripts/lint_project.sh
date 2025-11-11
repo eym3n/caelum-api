@@ -5,10 +5,20 @@ if [ -z "$PROJECT_NAME" ]; then echo "Usage: $0 <project-name>"; exit 1; fi
 ENV="${ENV:-local}"
 STORAGE_ROOT="${OUTPUT_PATH:-}"
 if [ -z "$STORAGE_ROOT" ]; then
-    if [[ "$ENV" == "local" || "$ENV" == "development" ]]; then STORAGE_ROOT="./storage"; else STORAGE_ROOT="/mnt/storage"; fi
+    if [[ "$ENV" == "local" || "$ENV" == "development" || "$ENV" == "testing" ]]; then
+        STORAGE_ROOT="./storage"
+    else
+        STORAGE_ROOT="/mnt/storage"
+    fi
 fi
 if [ ! -d "$STORAGE_ROOT" ] && [ -d "__out__" ]; then STORAGE_ROOT="__out__"; fi
-cd "$STORAGE_ROOT/$PROJECT_NAME" || { echo "❌ Project '$PROJECT_NAME' not found in $STORAGE_ROOT"; exit 1; }
+echo "[lint_project] Using STORAGE_ROOT='$STORAGE_ROOT' (ENV=$ENV OUTPUT_PATH='${OUTPUT_PATH:-}')"
+TARGET_DIR="$STORAGE_ROOT/$PROJECT_NAME"
+if [ ! -d "$TARGET_DIR" ]; then
+    echo "❌ Project '$PROJECT_NAME' not found in $STORAGE_ROOT"
+    exit 1
+fi
+cd "$TARGET_DIR"
 
 echo "🔍 Running linter, TypeScript, and CSS checks for '$PROJECT_NAME'..."
 
@@ -40,8 +50,8 @@ if ! npx tsc --noEmit 2>&1; then
 fi
 
 echo ""
-echo "🧴 Checking Tailwind CSS (globals.css) with Tailwind CLI..."
-if ! bash ../../scripts/css_check.sh "$PROJECT_NAME" 2>&1; then
+echo "🧴 Checking Tailwind CSS (globals.css) syntax..."
+if ! bash "$PWD/../../scripts/css_check.sh" "$PROJECT_NAME" 2>&1; then
     CSS_EXIT_CODE=$?
     echo ""
     echo "❌ CSS check failed for globals.css"
