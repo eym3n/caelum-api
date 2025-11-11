@@ -25,9 +25,7 @@ from app.agent.tools.files import (
 )
 
 from app.agent.tools.commands import (
-    run_npm_command,
     lint_project,
-    run_npx_command,
     check_css,
 )
 
@@ -43,8 +41,6 @@ tools = [
     # Utility
     list_files,
     # Command tools
-    run_npm_command,
-    run_npx_command,
     lint_project,
     check_css,
 ]
