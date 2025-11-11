@@ -10,7 +10,7 @@ router = APIRouter()
 
 MOUNT_PATH = "/mnt/storage"
 
-FOLDER_PATH = "codebase"
+FOLDER_PATH = ""
 
 
 class TestWriteFileResponse(BaseModel):
