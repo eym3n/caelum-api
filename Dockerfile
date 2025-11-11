@@ -27,9 +27,15 @@ COPY pyproject.toml ./
 RUN pip install --upgrade pip && pip wheel --no-deps . -w /tmp/wheels || true
 RUN pip install .
 
-# Copy application source.
+# Copy application source plus supporting scripts/templates.
 COPY app ./app
+COPY scripts ./scripts
+COPY template ./template
 COPY entrypoint.sh ./entrypoint.sh
+
+# Ensure scripts are executable
+RUN chmod +x entrypoint.sh && \
+	find scripts -type f -name '*.sh' -exec chmod +x {} +
 
 # Expose app port (FastAPI served by uvicorn) - matches uvicorn.run port=8080
 EXPOSE 8080
@@ -39,12 +45,16 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 	CMD curl -fsS http://127.0.0.1:8080/health || exit 1
 
 # Default environment can be overridden at runtime
-ENV APP_ENV=production
+ENV APP_ENV=production \
+	ENV=production
 
 # Ensure entrypoint script is executable (helpful for local context before build)
 RUN chmod +x entrypoint.sh
 
 ENTRYPOINT ["./entrypoint.sh"]
+
+# Create storage directory (used for session outputs) at build time; can be mounted/overridden
+RUN mkdir -p /mnt/storage || true
 
 # Development notes:
 #   For local iterative dev you can mount the source and override CMD with --reload.
