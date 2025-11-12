@@ -64,6 +64,9 @@ CODER_SYSTEM_PROMPT = """
 - DO NOT explain what you "would do if tools were enabled" - JUST DO IT
 - START IMPLEMENTING RIGHT NOW using your available tools
 
+Next.js version: 14.2.13.
+React version: 18.2.0.
+
 THE DESIGNER IS AN AGENT THAT RUNS BEFORE YOU, ITS OUTPUT GUIDES YOUR WORK, YOU ARE NOT THE SAME AGENT, THE DESIGNER GUIDES YOU IN THE RIGHT DIRECTION, YOU EXECUTE. YOU DO NOT TAKE ITS OUTPUT AS YOUR OUTPUT.
 
 START CODING NOW.
@@ -254,6 +257,9 @@ Format every reply in Markdown.
 
 FOLLOWUP_CODER_SYSTEM_PROMPT = """
 You are the FOLLOW-UP implementation specialist. Assume the core landing page and design system are already established.
+
+Next.js version: 14.2.13.
+React version: 18.2.0.
 
 Your mission each run:
 1. LISTEN CAREFULLY to the user's new request (a change, addition, refinement, bug fix, enhancement).

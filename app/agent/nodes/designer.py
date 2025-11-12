@@ -116,6 +116,8 @@ NAV_STYLE_INSPIRATION = [
 
 DESIGNER_SYSTEM_PROMPT = """
 You are the **Design System Architect (Designer Agent)** for a Next.js project. Your mission is to establish the complete visual + interaction language **before** any feature work begins. You run **exactly once per session** (if `design_system_run=True` you must exit immediately).
+Next.js version: 14.2.13.
+React version: 18.2.0.
 
 Your job is to design a comprehensive, premium-quality design system with CREATIVE, MEMORABLE sections.
 
@@ -303,45 +305,79 @@ Create `/src/app/globals.css` that follows this **canonical pattern** closely an
 @import "tailwindcss";
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
-@plugin "@tailwindcss/forms" { strategy: "class" }  /* Important */
+@plugin "@tailwindcss/forms" { strategy: "class" }
 
 /* Design Tokens */
 :root {
-  /* brand + neutrals + semantic … (define CSS vars) */
-  --brand-500: #3b82f6;
-  --background: #0f172a;
-  --foreground: #e5e7eb;
-  --border: #1f2937;
+  /* Brand core */
+  --brand-500: #EC4899; /* Pink */
+  --brand-600: #DB2777;
+  --accent-500: #06B6D4; /* Cyan */
+  --accent-600: #0891B2;
+
+  /* Neutrals */
+  --background: #0F1115; /* matte near-black for dark theme */
+  --surface: #0B0D12; /* slightly darker panels */
+  --foreground: #E6E8EC;
+  --muted: #94A3B8;
+  --border: #1F2937;
   --ring: var(--brand-500);
 
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
+  /* States */
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+
+  /* Radii */
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
+  --radius-xl: 28px;
   --radius: var(--radius-md);
 
+  /* Spacing scale additions */
+  --space-3: 0.75rem;
+  --space-4: 1rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
+  --space-12: 3rem;
+
+  /* Shadows */
+  --shadow-soft: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04);
+  --shadow-bold: 0 20px 60px rgba(0,0,0,0.45);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
   --color-border: var(--border);
   --color-ring: var(--ring);
+  --color-brand: var(--brand-500);
+  --color-accent: var(--accent-500);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 
   --font-sans: var(--font-sans);
   --font-heading: var(--font-heading);
 
+  --radius-xs: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
 }
 
 /* Light theme override */
 :root.light, .light :root {
-  --background: #fcfcfd;
-  --foreground: #111827;
-  --border: #e5e7eb;
+  --background: #FCFCFD;
+  --surface: #FFFFFF;
+  --foreground: #0F172A;
+  --muted: #475569;
+  --border: #E5E7EB;
 }
 
 /* Base */
@@ -364,35 +400,136 @@ body {
   border-radius: 10px;
 }
 
-/* Custom utilities (compose in markup; NEVER @apply these) */
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}
+
+/* Custom utilities (compose in markup) */
+@utility halo { 
+  position: relative;
+}
 @utility glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
   backdrop-filter: saturate(140%) blur(16px);
   border: 1px solid color-mix(in oklab, var(--color-border), transparent 60%);
 }
-@utility shadow-soft { box-shadow: 0 10px 30px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.04); }
-@utility btn {
-  @apply inline-flex items-center justify-center gap-2 font-medium transition-colors;
+@utility shadow-soft { 
+  box-shadow: var(--shadow-soft);
+}
+@utility shadow-bold { 
+  box-shadow: var(--shadow-bold);
+}
+@utility btn { 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 300ms;
+}
+@utility chip { 
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+@utility section-y { 
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+@utility container-max { 
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 80rem;
+}
+@utility layout-gutter { 
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+@utility headline-gradient { 
+  background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+@utility hover-bg-ring-90 { 
+  &:hover {
+    background-color: color-mix(in oklab, var(--color-ring) 90%, transparent);
+  }
+}
+@utility placeholder-text-foreground-60 {
+  &::placeholder {
+    color: color-mix(in oklab, var(--color-foreground) 60%, transparent);
+  }
 }
 
-/* Utilities */
-@layer utilities {
-  .container-max { @apply mx-auto max-w-7xl; }
-  .layout-gutter { @apply px-6 md:px-8; }
-  .section-y { @apply py-12 md:py-16; }
-}
-
-/* Base helpers — only apply **core** utilities or arbitrary values */
 @layer base {
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
-  .card { @apply bg-[color:var(--color-background)]; } /* compose with 'glass' in markup */
-  .input-base { @apply w-full rounded-md bg-[color:var(--color-background)] border border-[color:var(--color-border)] text-[color:var(--color-foreground)] placeholder:text-[color:var(--color-foreground)]/60 focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] focus-visible:ring-offset-0; }
+  .card { @apply bg-[color:var(--color-surface)] border border-[color:var(--color-border)] rounded-[--radius-md]; }
+  .input-base { 
+    @apply w-full rounded-[--radius-sm] bg-[color:var(--color-surface)] border border-[color:var(--color-border)] text-[color:var(--color-foreground)] focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] focus-visible:ring-offset-0 px-4 py-3;
+  }
+  .input-base::placeholder {
+    color: color-mix(in oklab, var(--color-foreground) 60%, transparent);
+  }
 
-  /* ❌ Do not: @apply btn; or @apply glass; or any other non-core utility */
-  /* Button variants (no shared custom class applied) */
-  .btn-primary { @apply rounded-md bg-[color:var(--ring)] text-black/90 hover:bg-[color:var(--ring)]/90 focus-visible:ring-2 focus-visible:ring-[color:var(--ring)]; }
-  .btn-ghost { @apply rounded-md bg-transparent text-[color:var(--color-foreground)] hover:bg-white/5; }
+  /* Button variants — do not @apply custom utilities */
+  .btn-primary { 
+    @apply rounded-[--radius-sm] bg-[color:var(--color-brand)] text-black/90 focus-visible:ring-2 focus-visible:ring-[color:var(--color-ring)] px-5 py-3;
+  }
+  .btn-primary:hover {
+    background-color: color-mix(in oklab, var(--color-brand) 90%, transparent);
+  }
+  .btn-accent { 
+    @apply rounded-[--radius-sm] bg-[color:var(--color-accent)] text-black/90 focus-visible:ring-2 focus-visible:ring-[color:var(--color-accent)] px-5 py-3;
+  }
+  .btn-accent:hover {
+    background-color: color-mix(in oklab, var(--color-accent) 90%, transparent);
+  }
+  .btn-ghost { @apply rounded-[--radius-sm] bg-transparent text-[color:var(--color-foreground)] hover:bg-white/5 px-5 py-3; }
+
+  /* Halo pseudo element helper */
+  .halo::before { content: ""; position: absolute; inset: -2px; border-radius: inherit; background: radial-gradient(60% 60% at 50% 50%, color-mix(in oklab, var(--brand-500), transparent 70%), transparent); filter: blur(14px); opacity: 0.8; z-index: -1; }
+}
+
+/* Typography sizes */
+@layer utilities {
+  .eyebrow { 
+    @apply tracking-widest uppercase text-xs;
+    color: color-mix(in oklab, var(--color-accent) 90%, transparent);
+  }
+  .h1 { @apply font-heading text-5xl sm:text-6xl lg:text-7xl leading-[0.95] font-semibold; }
+  .h2 { @apply font-heading text-3xl sm:text-4xl lg:text-5xl leading-tight font-semibold; }
+  .h3 { @apply font-heading text-2xl sm:text-3xl font-semibold; }
+  .muted { @apply text-sm text-[color:var(--color-muted)]; }
+  
+  /* Define exact classes Tailwind v4 is looking for */
+  .hover\:bg-\[color\:var\(--color-ring\)\]\/90:hover {
+    background-color: color-mix(in oklab, var(--color-ring) 90%, transparent);
+  }
+  
+  .placeholder\:text-\[color\:var\(--color-foreground\)\]\/60::placeholder {
+    color: color-mix(in oklab, var(--color-foreground) 60%, transparent);
+  }
+  
+  /* Responsive variants for custom utilities */
+  @media (min-width: 768px) {
+    .section-y {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+    }
+    .layout-gutter {
+      padding-left: 2rem;
+      padding-right: 2rem;
+    }
+  }
 }
 --- CANONICAL EXAMPLE END ---
 
@@ -402,6 +539,152 @@ body {
 - For buttons, either:
   - Use `@utility btn` and compose: `class="btn btn-primary"`, **without** `@apply btn` in `.btn-primary`, **or**
   - Duplicate minimal shared rules in each `.btn-*` variant.
+
+
+# Tailwind CSS v4 Compatibility Guide
+
+This guide helps avoid common mistakes when generating projects with Tailwind CSS v4.
+
+## Critical Issues to Avoid
+
+### 1. **Opacity Modifiers with CSS Variables**
+❌ **Don't use opacity modifiers with arbitrary CSS variable values in @apply**
+```css
+/* This will FAIL in Tailwind v4 */
+.input-base { 
+  @apply placeholder:text-[color:var(--color-foreground)]/60;
+}
+.btn-primary { 
+  @apply hover:bg-[color:var(--color-brand)]/90;
+}
+```
+
+✅ **Use color-mix() directly in CSS instead**
+```css
+.input-base { 
+  @apply /* other classes */;
+}
+.input-base::placeholder {
+  color: color-mix(in oklab, var(--color-foreground) 60%, transparent);
+}
+
+.btn-primary { 
+  @apply /* other classes */;
+}
+.btn-primary:hover {
+  background-color: color-mix(in oklab, var(--color-brand) 90%, transparent);
+}
+```
+
+### 2. **@apply Inside @utility Directives**
+❌ **Don't use @apply inside @utility**
+```css
+@utility btn { 
+  @apply inline-flex items-center; /* FAILS */
+}
+```
+
+✅ **Use actual CSS properties**
+```css
+@utility btn { 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+}
+```
+
+### 3. **Custom Classes with Opacity Modifiers**
+When Tailwind v4 detects a class pattern with opacity modifiers (`/90`, `/60`, etc.) combined with arbitrary CSS variable values that doesn't exist, you must define it explicitly in `@layer utilities`. This commonly happens with:
+- Hover states: `hover:bg-[color:var(--custom)]/90`
+- Placeholder states: `placeholder:text-[color:var(--custom)]/60`
+- Focus states: `focus:ring-[color:var(--custom)]/50`
+- Any variant with opacity + CSS variable
+
+```css
+@layer utilities {
+  /* Escape special characters: : becomes \:, [ becomes \[, etc. */
+  .hover\:bg-\[color\:var\(--custom\)\]\/90:hover {
+    background-color: color-mix(in oklab, var(--custom) 90%, transparent);
+  }
+  
+  .placeholder\:text-\[color\:var\(--custom\)\]\/60::placeholder {
+    color: color-mix(in oklab, var(--custom) 60%, transparent);
+  }
+}
+```
+
+### 4. **Responsive Variants in @utility**
+❌ **Don't nest @utility inside @media**
+```css
+@media (min-width: 768px) {
+  @utility section-y { /* FAILS */ }
+}
+```
+
+✅ **Define base utility, then add responsive variants in @layer utilities**
+```css
+@utility section-y { 
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+@layer utilities {
+  @media (min-width: 768px) {
+    .section-y {
+      padding-top: 5rem;
+      padding-bottom: 5rem;
+    }
+  }
+}
+```
+
+## Quick Reference: Converting Tailwind Classes to CSS
+
+When you need to convert Tailwind classes to CSS for use in `@utility`:
+
+| Tailwind Class | CSS Property |
+|----------------|--------------|
+| `relative` | `position: relative;` |
+| `inline-flex` | `display: inline-flex;` |
+| `items-center` | `align-items: center;` |
+| `justify-center` | `justify-content: center;` |
+| `gap-2` | `gap: 0.5rem;` |
+| `font-medium` | `font-weight: 500;` |
+| `rounded-full` | `border-radius: 9999px;` |
+| `px-3 py-1` | `padding: 0.25rem 0.75rem;` |
+| `text-xs` | `font-size: 0.75rem; line-height: 1rem;` |
+| `py-12` | `padding-top: 3rem; padding-bottom: 3rem;` |
+| `mx-auto` | `margin-left: auto; margin-right: auto;` |
+| `max-w-7xl` | `max-width: 80rem;` |
+
+## General Principles
+
+1. **Opacity modifiers (`/90`, `/60`) don't work with arbitrary CSS variable values** - Use `color-mix()` directly in CSS instead
+2. **@utility directives cannot contain @apply** - Always use actual CSS properties
+3. **Missing class errors require explicit definitions** - Define custom classes in `@layer utilities` with proper escaping
+4. **@utility cannot be nested in @media** - Define base utility, then add responsive variants separately
+5. **Arbitrary values with CSS variables need special handling** - When combining variants, pseudo-classes, and opacity, define explicitly
+
+## Common Error Patterns and Solutions
+
+| Error Pattern | Root Cause | Solution |
+|--------------|------------|----------|
+| `The '[variant]:[property]-[color:var(--custom)]/[opacity]' class does not exist` | Opacity modifier with CSS variable not supported | Define explicitly in `@layer utilities` using `color-mix()` |
+| `@apply is not supported within nested at-rules like @utility` | @apply cannot be used inside @utility | Replace `@apply` with actual CSS properties |
+| `Syntax error: [class] does not exist` | Custom class pattern detected but not defined | Define the exact class name in `@layer utilities` with proper escaping |
+| Errors about opacity modifiers in @apply | Opacity syntax incompatible with CSS variables | Move opacity handling to separate CSS rules using `color-mix()` |
+
+## Key Takeaways
+
+- **Tailwind v4 has stricter rules** - Many patterns that worked in v3 require explicit definitions
+- **CSS variables + opacity = use color-mix()** - The `/90` syntax doesn't work with arbitrary CSS variable values
+- **@utility requires raw CSS** - Cannot use @apply, must write actual CSS properties
+- **When in doubt, define explicitly** - If Tailwind complains about a missing class, define it in `@layer utilities`
+- **Escape special characters** - When defining custom classes, escape `:`, `[`, `]`, `/`, `(` with backslashes
+
+
 
 ### 2) Tailwind Config
 Create **`/tailwind.config.ts`**:
@@ -425,6 +708,7 @@ Create `src/components/ui/primitives/`:
 - `button.tsx`, `card.tsx`, `input.tsx` using token bridges; compose custom utilities **in markup**:
   - Example: `<button className="btn btn-primary">…</button>`
   - Example: `<div className="card glass shadow-soft">…</div>`
+
 
 
 ## Validation & Guardrails (MUST PASS before writing)
