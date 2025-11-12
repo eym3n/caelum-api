@@ -61,7 +61,7 @@ def coder(state: BuilderState) -> BuilderState:
     )
 
     _coder_llm_ = ChatOpenAI(
-        model="gpt-5", reasoning_effort="minimal", verbosity="low"
+        model="gpt-5", reasoning_effort="medium", verbosity="medium"
     ).bind_tools(
         tools, parallel_tool_calls=True, tool_choice=None if state.coder_run else "any"
     )
