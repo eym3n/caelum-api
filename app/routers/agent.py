@@ -120,9 +120,18 @@ class MessagingSection(BaseModel):
 
 
 class BrandingSection(BaseModel):
-    colorPalette: dict | None = None  # expects {"raw": str}
+    theme: str | None = None  # "light" or "dark"
+    colorPalette: dict | None = (
+        None  # expects {"primary": str, "accent": str, "neutral": str, "raw": str}
+    )
     fonts: str | None = None
     layoutPreference: str | None = None
+    sections: list[str] | None = (
+        None  # list of section names like ["hero", "benefits", ...]
+    )
+    sectionData: dict | None = (
+        None  # contains faq, pricing, stats, team, testimonials, custom
+    )
 
 
 class MediaSection(BaseModel):
@@ -141,6 +150,8 @@ class AssetsSection(BaseModel):
     logo: str | None = None  # file ref or URL
     heroImage: str | None = None  # file ref or URL
     secondaryImages: list[str] | None = None
+    favicon: str | None = None  # file ref or URL
+    sectionAssets: dict | None = None  # maps section names to image URL arrays
 
 
 class InitPayload(BaseModel):
@@ -736,14 +747,150 @@ def _flatten_init_payload(payload: InitPayload) -> str:
             ],
         )
     if payload.branding:
-        add(
-            "Branding",
-            [
-                f"Color Palette Raw: {(payload.branding.colorPalette or {}).get('raw')}",
-                f"Fonts: {payload.branding.fonts}",
-                f"Layout Preference: {payload.branding.layoutPreference}",
-            ],
-        )
+        branding_lines = []
+        if payload.branding.theme:
+            branding_lines.append(f"Theme: {payload.branding.theme}")
+        if payload.branding.colorPalette:
+            cp = payload.branding.colorPalette
+            if cp.get("raw"):
+                branding_lines.append(f"Color Palette Raw: {cp.get('raw')}")
+            else:
+                # Build from individual colors if raw not provided
+                parts = []
+                if cp.get("primary"):
+                    parts.append(f"Primary: {cp.get('primary')}")
+                if cp.get("accent"):
+                    parts.append(f"Accent: {cp.get('accent')}")
+                if cp.get("neutral"):
+                    parts.append(f"Neutral: {cp.get('neutral')}")
+                if parts:
+                    branding_lines.append(f"Color Palette: {', '.join(parts)}")
+        if payload.branding.fonts:
+            branding_lines.append(f"Fonts: {payload.branding.fonts}")
+        if payload.branding.layoutPreference:
+            branding_lines.append(
+                f"Layout Preference: {payload.branding.layoutPreference}"
+            )
+        if payload.branding.sections:
+            branding_lines.append(f"Sections: {', '.join(payload.branding.sections)}")
+        if payload.branding.sectionData:
+            sd = payload.branding.sectionData
+            # FAQ
+            if sd.get("faq") and isinstance(sd["faq"], list):
+                faq_items = []
+                for item in sd["faq"]:
+                    if isinstance(item, dict):
+                        q = item.get("question", "")
+                        a = item.get("answer", "")
+                        if q and a:
+                            faq_items.append(f"Q: {q}\nA: {a}")
+                if faq_items:
+                    branding_lines.append(f"FAQ Items:\n" + "\n\n".join(faq_items))
+            # Pricing
+            if sd.get("pricing") and isinstance(sd["pricing"], list):
+                pricing_items = []
+                for item in sd["pricing"]:
+                    if isinstance(item, dict):
+                        name = item.get("name", "")
+                        price = item.get("price", "")
+                        features = item.get("features", [])
+                        cta = item.get("cta", "")
+                        parts = [f"Plan: {name}"]
+                        if price:
+                            parts.append(f"Price: {price}")
+                        if features:
+                            parts.append(f"Features: {', '.join(features)}")
+                        if cta:
+                            parts.append(f"CTA: {cta}")
+                        pricing_items.append(" | ".join(parts))
+                if pricing_items:
+                    branding_lines.append(
+                        f"Pricing Plans:\n" + "\n".join(pricing_items)
+                    )
+            # Stats
+            if sd.get("stats") and isinstance(sd["stats"], list):
+                stats_items = []
+                for item in sd["stats"]:
+                    if isinstance(item, dict):
+                        label = item.get("label", "")
+                        value = item.get("value", "")
+                        desc = item.get("description", "")
+                        if label and value:
+                            parts = [f"{label}: {value}"]
+                            if desc:
+                                parts.append(f"({desc})")
+                            stats_items.append(" ".join(parts))
+                if stats_items:
+                    branding_lines.append(f"Stats:\n" + "\n".join(stats_items))
+            # Team
+            if sd.get("team") and isinstance(sd["team"], list):
+                team_items = []
+                for item in sd["team"]:
+                    if isinstance(item, dict):
+                        name = item.get("name", "")
+                        role = item.get("role", "")
+                        bio = item.get("bio", "")
+                        image = item.get("image", "")
+                        parts = [f"{name}"]
+                        if role:
+                            parts.append(f"({role})")
+                        if bio:
+                            parts.append(f"- {bio}")
+                        if image:
+                            parts.append(f"Image: {image}")
+                        team_items.append(" ".join(parts))
+                if team_items:
+                    branding_lines.append(f"Team:\n" + "\n".join(team_items))
+            # Testimonials (structured)
+            if sd.get("testimonials") and isinstance(sd["testimonials"], list):
+                testimonial_items = []
+                for item in sd["testimonials"]:
+                    if isinstance(item, dict):
+                        quote = item.get("quote", "")
+                        author = item.get("author", "")
+                        role = item.get("role", "")
+                        company = item.get("company", "")
+                        image = item.get("image", "")
+                        parts = []
+                        if quote:
+                            parts.append(f'"{quote}"')
+                        if author:
+                            author_parts = [author]
+                            if role:
+                                author_parts.append(role)
+                            if company:
+                                author_parts.append(f"at {company}")
+                            parts.append(f"— {', '.join(author_parts)}")
+                        if image:
+                            parts.append(f"Image: {image}")
+                        testimonial_items.append(" ".join(parts))
+                if testimonial_items:
+                    branding_lines.append(
+                        f"Testimonials:\n" + "\n\n".join(testimonial_items)
+                    )
+            # Custom sections
+            if sd.get("custom") and isinstance(sd["custom"], list):
+                custom_items = []
+                for item in sd["custom"]:
+                    if isinstance(item, dict):
+                        cid = item.get("id", "")
+                        name = item.get("name", "")
+                        desc = item.get("description", "")
+                        notes = item.get("notes", "")
+                        parts = [f"Custom Section: {name}"]
+                        if cid:
+                            parts.append(f"(ID: {cid})")
+                        if desc:
+                            parts.append(f"- {desc}")
+                        if notes:
+                            parts.append(f"Notes: {notes}")
+                        custom_items.append(" ".join(parts))
+                if custom_items:
+                    branding_lines.append(
+                        f"Custom Sections:\n" + "\n".join(custom_items)
+                    )
+        if branding_lines:
+            add("Branding", branding_lines)
     if payload.media:
         add(
             "Media",
@@ -764,14 +911,31 @@ def _flatten_init_payload(payload: InitPayload) -> str:
             ],
         )
     if payload.assets:
-        add(
-            "Assets",
-            [
-                f"Logo: {payload.assets.logo}",
-                f"Hero Image: {payload.assets.heroImage}",
-                f"Secondary Images: {', '.join(payload.assets.secondaryImages or [])}",
-            ],
-        )
+        assets_lines = []
+        if payload.assets.logo:
+            assets_lines.append(f"Logo: {payload.assets.logo}")
+        if payload.assets.heroImage:
+            assets_lines.append(f"Hero Image: {payload.assets.heroImage}")
+        if payload.assets.secondaryImages:
+            assets_lines.append(
+                f"Secondary Images: {', '.join(payload.assets.secondaryImages)}"
+            )
+        if payload.assets.favicon:
+            assets_lines.append(f"Favicon: {payload.assets.favicon}")
+        if payload.assets.sectionAssets:
+            sa = payload.assets.sectionAssets
+            section_asset_items = []
+            for section_key, urls in sa.items():
+                if isinstance(urls, list) and urls:
+                    section_asset_items.append(f"{section_key}: {', '.join(urls)}")
+                elif isinstance(urls, str):
+                    section_asset_items.append(f"{section_key}: {urls}")
+            if section_asset_items:
+                assets_lines.append(
+                    f"Section Assets:\n" + "\n".join(section_asset_items)
+                )
+        if assets_lines:
+            add("Assets", assets_lines)
     print(f"[INIT] Flattened payload:\n" + "\n\n".join(sections))
     return "\n\n".join(sections)
 
