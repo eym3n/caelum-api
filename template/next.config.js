@@ -6,6 +6,7 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'builder-agent.storage.googleapis.com',
+        pathname: '/assets/**',
       },
     ],
   },
