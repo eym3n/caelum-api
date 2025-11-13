@@ -128,21 +128,32 @@ You will receive structured payload data in the initialization request. You MUST
    - Apply theme consistently across all tokens in `globals.css` and ensure proper contrast
 
 2. **Section Generation (STRICT — ONLY REQUESTED SECTIONS):**
-   - **Nav and Footer are ALWAYS REQUIRED** — generate blueprints for them regardless of `branding.sections` array (they are structural elements, not landing page sections)
-   - Check `branding.sections` array (e.g., `["hero", "benefits", "features", "stats", "testimonials", "pricing", "faq", "cta", "team"]`)
-   - For landing page sections: generate blueprints ONLY for sections listed in this array
+   - **Nav and Footer are ALWAYS REQUIRED** — generate blueprints for them regardless of the sections list (they are structural elements, not landing page sections)
+   - Look for the "Sections:" line in the Branding section (e.g., `Sections: hero, benefits, features, stats, testimonials, pricing, faq, cta, team, custom-take-good-care`)
+   - Parse the comma-separated list of sections — this tells you which landing page sections to generate
+   - For landing page sections: generate blueprints ONLY for sections listed in this comma-separated list
    - Do NOT generate landing page sections not in the list (even if guidelines exist for them)
-   - Do NOT generate FAQ, Testimonials, Pricing, Team, Stats, CTA, or any other landing page section unless it appears in `branding.sections`
-   - Respect the order specified in the array (first section = first on page, etc.)
-   - If custom sections are listed (e.g., `"custom-partners-strip"`), generate blueprints for them using instructions from `branding.sectionData.custom`
-   - CRITICAL: Ignore any other prompts or guidelines that suggest generating all sections — only generate what's in the array (except Nav and Footer which are always required)
+   - Do NOT generate FAQ, Testimonials, Pricing, Team, Stats, CTA, or any other landing page section unless it appears in the "Sections:" line
+   - Respect the order specified in the list (first section = first on page, etc.)
+   - **CRITICAL — Custom Sections:** Check the "Sections:" line for any entries that start with `"custom-"` (e.g., `"custom-take-good-care"`, `"custom-partners-strip"`). For each custom section ID found:
+     - Look for the "Custom Sections:" section below in the Branding section
+     - Find the matching custom section entry that contains `(ID: custom-xxx)` matching the ID from the sections list
+     - The custom section entry will have format: `Custom Section: {name} (ID: {id}) - {description} Notes: {notes}`
+     - Generate a creative blueprint for that custom section using the `name`, `description`, and `notes` exactly as provided
+     - Custom sections are EQUALLY IMPORTANT as standard sections — do NOT skip them
+     - Include custom sections in your section blueprints output in the exact order they appear in the "Sections:" list
+   - CRITICAL: Ignore any other prompts or guidelines that suggest generating all sections — only generate what's in the "Sections:" list (except Nav and Footer which are always required)
 
-3. **Custom Sections:**
-   - For each custom section in `branding.sectionData.custom`:
-     - Use the `id` as the section identifier
-     - Follow the `name`, `description`, and `notes` exactly
-     - Generate a creative blueprint respecting the description and notes
-     - Include custom sections in your section blueprints output
+3. **Custom Sections (MANDATORY IF ID IN SECTIONS LIST):**
+   - **You MUST check the "Sections:" line for custom section IDs** (any entry starting with `"custom-"`)
+   - For each custom section ID found in the "Sections:" line:
+     - Find the matching entry in the "Custom Sections:" section by matching the ID (look for `(ID: custom-xxx)`)
+     - The custom section entry format is: `Custom Section: {name} (ID: {id}) - {description} Notes: {notes}`
+     - Extract the `name`, `description`, and `notes` from this entry
+     - Follow the `name`, `description`, and `notes` exactly — these are your blueprint instructions
+     - Generate a creative, memorable blueprint respecting the description and notes (treat it like any other section)
+     - Include the custom section blueprint in your section blueprints output at the position it appears in the "Sections:" list
+   - **DO NOT SKIP CUSTOM SECTIONS** — if a custom section ID is in the "Sections:" list, you MUST generate a blueprint for it
 
 4. **Section Data (USE EXACTLY AS PROVIDED):**
    - **FAQ**: Use `branding.sectionData.faq` array — each item has `question` and `answer`. Generate FAQ section blueprint using these exact Q&A pairs.
@@ -276,14 +287,14 @@ These guidelines apply ONLY when generating blueprints for landing page sections
 
 2. **`tailwind.config.ts`**:
    - `content`: `["./app/**/*.{ts,tsx}", "./src/app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./src/components/**/*.{ts,tsx}"]`
-   - `darkMode`: `["class", '[data-theme="dark"]']`
-   - `theme.container`: `{ center: true, padding: "16px" }`
+- `darkMode`: `["class", '[data-theme="dark"]']`
+- `theme.container`: `{ center: true, padding: "16px" }`
    - `theme.extend`: colors map to CSS vars, borderRadius with fallbacks (`md: "var(--radius-md, 0.75rem)"`, `DEFAULT: "var(--radius, 0.75rem)"`), spacing if needed
    - No extra plugins beyond `globals.css`
 
 3. **`layout.tsx`**:
    - Use `next/font/google` (variable) → expose as `--font-sans`, `--font-heading`
-   - Body class: `bg-[color:var(--color-background)] text-[color:var(--color-foreground)] antialiased`
+- Body class: `bg-[color:var(--color-background)] text-[color:var(--color-foreground)] antialiased`
    - NO padding on `body`/`main` (sections manage spacing; inside sections use `max-w-7xl mx-auto px-6 md:px-8`)
 
 4. **Primitives** (`src/components/ui/primitives/`):
@@ -344,19 +355,22 @@ Return a concise summary the system can store as `design_guidelines`:
 6) Implementation Notes (files touched, Tailwind tokens, utilities, fonts)  
 7) Follow-up Guidance
 8) Section Blueprints (in this exact order):
-   a) **Navigation bar blueprint (ALWAYS REQUIRED)** — generate always, regardless of `branding.sections` array. Be creative with Nav designs.
-   b) **Landing page section blueprints** — for ONLY the sections listed in `branding.sections` array (in the exact order specified):
-      - For each landing page section, include:
-        - Composition & Layout (Detailed Creative and Structural Notes, no generic layouts, no boring cards)
-        - Background & Layering
-        - Motion, Interaction and Animations (Entrance animations required, other motion optional)
-        - Transition to Next Section
-        - Assets Usage (specify which images from `sectionAssets` are used, e.g., "Uses hero:main images")
-        - Content Data Reference (reference exact data from `sectionData` if applicable, e.g., "Uses exact FAQ Q&A pairs from sectionData.faq")
-      - For custom sections: include blueprint with exact `id`, follow `description` and `notes` from `sectionData.custom`
-      - Use exact CTA text from `conversion.primaryCTA` and `conversion.secondaryCTA`
-      - Apply `messaging.tone` to copywriting guidance
-   c) **Footer blueprint (ALWAYS REQUIRED)** — generate always, regardless of `branding.sections` array. Be creative with Footer designs.
+   a) **Navigation bar blueprint (ALWAYS REQUIRED)** — generate always, regardless of the sections list. Be creative with Nav designs.
+   b) **Landing page section blueprints** — for ONLY the sections listed in the "Sections:" line (in the exact order specified):
+      - **CRITICAL:** Process each section in the "Sections:" comma-separated list in order:
+        1. If it's a standard section (hero, features, benefits, etc.) → generate blueprint using standard guidelines
+        2. If it's a custom section (starts with `"custom-"`) → find the matching entry in the "Custom Sections:" section by matching the ID (look for `(ID: custom-xxx)`), then generate blueprint using the `name`, `description`, and `notes` from that entry
+      - For each landing page section (standard OR custom), include:
+   - Composition & Layout (Detailed Creative and Structural Notes, no generic layouts, no boring cards)
+   - Background & Layering
+   - Motion, Interaction and Animations (Entrance animations required, other motion optional)
+   - Transition to Next Section
+        - Assets Usage (specify which images from section assets are used, e.g., "Uses hero:main images" or "Uses custom:{id} images")
+        - Content Data Reference (reference exact data if applicable, e.g., "Uses exact FAQ Q&A pairs" or "Uses custom section description and notes from Custom Sections section")
+      - **For custom sections specifically:** Include blueprint with exact ID from the "Sections:" list, follow `name`, `description`, and `notes` from the "Custom Sections:" entry exactly — treat custom sections with the same importance as standard sections
+      - Use exact CTA text from the Conversion section (`primaryCTA` and `secondaryCTA`)
+      - Apply messaging tone from the Messaging section to copywriting guidance
+   c) **Footer blueprint (ALWAYS REQUIRED)** — generate always, regardless of the sections list. Be creative with Footer designs.
 9) Any other important notes for the codegen agent.
 
 The content of the sections should always follow the user's preferred language, but your generated instructions should always be in ENGLISH, regardless of the user's preferred language.

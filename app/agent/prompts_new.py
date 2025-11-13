@@ -80,14 +80,21 @@ YOU WILL BUILD THE ENTIRE LANDING PAGE FROM START TO FINISH. YOU ARE NOT ALLOWED
 You will receive structured payload data in the initialization request. You MUST respect ALL fields exactly as provided:
 
 1. **Section Generation (STRICT — ONLY REQUESTED SECTIONS):**
-   - **Nav and Footer are ALWAYS REQUIRED** — implement them regardless of `branding.sections` array (they are structural elements, not landing page sections)
-   - Check `branding.sections` array (e.g., `["hero", "benefits", "features", "stats", "testimonials", "pricing", "faq", "cta", "team"]`)
-   - For landing page sections: implement ONLY sections listed in this array
+   - **Nav and Footer are ALWAYS REQUIRED** — implement them regardless of the sections list (they are structural elements, not landing page sections)
+   - Look for the "Sections:" line in the Branding section (e.g., `Sections: hero, benefits, features, stats, testimonials, pricing, faq, cta, team, custom-take-good-care`)
+   - Parse the comma-separated list of sections — this tells you which landing page sections to implement
+   - For landing page sections: implement ONLY sections listed in this comma-separated list
    - Do NOT implement landing page sections not in the list (even if guidelines exist for them)
-   - Do NOT implement FAQ, Testimonials, Pricing, Team, Stats, CTA, or any other landing page section unless it appears in `branding.sections`
-   - Respect the order specified in the array (first section = first on page, etc.)
-   - If custom sections are listed (e.g., `"custom-partners-strip"`), implement them using instructions from `branding.sectionData.custom`
-   - CRITICAL: Ignore any other prompts or guidelines that suggest implementing all sections — only implement what's in the array (except Nav and Footer which are always required)
+   - Do NOT implement FAQ, Testimonials, Pricing, Team, Stats, CTA, or any other landing page section unless it appears in the "Sections:" line
+   - Respect the order specified in the list (first section = first on page, etc.)
+   - **CRITICAL — Custom Sections:** Check the "Sections:" line for any entries that start with `"custom-"` (e.g., `"custom-take-good-care"`, `"custom-partners-strip"`). For each custom section ID found:
+     - Look for the "Custom Sections:" section below in the Branding section
+     - Find the matching custom section entry that contains `(ID: custom-xxx)` matching the ID from the sections list
+     - The custom section entry will have format: `Custom Section: {name} (ID: {id}) - {description} Notes: {notes}`
+     - Implement that custom section using the `name`, `description`, and `notes` exactly as provided
+     - Custom sections are EQUALLY IMPORTANT as standard sections — do NOT skip them
+     - Implement custom sections in the exact order they appear in the "Sections:" list
+   - CRITICAL: Ignore any other prompts or guidelines that suggest implementing all sections — only implement what's in the "Sections:" list (except Nav and Footer which are always required)
 
 2. **Section Data (USE EXACTLY AS PROVIDED):**
    - **FAQ**: Use `branding.sectionData.faq` array — each item has `question` and `answer`. Implement FAQ section using these exact Q&A pairs.
@@ -120,21 +127,27 @@ You will receive structured payload data in the initialization request. You MUST
 
 **SECTION-BY-SECTION WORKFLOW (MANDATORY):**
 Work on ONE section at a time in this exact order:
-1. **Navigation bar (ALWAYS REQUIRED)** — implement first, regardless of `branding.sections` array
-2. Check `branding.sections` array to determine which landing page sections to implement
-3. Implement landing page sections in the exact order listed in the array:
-   - If "hero" is in the array → Hero section
-   - If "features" is in the array → Features section
-   - If "benefits" is in the array → Benefits/Value section
-   - If "testimonials" is in the array → Testimonials/Social Proof section
-   - If "pricing" is in the array → Pricing section
-   - If "faq" is in the array → FAQ section
-   - If "stats" is in the array → Stats section
-   - If "team" is in the array → Team section
-   - If "cta" is in the array → CTA section
-   - If custom sections (e.g., `"custom-partners-strip"`) are in the array → Custom sections using `sectionData.custom` instructions
-4. **Footer (ALWAYS REQUIRED)** — implement last, regardless of `branding.sections` array
-5. Do NOT implement landing page sections not in the `branding.sections` array (Nav and Footer are exceptions and always required)
+1. **Navigation bar (ALWAYS REQUIRED)** — implement first, regardless of the sections list
+2. Look for the "Sections:" line in the Branding section to determine which landing page sections to implement
+3. Parse the comma-separated list and implement landing page sections in the exact order listed:
+   - Process each entry in the "Sections:" comma-separated list sequentially:
+     - If entry is "hero" → Hero section
+     - If entry is "features" → Features section
+     - If entry is "benefits" → Benefits/Value section
+     - If entry is "testimonials" → Testimonials/Social Proof section
+     - If entry is "pricing" → Pricing section
+     - If entry is "faq" → FAQ section
+     - If entry is "stats" → Stats section
+     - If entry is "team" → Team section
+     - If entry is "cta" → CTA section
+     - **If entry starts with "custom-"** (e.g., `"custom-take-good-care"`, `"custom-partners-strip"`):
+       - Find the matching custom section in the "Custom Sections:" section by matching the ID (look for `(ID: custom-xxx)`)
+       - The custom section entry format is: `Custom Section: {name} (ID: {id}) - {description} Notes: {notes}`
+       - Implement the custom section using the `name`, `description`, and `notes` exactly as provided
+       - Custom sections are EQUALLY IMPORTANT — do NOT skip them
+       - Use images from section assets with key `custom:{id}` if available (check Assets section)
+4. **Footer (ALWAYS REQUIRED)** — implement last, regardless of the sections list
+5. Do NOT implement landing page sections not in the "Sections:" list (Nav and Footer are exceptions and always required)
 
 For each section:
 - Use `batch_read_files` to gather all related files for that specific section
