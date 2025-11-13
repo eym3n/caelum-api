@@ -772,7 +772,8 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                 f"Layout Preference: {payload.branding.layoutPreference}"
             )
         if payload.branding.sections:
-            branding_lines.append(f"Sections: {', '.join(payload.branding.sections)}")
+            sections_list = payload.branding.sections
+            branding_lines.append(f"Sections: {', '.join(sections_list)}")
         if payload.branding.sectionData:
             sd = payload.branding.sectionData
             # FAQ
@@ -868,7 +869,7 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                     branding_lines.append(
                         f"Testimonials:\n" + "\n\n".join(testimonial_items)
                     )
-            # Custom sections
+            # Custom sections - MAKE THIS VERY PROMINENT
             if sd.get("custom") and isinstance(sd["custom"], list):
                 custom_items = []
                 for item in sd["custom"]:
@@ -877,18 +878,49 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                         name = item.get("name", "")
                         desc = item.get("description", "")
                         notes = item.get("notes", "")
-                        parts = [f"Custom Section: {name}"]
-                        if cid:
-                            parts.append(f"(ID: {cid})")
-                        if desc:
-                            parts.append(f"- {desc}")
-                        if notes:
-                            parts.append(f"Notes: {notes}")
-                        custom_items.append(" ".join(parts))
+                        if cid and name:
+                            # Check if this custom section is in the sections list
+                            is_in_sections = (
+                                payload.branding.sections
+                                and cid in payload.branding.sections
+                            )
+                            # Format with emphasis
+                            header = f"🚨 CUSTOM SECTION (ID: {cid}) 🚨"
+                            if is_in_sections:
+                                header += " ⚠️ REQUIRED IN SECTIONS LIST ⚠️"
+                            custom_items.append(header)
+                            custom_items.append(f"Name: {name}")
+                            if desc:
+                                custom_items.append(f"Description: {desc}")
+                            if notes:
+                                custom_items.append(f"Notes: {notes}")
+                            custom_items.append("")  # Empty line for separation
                 if custom_items:
+                    # Add prominent header
+                    branding_lines.append("")
+                    branding_lines.append("=" * 60)  # Separator line for emphasis
                     branding_lines.append(
-                        f"Custom Sections:\n" + "\n".join(custom_items)
+                        "🚨 CUSTOM SECTIONS (MANDATORY IF IN SECTIONS LIST) 🚨"
                     )
+                    branding_lines.append("=" * 60)
+                    # Add note about which ones are required
+                    if payload.branding.sections:
+                        custom_in_list = [
+                            s
+                            for s in payload.branding.sections
+                            if s.startswith("custom-")
+                        ]
+                        if custom_in_list:
+                            branding_lines.append(
+                                f"⚠️ REQUIRED CUSTOM SECTIONS (found in Sections list): {', '.join(custom_in_list)}"
+                            )
+                            branding_lines.append(
+                                "⚠️ YOU MUST GENERATE/IMPLEMENT BLUEPRINTS FOR THESE CUSTOM SECTIONS ⚠️"
+                            )
+                    branding_lines.append("")
+                    branding_lines.extend(custom_items)
+                    branding_lines.append("=" * 60)
+                    branding_lines.append("")
         if branding_lines:
             add("Branding", branding_lines)
     if payload.media:
