@@ -407,6 +407,8 @@ When Tailwind v4 detects a class pattern with opacity modifiers (`/90`, `/60`, e
 }
 ```
 
+Do not create empty utility classes. avoid this error `@utility XYZ` is empty. Utilities should include at least one property.
+
 ## Quick Reference: Converting Tailwind Classes to CSS
 
 When you need to convert Tailwind classes to CSS for use in `@utility`:
