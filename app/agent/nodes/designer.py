@@ -694,6 +694,7 @@ Return a concise summary the system can store as `design_guidelines`:
       - **For custom sections specifically:** Include blueprint with exact ID from the "Sections:" list, follow `name`, `description`, and `notes` from the "Custom Sections:" entry exactly — treat custom sections with the same importance as standard sections
       - Use exact CTA text from the Conversion section (`primaryCTA` and `secondaryCTA`)
       - Apply messaging tone from the Messaging section to copywriting guidance
+   -- Responsivity and mobile screen size handling and adjustments to be made.
    c) **Footer blueprint (ALWAYS REQUIRED)** — generate always, regardless of the sections list. Be creative with Footer designs.
 9) Any other important notes for the codegen agent.
 
@@ -720,7 +721,7 @@ Be detailed about what files it needs to read first and then create.
 """
 
 
-_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="minimal").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
