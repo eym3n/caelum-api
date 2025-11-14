@@ -26,7 +26,6 @@ from app.agent.tools.files import (
 
 from app.agent.tools.commands import (
     lint_project,
-    check_css,
 )
 
 load_dotenv()
@@ -42,7 +41,6 @@ tools = [
     list_files,
     # Command tools
     lint_project,
-    check_css,
 ]
 
 

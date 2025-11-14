@@ -27,7 +27,6 @@ from app.agent.tools.commands import (
     git_log,
     git_show,
     lint_project,
-    check_css,
 )
 from app.checkpointer import get_default_checkpointer
 
@@ -81,7 +80,6 @@ command_tools = [
     git_log,
     git_show,
     lint_project,
-    check_css,
 ]
 
 # Coder has access to both file and command tools (batch operations only)

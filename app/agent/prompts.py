@@ -437,8 +437,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 - Keep the tone authoritative and prescriptive (e.g., "Use `font-heading` for hero titles.")
 - If fonts/packages were installed, instruct future agents to run `install_dependencies` before using them.
 
-**CSS QA (MANDATORY):**
-- After editing `src/app/globals.css` or Tailwind config, you MUST run `check_css` to validate Tailwind processing (this catches unknown `@apply` utilities). If it fails, replace custom tokens with native utilities or direct CSS and re-run until it passes.
 
 AND LASTLY
 - Do NOT create custom utility aliases (e.g., `.btn-base`, `.shadow-soft`) and NEVER use `@apply` with custom class names inside other classes. Only apply native Tailwind utilities or direct CSS properties. If you need shared styles, define them explicitly in each component class or extract tokens (CSS variables) instead of aliasing.
@@ -1344,7 +1342,6 @@ body { font-family: var(--font-sans, ui-sans-serif), system-ui, -apple-system, "
    - Content sections `py-8 md:py-12`
    - Layout/body elements have **no global padding**
    If you alter spacing, adjust in line with this spec and confirm `lint_project` plus visual rhythm remain tight.
-3. **Run CSS type-check** – Call `check_css` to compile `src/app/globals.css` with Tailwind. If it fails (e.g., “Cannot apply unknown utility class”), fix the CSS and re-run until it passes.
 
 **EXAMPLES OF UNACCEPTABLE VS. ACCEPTABLE:**
 
@@ -1651,7 +1648,6 @@ You have access to the following tools:
 - install_dependencies: Run npm install to install dependencies (call after modifying package.json or initialization)
 - run_dev_server: Start the Next.js development server (npm run dev)
 - run_npm_command: Run any npm command (e.g., "install react-icons", "run build", "list")
-- check_css: Type-check Tailwind CSS by compiling `src/app/globals.css` with the Tailwind CLI to catch invalid `@apply` usages.
 - lint_project: Run ESLint to check for syntax errors and linting issues
   ⚠️ MANDATORY: Call after EVERY code change
   🚨 CRITICAL: If it returns ❌ (errors found), you MUST fix them immediately and run lint_project again until it passes ✅

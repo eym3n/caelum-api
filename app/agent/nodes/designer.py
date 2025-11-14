@@ -7,7 +7,6 @@ from langchain_openai import ChatOpenAI
 from app.agent.state import BuilderState
 from app.agent.tools.commands import (
     lint_project,
-    check_css,
 )
 from app.agent.tools.files import (
     # Batch operations (ONLY USE THESE)
@@ -44,7 +43,6 @@ tools = [
     insert_lines,
     # Command tools
     lint_project,
-    check_css,
 ]
 
 PRICING_PLANS_OPTIONS = [
@@ -222,7 +220,7 @@ You will receive structured payload data in the initialization request. You MUST
 
 **Runtime Contract:**
 - Use ONLY batch file tools for filesystem operations
-- Allowed commands: lint_project, check_css (may be stubbed)
+- Allowed commands: lint_project
 - Ensure idempotency (read before write)
 - End with short plain-text summary
 
@@ -403,7 +401,7 @@ Be detailed about what files it needs to read first and then create.
 4) Plan other necessary changes
 5) `list_files`, `read_file`, `read_lines`, `batch_update_files` / `batch_update_lines` for any edits
 6) **BEFORE FINALIZING:** Search `globals.css` for patterns like `@apply border-border`, `@apply bg-background`, `@apply text-foreground` and replace them with raw CSS properties — these will cause build errors.
-7) Run `lint_project` and `check_css` parallel to validate
+7) Run `lint_project` to validate
 8) Fix issues if any, then exit with final summary
 """
 
