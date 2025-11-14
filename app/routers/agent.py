@@ -872,15 +872,21 @@ def _flatten_init_payload(payload: InitPayload) -> str:
             # Custom sections - ONLY SHOW THOSE IN SECTIONS LIST
             if sd.get("custom") and isinstance(sd["custom"], list):
                 # First, identify which custom section IDs are in the sections list
-                custom_ids_in_sections = []
+                # Handle both formats: "custom:custom-id" (colon) and "custom-custom-id" (hyphen)
+                custom_ids_in_sections = set()
+                custom_section_entries_in_list = []
                 if payload.branding.sections:
-                    custom_ids_in_sections = [
-                        s.replace(
-                            "custom-", ""
-                        )  # Remove "custom-" prefix to get raw ID
-                        for s in payload.branding.sections
-                        if s.startswith("custom-")
-                    ]
+                    for s in payload.branding.sections:
+                        if s.startswith("custom:"):
+                            # Format: "custom:custom-partners-strip" -> extract "custom-partners-strip"
+                            custom_id = s.replace("custom:", "", 1)
+                            custom_ids_in_sections.add(custom_id)
+                            custom_section_entries_in_list.append(s)
+                        elif s.startswith("custom-"):
+                            # Format: "custom-custom-partners-strip" -> extract "custom-partners-strip"
+                            custom_id = s.replace("custom-", "", 1)
+                            custom_ids_in_sections.add(custom_id)
+                            custom_section_entries_in_list.append(s)
 
                 custom_items = []
                 for item in sd["custom"]:
@@ -890,10 +896,11 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                         desc = item.get("description", "")
                         notes = item.get("notes", "")
                         if cid and name:
-                            # ONLY include custom sections that are in the sections list
-                            # Check if the ID matches (with or without "custom-" prefix)
+                            # Check if this custom section ID is in the sections list
+                            # Match the ID directly, or with "custom-" prefix, or with "custom:" prefix
                             is_in_sections = (
                                 cid in custom_ids_in_sections
+                                or f"custom:{cid}" in (payload.branding.sections or [])
                                 or f"custom-{cid}" in (payload.branding.sections or [])
                                 or cid in (payload.branding.sections or [])
                             )
@@ -919,22 +926,16 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                     )
                     branding_lines.append("=" * 60)
                     # Add note about which ones are required
-                    if payload.branding.sections:
-                        custom_in_list = [
-                            s
-                            for s in payload.branding.sections
-                            if s.startswith("custom-")
-                        ]
-                        if custom_in_list:
-                            branding_lines.append(
-                                f"⚠️ THESE CUSTOM SECTIONS ARE IN THE SECTIONS LIST: {', '.join(custom_in_list)}"
-                            )
-                            branding_lines.append(
-                                "⚠️ YOU MUST GENERATE/IMPLEMENT BLUEPRINTS FOR ALL CUSTOM SECTIONS LISTED ABOVE ⚠️"
-                            )
-                            branding_lines.append(
-                                "⚠️ DO NOT SKIP CUSTOM SECTIONS - THEY ARE EQUALLY IMPORTANT AS STANDARD SECTIONS ⚠️"
-                            )
+                    if custom_section_entries_in_list:
+                        branding_lines.append(
+                            f"⚠️ THESE CUSTOM SECTIONS ARE IN THE SECTIONS LIST: {', '.join(custom_section_entries_in_list)}"
+                        )
+                        branding_lines.append(
+                            "⚠️ YOU MUST GENERATE/IMPLEMENT BLUEPRINTS FOR ALL CUSTOM SECTIONS LISTED ABOVE ⚠️"
+                        )
+                        branding_lines.append(
+                            "⚠️ DO NOT SKIP CUSTOM SECTIONS - THEY ARE EQUALLY IMPORTANT AS STANDARD SECTIONS ⚠️"
+                        )
                     branding_lines.append("")
                     branding_lines.extend(custom_items)
                     branding_lines.append("=" * 60)
@@ -975,11 +976,48 @@ def _flatten_init_payload(payload: InitPayload) -> str:
         if payload.assets.sectionAssets:
             sa = payload.assets.sectionAssets
             section_asset_items = []
+            # Group by section type for better readability
+            hero_assets = []
+            benefit_assets = []
+            feature_assets = []
+            custom_assets = []
+            other_assets = []
+
             for section_key, urls in sa.items():
                 if isinstance(urls, list) and urls:
-                    section_asset_items.append(f"{section_key}: {', '.join(urls)}")
+                    url_list = ", ".join(urls)
                 elif isinstance(urls, str):
-                    section_asset_items.append(f"{section_key}: {urls}")
+                    url_list = urls
+                else:
+                    continue
+
+                if section_key.startswith("hero:"):
+                    hero_assets.append(f"  {section_key}: {url_list}")
+                elif section_key.startswith("benefits:"):
+                    benefit_assets.append(f"  {section_key}: {url_list}")
+                elif section_key.startswith("features:"):
+                    feature_assets.append(f"  {section_key}: {url_list}")
+                elif section_key.startswith("custom:"):
+                    custom_assets.append(f"  {section_key}: {url_list}")
+                else:
+                    other_assets.append(f"  {section_key}: {url_list}")
+
+            if hero_assets:
+                section_asset_items.append("Hero Section Assets:")
+                section_asset_items.extend(hero_assets)
+            if benefit_assets:
+                section_asset_items.append("Benefits Section Assets:")
+                section_asset_items.extend(benefit_assets)
+            if feature_assets:
+                section_asset_items.append("Features Section Assets:")
+                section_asset_items.extend(feature_assets)
+            if custom_assets:
+                section_asset_items.append("🚨 Custom Section Assets (REQUIRED):")
+                section_asset_items.extend(custom_assets)
+            if other_assets:
+                section_asset_items.append("Other Section Assets:")
+                section_asset_items.extend(other_assets)
+
             if section_asset_items:
                 assets_lines.append(
                     f"Section Assets:\n" + "\n".join(section_asset_items)
