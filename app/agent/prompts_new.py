@@ -186,7 +186,7 @@ Do not ask the user any more questions, do not even address the user, start work
 - Keep designs clean and polished with BALANCED use of effects
 - Use purposeful animations to enhance UX - keep them smooth and performant
 - Prioritize performance and loading speed, but don't sacrifice polish
-- **CRITICAL: Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. Each section should have a unique animated background treatment. Refer to designer notes for specific background requirements.
+- **CRITICAL: Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. **Background Strategy:** Consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate. Refer to designer notes for specific background requirements.
 - Required animations:
   - Entrance reveals for ALL major sections using `whileInView` (fade-in, slide-up)
   - Entrance animations for key content elements within sections (with subtle staggers if needed)
@@ -273,7 +273,7 @@ Adopt a batch-tool workflow: gather every file you need with `batch_read_files`,
 Structure the app according to Next.js best practices: compose pages in `src/app`, funnel reusable UI into `src/components` (sections live in `src/components/sections/`), place stateful logic in `src/hooks`, types in `src/types`, utilities in `src/lib`, and shared contexts in `src/contexts`. Maintain strict TypeScript with meaningful prop interfaces, and ensure every section obeys spacing rules (nav `h-14`/`h-16`, hero `pt-24 md:pt-32 pb-16 md:pb-20`, other bands `py-12 md:py-16`, gutters `max-w-7xl mx-auto px-6 md:px-8`). Do NOT add page-level padding or outer section margins.
 
 **ANIMATION & MOTION RULES (CREATIVE & ENGAGING):**
-- **Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. Each section should have a unique animated background treatment. Refer to designer notes for specific background requirements.
+- **Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. **Background Strategy:** Consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate. Refer to designer notes for specific background requirements.
 - **Component Layering & Wow Factor (MANDATORY):**
   - Each section MUST have creative component layering with a "wow factor"
   - Use z-index strategically: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals (100+)
@@ -462,7 +462,7 @@ CODER_DESIGN_BOOSTER = """
 
 * **Creative animated backgrounds are ENCOURAGED:**
   1. Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects
-  2. Each section should have a unique animated background treatment
+  2. **Background Strategy:** Consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate.
   3. Layer multiple effects for richness (e.g., gradient + particles + glow)
   4. Vary animation speeds for visual interest
   5. Use Framer Motion for background animations (mark components with `'use client'`)
@@ -500,7 +500,7 @@ CODER_DESIGN_BOOSTER = """
 
 * Clean, modern designs with purposeful layouts and polished presentation
 * Balance visual appeal with performance and usability
-* **Creative animated backgrounds** with unique treatments per section
+* **Creative animated backgrounds** — consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background.
 * **Component layering** creating depth and "wow factor" in every section
 * **Scroll animations** used sparingly (2-4 per page) for engagement
 * Smooth entrance animations for all sections to create engaging flow
@@ -537,17 +537,17 @@ CODER_DESIGN_BOOSTER = """
 **Section Composition Guardrails**
 
 * Sections are full-bleed wrappers (`relative overflow-hidden`), with all padding **inside** the inner container
-* Use creative animated backgrounds - each section should have a unique animated background treatment
+* Use creative animated backgrounds — consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background.
 * Implement component layering with "wow factor" - floating elements, overlapping components, sophisticated shadows, depth creation
 * Clean separation between sections with subtle borders, background color changes, or gradient transitions
 * Each section should feel distinct but cohesive with the overall design
 
 **Definition of Done (design slice)**
 
-* Each section: creative animated background + entrance animations + interactive states + component layering with "wow factor"
+* Backgrounds: creative animated background (global, shared across 2-3 sections, or per-section as appropriate) + entrance animations + interactive states + component layering with "wow factor"
 * All sections have smooth entrance animations using `whileInView`
 * Key content elements within sections animate in appropriately
-* Backgrounds have creative animated treatments (animated gradients, particles, morphing shapes, etc.)
+* Backgrounds have creative animated treatments (animated gradients, particles, morphing shapes, etc.) — can be global, shared, or per-section
 * Component layering creates depth and visual interest (floating elements, overlapping components, sophisticated shadows)
 * Scroll animations used sparingly (2-4 per page total, max 1 per section)
 * Interactive elements have polished hover/focus/active states
