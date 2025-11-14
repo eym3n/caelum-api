@@ -74,17 +74,28 @@ TESTIMONIALS_SOCIAL_PROOF_OPTIONS = [
 ]
 
 HERO_CONCEPTS = [
-    "Bento Grid Hero: Headline dominates left 60%, right splits into 4-6 asymmetric cells showing benefits/stats/media with varied sizes and colors",
-    "Diagonal Shatter: Page splits diagonally; content on one triangle, striking visual/illustration on the other with overlapping badge clusters",
-    "Circular Spotlight: Massive circular gradient spotlight (static) centers hero content with orbiting stat cards positioned around perimeter",
-    "Stacked Perspective Cards: Headline floats over 3-4 stacked cards in 3D perspective (CSS transform) showing features/benefits with parallax-like depth",
-    "Full-Bleed Typography: Massive oversized headline fills viewport, CTA and benefits peek from corners, minimal centered media",
-    "Split Asymmetric: 40/60 or 30/70 split with one side solid color block + text, other side full-bleed image/illustration with text overlay",
-    "Radial Feature Wheel: Content in center, 6-8 feature pods arranged in circle around it (static positions), connected by subtle lines",
-    "Layered Depth Panels: 3 overlapping panels at slight angles, each revealing different info (headline→benefits→CTA), creates depth without animation",
-    "Corner Anchored: Content anchored to corners (top-left headline, top-right stats, bottom-left CTA, bottom-right media) with connecting lines/shapes",
-    "Newspaper Editorial: Magazine-style layout with oversized numbers, pull quotes, eyebrow text, multi-column composition",
+    "Cinematic Scene Breaker: Movie-poster style hero with dramatic lighting, layered typography, and a strong central CTA zone",
+    "Oversized Monochrome Collage: Black-and-white cropped UI collage with a bold color-pop CTA and editorial headline",
+    "Soft Atmosphere Gradient: Ambient blurry-orb background with a glowing halo around centered content and floating stat chips",
+    "Architectural Blueprint: Precise grid lines, measurement ticks, and engineered 3D blocks supporting a sharp, technical headline",
+    "Halo Center Stage: Massive radial halo with product or illustration in the middle and stat cards orbiting around",
+    "Ultra Minimal Brutalist: Giant left-aligned headline, hard 1px separators, monotone palette, and a boxed CTA",
+    "Micro-Story Process: Four-step horizontal visual storyline culminating in a CTA card, headline above acts as narrative title",
+    "Framed Glass Layers: Multiple frosted-glass panels stacked with slight offsets creating depth behind headline and CTA",
+    "Workbench Desktop Scene: Virtual desk layout with scattered tools, sticky notes, and product window framed as the centerpiece",
+    "Fractal Geometric Pattern: Hero using tessellated geometric shapes with the headline sitting in the only negative-space zone",
+    "Vertical Typographic Stack: Tower-like vertical headline, alternating bold/outline styles, with overlapping media card",
+    "Curated Moodboard Spread: Polaroid frames, swatches, scribbles, and pinned screenshots forming a curated board behind content",
+    "Portal Ring Hero: Circular gradient portal behind product image with CTA placed along the lower arc",
+    "Hyper-Contrasted Editorial Block: Massive serif headline, thin subtext, and oversized stat number creating a magazine aesthetic",
+    "Studio Spotlight Stage: Product placed on a shadowed pedestal with soft spotlight cone and centered copy",
+    "Orbiting Feature Pods: Centered main message with several fixed-position pods in a circular arrangement connected by thin lines",
+    "Gradient Beam Split: Vertical gradient beam dividing the hero; headline on one side, product on the other, subtle overlap",
+    "Diagonal Card Stack: Large angled cards sliding behind the headline, creating motion-like depth (static CSS transforms)",
+    "Layered Cutout Collage: Tear-edge shapes containing product visuals, layered behind bold text for a crafted editorial feel",
+    "Soft Glowing Frame: Faint neon frame around the hero area, highlighting headline and CTA with futuristic minimalism",
 ]
+
 
 FEATURES_LAYOUT_OPTIONS = [
     "Alternating Diagonal Rows: Features in diagonal bands alternating left/right, each with unique background color/texture",
@@ -211,12 +222,34 @@ You will receive structured payload data in the initialization request. You MUST
     - Use this to guide overall page structure and section ordering
 
 **Creativity Mandate:**
-- Unique compositions per section (bento grids, asymmetric layouts, diagonal cuts, overlapping elements, bold typography)
+- Unique compositions per section (bento grids, asymmetric layouts, diagonal cuts, overlapping elements, bold typography...ETC use your imagination)
 - Varied layouts: full-bleed, constrained, diagonal, circular/radial
 - Static but creative backgrounds (gradients, patterns, textures; NO animated backgrounds)
 - Entrance animations required (polished); backgrounds never animate
 - Avoid generic card grids; think Apple/Stripe/Linear quality
 - NO two sections use same layout pattern
+
+**SOME INSPIRATION FOR LAYOUTS:**
+NAV BAR INSPIRATION:
+**_nav_inspiration_**
+
+HERO INSPIRATION:
+**_hero_inspiration_**
+
+FEATURES INSPIRATION:
+**_features_inspiration_**
+
+BENEFITS INSPIRATION:
+**_benefits_inspiration_**
+
+TESTIMONIALS INSPIRATION:
+**_testimonials_inspiration_**
+
+PRICING INSPIRATION:
+**_pricing_inspiration_**
+
+CTA INSPIRATION:
+**_cta_inspiration_**
 
 **Runtime Contract:**
 - Use ONLY batch file tools for filesystem operations
