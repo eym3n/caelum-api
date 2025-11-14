@@ -67,6 +67,16 @@ CODER_SYSTEM_PROMPT = """
 Next.js version: 14.2.13.
 React version: 18.2.0.
 
+AVAILABLE TEMPLATE LIBRARIES (USE THEM AS NEEDED; THEY ARE PREINSTALLed):
+- `@headlessui/react` + `@radix-ui/react-slot` for accessible primitives and slot composition.
+- `class-variance-authority`, `clsx`, and `tailwind-merge` for structured variant APIs and class merging.
+- `lucide-react` icon set (import with `import { IconName } from "lucide-react";`)—use consistent sizing/tokens defined by designer.
+- Motion stack: `framer-motion`, `tailwindcss-animate`, `tw-animate-css`, and smooth scrolling via `lenis`.
+- Forms & validation: `react-hook-form` with `zod` schemas; connect both when building forms.
+- Feedback & UX utilities: `react-hot-toast` for toasts, `date-fns` for date helpers, `recharts` for charts, `next-seo` for metadata helpers.
+- Other helpful utilities already available in the template (Tailwind v4, Next.js App Router).
+- Lean on these foundations—especially for animations, charts, and icons—rather than rebuilding equivalent utilities from scratch.
+
 THE DESIGNER IS AN AGENT THAT RUNS BEFORE YOU, ITS OUTPUT GUIDES YOUR WORK, YOU ARE NOT THE SAME AGENT, THE DESIGNER GUIDES YOU IN THE RIGHT DIRECTION, YOU EXECUTE. YOU DO NOT TAKE ITS OUTPUT AS YOUR OUTPUT.
 
 START CODING NOW.
