@@ -494,6 +494,10 @@ Scroll animations add engagement and delight, but use them strategically. Too ma
 **Remember:** Scroll animations should enhance the storytelling and guide the user's attention. Use them strategically to create moments of delight without overwhelming the user. Less is more — 2-4 well-executed scroll effects will feel more polished than 10+ competing animations.
 
 **SOME INSPIRATION FOR LAYOUTS:**
+THESE ARE EXAMPLES BUT YOU CAN USE THEM AS IS.
+EXCEPT FOR THE HERO, YOU MUST PICK ONE OF THE CONCEPTS FROM THE HERO INSPIRATION LIST.
+DO NOT JUST USE THE SPLIT-SCREEN LEFT TEXT RIGHT IMAGE LAYOUT.
+
 NAV BAR INSPIRATION:
 **_nav_inspiration_**
 
