@@ -58,10 +58,10 @@ PRICING_PLANS_OPTIONS = [
 
 CTA_SECTION_GUIDELINES = [
     "Forms must be clear and usable, but section design should be BOLD",
-    "Consider: diagonal split with form on one side, floating form over striking background, centered card with dramatic backdrop",
+    "Consider: diagonal split with form on one side, floating form over striking animated background, centered card with dramatic animated backdrop",
     "Creative CTAs: button with icon animation, multi-step micro-wizard, benefit reminder sidebar",
     "Use strong visual hierarchy and whitespace to make form inviting",
-    "Static backgrounds but can use bold colors, gradients, geometric shapes",
+    "Creative animated backgrounds: bold colors, animated gradients, morphing shapes, flowing patterns, geometric animations",
 ]
 
 TESTIMONIALS_SOCIAL_PROOF_OPTIONS = [
@@ -227,10 +227,271 @@ You will receive structured payload data in the initialization request. You MUST
 **Creativity Mandate:**
 - Unique compositions per section (bento grids, asymmetric layouts, diagonal cuts, overlapping elements, bold typography...ETC use your imagination)
 - Varied layouts: full-bleed, constrained, diagonal, circular/radial
-- Static but creative backgrounds (gradients, patterns, textures; NO animated backgrounds)
-- Entrance animations required (polished); backgrounds never animate
+- **Creative animated backgrounds are ENCOURAGED:** Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. Be bold and innovative with background animations — they add depth and visual interest. Each section should have a unique animated background treatment.
+- Entrance animations required (polished)
 - Avoid generic card grids; think Apple/Stripe/Linear quality
 - NO two sections use same layout pattern
+
+**SPECIAL BACKGROUND CREATIVITY INSTRUCTIONS (CRITICAL — BE INNOVATIVE):**
+Backgrounds are your canvas for visual storytelling. Each section MUST have a unique, memorable animated background that enhances the content without overwhelming it.
+
+**Techniques to Explore:**
+1. **Animated Gradients:**
+   - Multi-stop gradients that shift colors smoothly (use CSS `@keyframes` with `background-position` or `hue-rotate`)
+   - Radial gradients that pulse or expand/contract
+   - Conic gradients that rotate slowly (360deg rotation over 10-20s)
+   - Mesh gradients with multiple color stops that morph positions
+   - Gradient overlays that blend modes (multiply, screen, overlay) for depth
+
+2. **Particle Systems & Floating Elements:**
+   - Subtle floating particles/dots that drift slowly (use CSS animations with `transform: translate()`)
+   - Geometric shapes (circles, triangles, hexagons) that float and rotate independently
+   - Sparkles or stars that twinkle (opacity animations)
+   - Bubbles that rise from bottom with varying speeds
+   - Confetti-like elements that fall gently (parallax effect)
+
+3. **Morphing Shapes & Blobs:**
+   - Organic blob shapes created with SVG filters (`feTurbulence`, `feDisplacementMap`) that morph continuously
+   - Animated SVG paths that change shape smoothly
+   - CSS clip-path animations that reveal/hide shapes
+   - Border-radius animations creating organic flowing edges
+   - Liquid-like shapes that flow and merge
+
+4. **Pattern Animations:**
+   - Animated grid patterns that shift subtly
+   - Wave patterns (using SVG or CSS) that flow horizontally or vertically
+   - Noise textures that animate (using `filter: url(#noise)` or canvas)
+   - Dot matrix patterns that pulse or shift
+   - Line patterns that draw themselves or flow
+
+5. **Parallax & Depth Effects:**
+   - Multiple background layers moving at different speeds on scroll
+   - 3D transforms creating depth illusion (perspective, rotateX/Y)
+   - Floating elements that respond to scroll position
+   - Depth-of-field blur effects (backdrop-filter)
+   - Shadow layers that create depth
+
+6. **Light & Glow Effects:**
+   - Pulsing glows that expand and contract
+   - Light rays that sweep across (gradient + rotation)
+   - Halo effects around content areas
+   - Neon-style glows with animated intensity
+   - Spotlight effects that follow cursor or scroll position
+
+7. **Geometric & Abstract:**
+   - Rotating geometric forms (triangles, diamonds, hexagons) at different speeds
+   - Tessellated patterns that shift and transform
+   - Fractal-like patterns (using CSS or SVG)
+   - Abstract brush strokes that fade in/out
+   - Grid distortions (using CSS transforms)
+
+8. **Nature-Inspired:**
+   - Flowing water effects (gradient + animation)
+   - Cloud-like shapes that drift
+   - Aurora-like color shifts (northern lights effect)
+   - Fire-like gradients that flicker
+   - Wind-blown effects (subtle movement)
+
+**Implementation Guidelines:**
+- Use CSS `@keyframes` for smooth, performant animations (prefer `transform` and `opacity` over layout properties)
+- Consider using CSS custom properties (variables) for easy theme integration
+- Layer multiple effects for richness (e.g., gradient + particles + glow)
+- Vary animation speeds (some fast, some slow) for visual interest
+- Use `will-change` property for performance optimization
+- Always respect `prefers-reduced-motion` media query (disable animations for accessibility)
+- Keep animations subtle enough not to distract from content
+- Test performance — avoid too many simultaneous animations that cause jank
+
+**Section-Specific Background Ideas:**
+- **Hero:** Bold, attention-grabbing (large-scale gradients, prominent particles, dramatic lighting)
+- **Features:** Supportive but not distracting (subtle patterns, gentle morphing shapes)
+- **Benefits:** Energetic and dynamic (flowing waves, pulsing elements, animated counters)
+- **Stats:** Data-focused (grid patterns, geometric forms, subtle gradients)
+- **Pricing:** Professional yet engaging (elegant gradients, soft glows, refined patterns)
+- **Testimonials:** Trust-building (warm gradients, gentle particles, calming effects)
+- **CTA:** Action-oriented (bold gradients, dynamic shapes, attention-drawing effects)
+- **Footer:** Subtle and refined (minimal animations, elegant patterns)
+
+**Remember:** Backgrounds should enhance, not compete. If content is dense, use subtler backgrounds. If content is minimal, backgrounds can be more prominent. Always ensure text remains readable (sufficient contrast, blur overlays if needed).
+
+**COMPONENT LAYERING & DESIGN INSTRUCTIONS (CRITICAL — CREATE WOW FACTOR):**
+Every section MUST have a "wow factor" through creative, sophisticated component layering. Layering creates depth, visual hierarchy, and memorable experiences. Think in 3D space, not flat 2D layouts.
+
+**Core Layering Principles:**
+1. **Depth Through Z-Index Strategy:**
+   - Establish clear z-index layers: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals/tooltips (100+)
+   - Use semantic z-index values: `z-0` (background), `z-10` (base content), `z-20` (elevated cards), `z-30` (floating elements), `z-40` (overlays), `z-50` (modals)
+   - Create depth illusion with multiple layers at different z-index levels
+   - Use negative z-index sparingly for background-only elements
+
+2. **Visual Depth Creation:**
+   - **Shadows & Elevation:** Use multiple shadow layers (soft shadows for depth, hard shadows for separation)
+   - **Blur & Backdrop Filters:** Frosted glass effects (`backdrop-blur`) create separation between layers
+   - **Opacity & Overlays:** Semi-transparent overlays create depth and focus
+   - **Borders & Outlines:** Layered borders (inner shadows, outlines) define edges
+   - **Gradients as Separators:** Gradient overlays create visual separation between layers
+
+3. **Creative Layering Techniques:**
+   - **Floating Elements:** Cards, badges, or icons that appear to float above the background
+   - **Overlapping Components:** Elements that intentionally overlap (cards, images, text blocks)
+   - **Cutout Effects:** Elements that appear to cut through layers (using `clip-path` or negative margins)
+   - **Peek-Through Layers:** Background elements that peek through foreground elements
+   - **Stacked Cards:** Multiple card layers with slight offsets creating depth
+   - **Floating Navigation:** Nav bars that float above content with blur backdrop
+   - **Sticky Overlays:** Elements that stick while scrolling, creating parallax-like depth
+
+4. **Advanced Layering Patterns:**
+   - **Card Stacks:** Multiple cards stacked with rotation/offset (like a deck of cards)
+   - **Layered Typography:** Text at different z-levels with shadows/glows creating depth
+   - **Image Overlays:** Images layered behind/above content with creative masking
+   - **Floating CTAs:** Call-to-action buttons that float above content with shadows
+   - **Badge Layers:** Badges, tags, or labels that sit on top of cards/content
+   - **Decorative Elements:** Abstract shapes, lines, or patterns at various z-levels
+   - **Content Reveals:** Elements that reveal/disappear as layers scroll
+
+5. **Section-Specific Layering Strategies:**
+   - **Hero:** Maximum depth — floating headline, layered background elements, floating CTA, decorative particles at different depths
+   - **Features:** Card-based depth — elevated feature cards, floating icons, layered backgrounds, hover elevation changes
+   - **Benefits:** Dynamic layering — floating stat numbers, layered illustrations, overlapping content blocks
+   - **Stats:** Data-focused depth — floating numbers, layered backgrounds, elevated stat cards
+   - **Pricing:** Card hierarchy — recommended plan elevated above others, floating badges, layered shadows
+   - **Testimonials:** Quote depth — floating quote cards, layered avatars, background blur effects
+   - **CTA:** Action-focused — floating form, elevated CTA button, layered background effects
+   - **Footer:** Subtle depth — layered links, floating social icons, subtle background separation
+
+**Wow Factor Requirements (MANDATORY for Each Section):**
+Each section MUST include at least ONE of these "wow factor" elements:
+- **Unexpected Depth:** Elements that create surprising 3D-like depth (floating cards, layered shadows, parallax effects)
+- **Creative Overlaps:** Components that intentionally overlap in unexpected ways (text over images, cards over backgrounds, floating elements)
+- **Dynamic Layering:** Layers that respond to interaction (hover elevation, scroll reveals, animated depth changes)
+- **Visual Surprise:** Elements that break the expected flat layout (cutouts, floating elements, peek-through effects)
+- **Sophisticated Shadows:** Multi-layered shadows creating realistic depth (soft + hard shadows, colored shadows, animated shadows)
+- **Glass Morphism:** Frosted glass effects creating depth through blur and transparency
+- **Floating Elements:** At least one element that appears to float above the background (badges, icons, cards, CTAs)
+
+**Implementation Guidelines:**
+- Use CSS `position: relative/absolute/fixed/sticky` strategically for layering
+- Combine `z-index` with `transform: translateZ()` for 3D depth (when using `transform-style: preserve-3d`)
+- Use `isolation: isolate` to create new stacking contexts when needed
+- Layer shadows: `box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.1), 0 16px 32px rgba(0,0,0,0.1)`
+- Combine multiple effects: shadow + blur + transform + opacity for maximum depth
+- Use `backdrop-filter: blur()` for glass morphism effects
+- Animate z-index changes sparingly (prefer transform/opacity animations)
+- Ensure touch targets remain accessible (floating elements shouldn't block interactions)
+- Test layering on mobile (ensure elements don't overlap unintentionally)
+
+**Layering Do's:**
+- ✅ Create clear visual hierarchy through layering
+- ✅ Use shadows to establish depth relationships
+- ✅ Layer decorative elements behind content
+- ✅ Use blur/transparency to separate layers
+- ✅ Create floating elements for emphasis
+- ✅ Overlap elements intentionally for visual interest
+- ✅ Use multiple shadow layers for realistic depth
+- ✅ Combine layering with animations for dynamism
+
+**Layering Don'ts:**
+- ❌ Don't create flat, single-layer layouts
+- ❌ Don't use excessive z-index values (keep it semantic)
+- ❌ Don't layer elements without purpose (every layer should add value)
+- ❌ Don't block important content with decorative layers
+- ❌ Don't create layering that breaks mobile layouts
+- ❌ Don't use layering that reduces accessibility (ensure contrast, focus states)
+- ❌ Don't animate z-index directly (use transform/opacity instead)
+
+**Remember:** Layering is about creating visual interest and hierarchy. Each section should feel like a carefully composed 3D scene, not a flat 2D layout. The "wow factor" comes from unexpected depth, creative overlaps, and sophisticated visual relationships between layers.
+
+**SPECIAL SCROLL ANIMATION EFFECTS (USE SPARINGLY — QUALITY OVER QUANTITY):**
+Scroll animations add engagement and delight, but use them strategically. Too many scroll effects can feel overwhelming. Choose 2-4 scroll effects per page total, distributed across different sections. Each effect should feel intentional and enhance the user experience.
+
+**Scroll Animation Categories:**
+
+1. **Reveal Animations (Most Common — Use 1-2 per page):**
+   - **Fade In:** Elements fade in as they enter viewport (opacity 0 → 1)
+   - **Slide Up:** Elements slide up from below viewport (translateY +50px → 0)
+   - **Slide In from Left/Right:** Elements slide in from sides (translateX ±100px → 0)
+   - **Scale In:** Elements scale from small to full size (scale 0.8 → 1)
+   - **Staggered Reveals:** Multiple elements reveal sequentially with small delays (0.1-0.2s between)
+   - **Rotate In:** Elements rotate as they enter (rotate -10deg → 0deg)
+   - **Blur to Focus:** Elements start blurred and sharpen (filter: blur(10px) → blur(0))
+
+2. **Parallax Effects (Use 1 per page maximum):**
+   - **Background Parallax:** Background moves slower than foreground creating depth illusion
+   - **Element Parallax:** Specific elements (images, shapes) move at different speeds
+   - **Multi-Layer Parallax:** Multiple layers moving at different speeds (background, midground, foreground)
+   - **Horizontal Parallax:** Elements move horizontally while scrolling vertically
+   - **Depth Parallax:** Elements scale/translate based on scroll position creating 3D effect
+
+3. **Progress-Based Animations (Use 1-2 per page):**
+   - **Progress Bars:** Animated progress indicators that fill as user scrolls
+   - **Number Counters:** Numbers count up as section enters viewport
+   - **Progress Circles:** Circular progress indicators (like skill bars)
+   - **Timeline Progress:** Visual timeline that fills as user scrolls through sections
+
+4. **Sticky & Pin Effects (Use 1 per page maximum):**
+   - **Sticky Elements:** Elements that stick to top/bottom while scrolling
+   - **Pin on Scroll:** Elements that "pin" in place while other content scrolls over
+   - **Sticky Header:** Navigation that sticks to top with blur/color change
+   - **Sticky Sidebar:** Sidebar that sticks while main content scrolls
+
+5. **Transform Effects (Use sparingly — 1-2 per page):**
+   - **Tilt on Scroll:** Elements tilt based on scroll position (rotateX/Y)
+   - **Scale on Scroll:** Elements scale up/down based on scroll position
+   - **Skew Effects:** Elements skew as they scroll in/out of view
+   - **3D Rotate:** Elements rotate in 3D space based on scroll (perspective transforms)
+
+6. **Morphing & Shape Changes (Use 1 per page maximum):**
+   - **Shape Morphing:** SVG shapes that morph as user scrolls
+   - **Path Drawing:** SVG paths that draw themselves on scroll
+   - **Blob Morphing:** Organic shapes that morph based on scroll position
+   - **Gradient Shift:** Gradients that shift colors/positions on scroll
+
+7. **Interactive Scroll Effects (Use 1-2 per page):**
+   - **Scroll Snap:** Sections snap into place when scrolling stops
+   - **Scroll-Triggered Animations:** Complex animations triggered at specific scroll points
+   - **Scroll-Based Color Changes:** Background/text colors change based on scroll position
+   - **Scroll-Based Opacity:** Elements fade in/out based on scroll position
+
+**Implementation Guidelines:**
+- **Use Intersection Observer API** for efficient scroll detection (prefer over scroll event listeners)
+- **Use CSS `@keyframes` + `animation-timeline: scroll()`** for native scroll-linked animations (when supported)
+- **Use Framer Motion's `useScroll` hook** or similar libraries for React components
+- **Throttle scroll events** if using JavaScript (max 60fps, use `requestAnimationFrame`)
+- **Respect `prefers-reduced-motion`** — disable scroll animations for users who prefer reduced motion
+- **Use `will-change` property** sparingly and only for elements actively animating
+- **Test performance** — ensure scroll animations don't cause jank or lag
+- **Use `transform` and `opacity`** for animations (GPU-accelerated, performant)
+- **Avoid animating `width`, `height`, `top`, `left`** (causes layout reflow)
+
+**Recommended Scroll Animation Distribution:**
+- **Hero Section:** Subtle parallax or fade-in (1 effect)
+- **Features Section:** Staggered reveals for feature cards (1 effect)
+- **Benefits Section:** Progress counters or scale-in animations (1 effect)
+- **Stats Section:** Number counters or progress bars (1 effect)
+- **Pricing Section:** Slide-in or fade-in for pricing cards (1 effect)
+- **Testimonials:** Staggered reveals or parallax (1 effect)
+- **CTA Section:** Scale-in or slide-up for form/CTA (1 effect)
+
+**Scroll Animation Best Practices:**
+- ✅ Start animations when element is 10-20% visible in viewport (not too early, not too late)
+- ✅ Use easing functions (`ease-out`, `cubic-bezier`) for natural motion
+- ✅ Keep animation durations short (300-800ms) — users scroll quickly
+- ✅ Use subtle effects — dramatic animations can be distracting
+- ✅ Test on mobile — ensure animations work well on touch devices
+- ✅ Provide fallbacks — ensure content is visible even if animations fail
+- ✅ Use scroll snap sparingly — can feel restrictive if overused
+
+**Scroll Animation Don'ts:**
+- ❌ Don't animate every element — choose key elements only
+- ❌ Don't use too many parallax effects (causes motion sickness)
+- ❌ Don't block content with scroll animations (content should be accessible)
+- ❌ Don't use scroll animations that interfere with reading
+- ❌ Don't create scroll animations that feel laggy or janky
+- ❌ Don't ignore `prefers-reduced-motion` preference
+- ❌ Don't use scroll animations that break mobile scrolling
+- ❌ Don't animate elements that are already animated (background animations)
+
+**Remember:** Scroll animations should enhance the storytelling and guide the user's attention. Use them strategically to create moments of delight without overwhelming the user. Less is more — 2-4 well-executed scroll effects will feel more polished than 10+ competing animations.
 
 **SOME INSPIRATION FOR LAYOUTS:**
 NAV BAR INSPIRATION:
@@ -275,16 +536,16 @@ Footer: "A top rounded contrast footer with a large typography and a creative or
 
 **Landing Page Section Guidelines (APPLY ONLY IF SECTION IS IN `branding.sections` ARRAY):**
 These guidelines apply ONLY when generating blueprints for landing page sections that are explicitly listed in the `branding.sections` array. Do NOT generate landing page sections not in that array. Nav and Footer are exceptions and always required.
-- Hero (if "hero" in sections array): Pick one extraordinary concept, bold hierarchy, static creative background layers. **IMAGES ARE OPTIONAL:** Only include images if valid image URLs are provided in `assets.sectionAssets["hero:main"]` or `assets.heroImage`. If no image URLs are provided, design the hero WITHOUT images — focus on typography, layout, and creative backgrounds instead. Do NOT create image placeholders or assume images will be present.
-- Features (if "features" in sections array): Avoid 3-up/4-up card walls; use non-card structures or creative twists. Smooth scroll-triggered entrances (fade+slide), subtle hover (scale 1.02-1.05), optional pulse on icons/badges sparingly, micro-bounce on cards, CSS transforms only, no continuous animations
-- Benefits (if "benefits" in sections array): Oversized presence (min-h-screen+), bold typography (huge numbers, oversized headlines), creative layout (not 3 cards), static backgrounds. Entrance reveals with staggers (0.05-0.1s), hover lift (translateY -2 to -4px), optional animated counters, subtle pulse on badges, light bounce on CTAs, icons rotate/scale hover (max 10deg, 1.1x)
-- Stats (if "stats" in sections array): Use exact data from `sectionData.stats`, creative presentation with the provided metrics
-- Pricing (if "pricing" in sections array): Creative presentation (not generic tables), use exact plans from `sectionData.pricing`
-- FAQ (if "faq" in sections array): Use exact Q&A pairs from `sectionData.faq`, creative accordion or reveal presentation
-- Testimonials (if "testimonials" in sections array): Avoid boring carousels, use exact testimonials from `sectionData.testimonials` or `trust.testimonials`
-- Team (if "team" in sections array): Use exact team members from `sectionData.team`, creative presentation
-- CTA (if "cta" in sections array): Bold composition, clear usable forms, strong hierarchy, creative CTAs (icon animation, micro-wizard, benefit sidebar), use exact CTA text from `conversion.primaryCTA` and `conversion.secondaryCTA`
-- **Footer (ALWAYS REQUIRED):** More than links (wave divider, gradient fade, large typography, creative organization). Generate Footer blueprint always, regardless of `branding.sections` array.
+- Hero (if "hero" in sections array): Pick one extraordinary concept, bold hierarchy, creative animated background layers (animated gradients, floating particles, morphing shapes, parallax effects, etc.). **Use 1 scroll animation effect:** Subtle parallax or fade-in. **IMAGES ARE OPTIONAL:** Only include images if valid image URLs are provided in `assets.sectionAssets["hero:main"]` or `assets.heroImage`. If no image URLs are provided, design the hero WITHOUT images — focus on typography, layout, and creative animated backgrounds instead. Do NOT create image placeholders or assume images will be present.
+- Features (if "features" in sections array): Avoid 3-up/4-up card walls; use non-card structures or creative twists. Creative animated backgrounds encouraged (animated gradients, morphing shapes, flowing patterns, etc.). **Use 1 scroll animation effect:** Staggered reveals for feature cards (fade+slide as they enter viewport). Smooth scroll-triggered entrances (fade+slide), subtle hover (scale 1.02-1.05), optional pulse on icons/badges sparingly, micro-bounce on cards, CSS transforms only, no continuous animations on cards (but backgrounds can animate)
+- Benefits (if "benefits" in sections array): Oversized presence (min-h-screen+), bold typography (huge numbers, oversized headlines), creative layout (not 3 cards), creative animated backgrounds (animated gradients, morphing shapes, flowing patterns, etc.). **Use 1 scroll animation effect:** Progress counters or scale-in animations. Entrance reveals with staggers (0.05-0.1s), hover lift (translateY -2 to -4px), optional animated counters, subtle pulse on badges, light bounce on CTAs, icons rotate/scale hover (max 10deg, 1.1x)
+- Stats (if "stats" in sections array): Use exact data from `sectionData.stats`, creative presentation with the provided metrics, creative animated backgrounds encouraged. **Use 1 scroll animation effect:** Number counters or progress bars
+- Pricing (if "pricing" in sections array): Creative presentation (not generic tables), use exact plans from `sectionData.pricing`, creative animated backgrounds encouraged. **Use 1 scroll animation effect:** Slide-in or fade-in for pricing cards
+- FAQ (if "faq" in sections array): Use exact Q&A pairs from `sectionData.faq`, creative accordion or reveal presentation, creative animated backgrounds encouraged
+- Testimonials (if "testimonials" in sections array): Avoid boring carousels, use exact testimonials from `sectionData.testimonials` or `trust.testimonials`, creative animated backgrounds encouraged. **Use 1 scroll animation effect:** Staggered reveals or parallax
+- Team (if "team" in sections array): Use exact team members from `sectionData.team`, creative presentation, creative animated backgrounds encouraged
+- CTA (if "cta" in sections array): Bold composition, clear usable forms, strong hierarchy, creative CTAs (icon animation, micro-wizard, benefit sidebar), creative animated backgrounds encouraged. **Use 1 scroll animation effect:** Scale-in or slide-up for form/CTA. Use exact CTA text from `conversion.primaryCTA` and `conversion.secondaryCTA`
+- **Footer (ALWAYS REQUIRED):** More than links (wave divider, animated gradient fade, large typography, creative organization, creative animated backgrounds encouraged). Generate Footer blueprint always, regardless of `branding.sections` array.
 - Custom sections (if custom IDs in sections array): Follow exact `description` and `notes` from `sectionData.custom` for that ID
 - Responsive (applies to ALL sections): Mobile-first (375px, 768px, 1024px, 1440px+), Tailwind prefixes (base, sm, md, lg, xl, 2xl), touch targets ≥44×44px, stack vertical mobile/horizontal desktop
 
@@ -411,8 +672,8 @@ Return a concise summary the system can store as `design_guidelines`:
         DO NOT IGNORE CUSTOM SECTIONS, GENERATE BLUEPRINTS FOR THEM TOO. THIS IS MANDATORY.
       - For each landing page section (standard OR custom), include:
    - Composition & Layout (Detailed Creative and Structural Notes, no generic layouts, no boring cards)
-   - Background & Layering
-   - Motion, Interaction and Animations (Entrance animations required, other motion optional)
+   - Background & Layering (Be creative with animated backgrounds: animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, flowing waves, pulsing glows, rotating geometric forms, etc. Each section should have a unique animated background treatment. **CRITICAL:** Include detailed component layering strategy — describe z-index layers, floating elements, overlapping components, shadows, depth creation, and the "wow factor" element. Refer to "COMPONENT LAYERING & DESIGN INSTRUCTIONS" section for techniques. Each section MUST have creative layering that creates visual depth and interest.)
+   - Motion, Interaction and Animations (Entrance animations required, creative animated backgrounds encouraged, dynamic layering interactions. **CRITICAL:** Include scroll animation strategy — specify which scroll animation effect is used (refer to "SPECIAL SCROLL ANIMATION EFFECTS" section). Use 1 scroll animation per section maximum, distributed across page (total 2-4 scroll effects per page). Choose from: reveal animations, parallax, progress-based, sticky/pin, transform effects, morphing, or interactive scroll effects. Other motion optional)
    - Transition to Next Section
         - Assets Usage (specify which images from section assets are used, e.g., "Uses hero:main images" or "Uses custom:{id} images")
         - Content Data Reference (reference exact data if applicable, e.g., "Uses exact FAQ Q&A pairs" or "Uses custom section description and notes from Custom Sections section")
@@ -546,11 +807,14 @@ Your responsibilities each run:
 
 **Design Guidance (from original system):**
 - Every section must have a unique, innovative composition—avoid generic layouts unless you add a creative twist.
-- Use static, creative backgrounds only (bold gradients, patterns, textures; never animate backgrounds).
-- Entrance animations are required for all major sections and should feel polished, but backgrounds never animate.
+- **Creative animated backgrounds are ENCOURAGED:** Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. Be bold and innovative with background animations — they add depth and visual interest. Each section should have a unique animated background treatment.
+- **CRITICAL — Background Creativity:** Refer to the "SPECIAL BACKGROUND CREATIVITY INSTRUCTIONS" section in the main designer prompt for detailed techniques, implementation guidelines, and section-specific background ideas. Each section MUST have a unique, memorable animated background that enhances content without overwhelming it. Explore techniques like animated gradients, particle systems, morphing shapes, parallax effects, light/glow effects, geometric patterns, and nature-inspired animations. Layer multiple effects for richness, vary animation speeds, and always respect `prefers-reduced-motion` for accessibility.
+- **CRITICAL — Component Layering & Wow Factor:** Refer to the "COMPONENT LAYERING & DESIGN INSTRUCTIONS" section in the main designer prompt for comprehensive layering strategies. Each section MUST have a "wow factor" through creative component layering. Use z-index strategically, create depth with shadows and blur effects, implement floating elements, overlapping components, and sophisticated visual relationships. Every section must include at least one "wow factor" element: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements. Think in 3D space, not flat layouts.
+- **CRITICAL — Scroll Animations:** Refer to the "SPECIAL SCROLL ANIMATION EFFECTS" section in the main designer prompt for scroll animation techniques. Use scroll animations sparingly — choose 2-4 scroll effects per page total, distributed across different sections. Each section should use maximum 1 scroll animation effect. Choose from: reveal animations (fade-in, slide-up, scale-in, staggered reveals), parallax effects, progress-based animations (counters, progress bars), sticky/pin effects, transform effects, morphing/shape changes, or interactive scroll effects. Use Intersection Observer API for efficient detection, respect `prefers-reduced-motion`, and ensure animations enhance rather than distract.
+- Entrance animations are required for all major sections and should feel polished.
 - All sections must be fully responsive (mobile-first, test at 375px, 768px, 1024px, 1440px+).
 - Use Tailwind v4 and follow all utility naming and composition rules.
-- Maintain accessibility: focus-visible, color contrast, keyboard navigation, and a11y best practices.
+- Maintain accessibility: focus-visible, color contrast, keyboard navigation, and a11y best practices. Ensure animated backgrounds don't cause motion sickness (use `prefers-reduced-motion` media query to disable animations for users who prefer reduced motion).
 - Use batch tools for file operations and keep changes atomic.
 
 **Received Assets Policy (Logo / Hero Image — IMAGES ARE OPTIONAL):**

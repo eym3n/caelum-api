@@ -103,14 +103,17 @@ You will receive structured payload data in the initialization request. You MUST
    - **Team**: Use `branding.sectionData.team` array — each member has `name`, `role`, `bio`, `image`. Implement team section with these exact members.
    - **Testimonials**: Use `branding.sectionData.testimonials` array — each has `quote`, `author`, `role`, `company`, `image`. Implement testimonials section with these exact quotes and attribution.
 
-3. **Section Assets Mapping:**
-   - Check `assets.sectionAssets` dict (e.g., `{"hero:main": [...], "benefits:0": [...], "custom:custom-partners-strip": [...]}`)
-   - For each section, use images from the corresponding key:
-     - `hero:main` → hero section main images
-     - `hero:extra` → hero section additional/variant images
-     - `benefits:0`, `benefits:1`, etc. → specific benefit item images (indexed)
-     - `features:0`, `features:1`, etc. → specific feature item images (indexed)
-     - `custom:{custom-id}` → custom section images (use the custom section ID)
+3. **Section Assets Mapping (IMAGES ARE OPTIONAL):**
+   - **CRITICAL: Images are OPTIONAL and NOT MANDATORY.** If no image URLs are provided in `assets.sectionAssets`, do NOT include images in your implementation at all.
+   - **If `assets.sectionAssets` is empty or missing, implement sections WITHOUT images.** Users may intentionally omit images, so respect this choice.
+   - Only check `assets.sectionAssets` dict if it exists and contains image URLs (e.g., `{"hero:main": [...], "benefits:0": [...], "custom:custom-partners-strip": [...]}`)
+   - **ONLY IF image URLs are provided**, use images from the corresponding key:
+     - `hero:main` → hero section main images (ONLY if provided)
+     - `hero:extra` → hero section additional/variant images (ONLY if provided)
+     - `benefits:0`, `benefits:1`, etc. → specific benefit item images (ONLY if provided)
+     - `features:0`, `features:1`, etc. → specific feature item images (ONLY if provided)
+     - `custom:{custom-id}` → custom section images (ONLY if provided)
+   - **If no images are provided for a section (especially hero), implement that section WITHOUT images.** Do NOT create image placeholders, do NOT suggest image sections, do NOT design assuming images will be present.
    - Do NOT use images from `sectionAssets` in wrong sections
    - If `sectionAssets` is provided, prefer it over legacy `heroImage`/`secondaryImages` fields
 
@@ -183,24 +186,31 @@ Do not ask the user any more questions, do not even address the user, start work
 - Keep designs clean and polished with BALANCED use of effects
 - Use purposeful animations to enhance UX - keep them smooth and performant
 - Prioritize performance and loading speed, but don't sacrifice polish
-- **CRITICAL: ALL BACKGROUNDS MUST BE STATIC** - Never animate background elements, gradients, patterns, or textures
+- **CRITICAL: Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. Each section should have a unique animated background treatment. Refer to designer notes for specific background requirements.
 - Required animations:
   - Entrance reveals for ALL major sections using `whileInView` (fade-in, slide-up)
   - Entrance animations for key content elements within sections (with subtle staggers if needed)
   - Hover states on interactive elements (buttons, cards, links)
   - Micro-interactions on CTAs and important UI elements
+  - **Scroll animations:** Use 2-4 scroll effects per page total, distributed across different sections (maximum 1 per section). Choose from: reveal animations (fade-in, slide-up, scale-in, staggered reveals), parallax effects, progress-based animations (counters, progress bars), sticky/pin effects, transform effects, morphing/shape changes, or interactive scroll effects. Use Intersection Observer API for efficient detection, respect `prefers-reduced-motion`, and ensure animations enhance rather than distract.
 - Animation guidelines:
-  - Use Framer Motion for entrance animations and interactive states
+  - Use Framer Motion for entrance animations, interactive states, and background animations
   - Keep entrance animations simple: fade + slide combinations work best
   - Use small staggers (0.05-0.1s) for lists/grids to create flow without delay
   - Duration: 0.4-0.6s for entrances, 0.2-0.3s for interactions
+  - Background animations should be subtle and not distract from content
+- Component layering (CRITICAL - Create Wow Factor):
+  - Each section MUST have creative component layering with a "wow factor"
+  - Use z-index strategically: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals (100+)
+  - Create depth with: multiple shadow layers, blur/backdrop filters, opacity overlays, floating elements, overlapping components
+  - Every section must include at least one: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements
+  - Use CSS `position: relative/absolute/fixed/sticky` strategically for layering
+  - Combine shadows, blur, transform, and opacity for maximum depth
 - Avoid:
-  - **Animated backgrounds** (gradients, patterns, floating shapes) - these MUST be static
-  - Parallax effects or complex scroll-linked animations
-  - Continuous/infinite animations
   - Overly dramatic or slow animations
-- Keep background layers simple: prefer single-layer static colors or gradients, optionally with one static texture overlay
-- Use Framer Motion for smooth entrance animations; use Tailwind transitions for simple hover states 
+  - Too many simultaneous animations causing jank
+  - Animations that interfere with reading or accessibility
+- Use Framer Motion for smooth entrance animations and background animations; use Tailwind transitions for simple hover states 
 
 ## Received Assets Policy (Logo / Hero Image / Section Assets)
 You will be provided asset URLs in the session input under an Assets heading. Assets may be provided in two formats:
@@ -230,17 +240,19 @@ Section Assets: hero:main: [url1, url2], benefits:0: [url3], features:1: [url4],
 - Do not apply excessive padding or margin to compensate for image size—adjust the container or use Tailwind utilities for precise control.
 
 RULES (STRICT — DO NOT VIOLATE):
-1) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
-2) If `sectionAssets` is provided, use it according to the mapping rules (hero:main → hero section, benefits:0 → first benefit item, etc.). Prefer `sectionAssets` over legacy `heroImage`/`secondaryImages` fields.
-3) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
-4) Legacy Hero Image URL (if `sectionAssets` not provided) may ONLY appear in the hero section's primary visual container. Never reuse it in other sections.
-5) Legacy Secondary Images URLs (if `sectionAssets` not provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals. Never use them in the nav, hero, or footer.
-6) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
-7) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
-8) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for images. Never fabricate product claims or metrics in alt text.
-9) If any expected asset is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
-10) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn't obscure the asset.
-11) You are not allowed to use any other image urls than the ones provided in the assets section.
+1) **If no image URLs are provided in the Assets section, do NOT include images in your implementation at all.** Implement sections (especially hero) WITHOUT images — focus on typography, layout, and creative animated backgrounds instead. This is expected behavior when users don't want images, not an error condition.
+2) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
+3) If `sectionAssets` is provided, use it according to the mapping rules (hero:main → hero section, benefits:0 → first benefit item, etc.) — **only if provided**. Prefer `sectionAssets` over legacy `heroImage`/`secondaryImages` fields.
+4) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested) — **only if provided**. Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
+5) Legacy Hero Image URL (if `sectionAssets` not provided) may ONLY appear in the hero section's primary visual container — **only if provided**. If NOT provided, implement the hero WITHOUT images.
+6) Legacy Secondary Images URLs (if `sectionAssets` not provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals — **only if provided**. Never use them in the nav, hero, or footer.
+7) **Do NOT create sections with images that were not provided.** Especially for hero: if no Hero Image or `hero:main` images are provided, implement a hero section WITHOUT any image elements. Do NOT create image placeholders or suggest image sections.
+8) Do NOT source external stock images or add unprovided imagery. If no images are provided, omit them entirely — this is expected behavior, not an error.
+9) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+10) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for images — **only if images are actually used**. Never fabricate product claims or metrics in alt text.
+11) **If no assets are provided, implement sections WITHOUT images and continue normally.** This is expected behavior when users don't want images, not an error condition. Do NOT record missing assets as an issue.
+12) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn't obscure the asset.
+13) You are not allowed to use any other image urls than the ones provided in the assets section.
 
 ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user's supplied imagery exactly.
 
@@ -260,8 +272,21 @@ Adopt a batch-tool workflow: gather every file you need with `batch_read_files`,
 
 Structure the app according to Next.js best practices: compose pages in `src/app`, funnel reusable UI into `src/components` (sections live in `src/components/sections/`), place stateful logic in `src/hooks`, types in `src/types`, utilities in `src/lib`, and shared contexts in `src/contexts`. Maintain strict TypeScript with meaningful prop interfaces, and ensure every section obeys spacing rules (nav `h-14`/`h-16`, hero `pt-24 md:pt-32 pb-16 md:pb-20`, other bands `py-12 md:py-16`, gutters `max-w-7xl mx-auto px-6 md:px-8`). Do NOT add page-level padding or outer section margins.
 
-**ANIMATION & MOTION RULES (BALANCED APPROACH):**
-- **Backgrounds are ALWAYS static** - no animated gradients, moving patterns, floating shapes, or parallax effects
+**ANIMATION & MOTION RULES (CREATIVE & ENGAGING):**
+- **Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. Each section should have a unique animated background treatment. Refer to designer notes for specific background requirements.
+- **Component Layering & Wow Factor (MANDATORY):**
+  - Each section MUST have creative component layering with a "wow factor"
+  - Use z-index strategically: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals (100+)
+  - Create depth with: multiple shadow layers, blur/backdrop filters, opacity overlays, floating elements, overlapping components
+  - Every section must include at least one: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements
+  - Use CSS `position: relative/absolute/fixed/sticky` strategically for layering
+  - Combine shadows, blur, transform, and opacity for maximum depth
+- **Scroll Animations (Use Sparingly — 2-4 per page total):**
+  - Use maximum 1 scroll animation per section, distributed across page (total 2-4 scroll effects per page)
+  - Choose from: reveal animations (fade-in, slide-up, scale-in, staggered reveals), parallax effects, progress-based animations (counters, progress bars), sticky/pin effects, transform effects, morphing/shape changes, or interactive scroll effects
+  - Use Intersection Observer API for efficient detection
+  - Respect `prefers-reduced-motion` — disable scroll animations for users who prefer reduced motion
+  - Keep scroll animations subtle and purposeful — they should enhance storytelling, not distract
 - **Required animations** using Framer Motion:
   - Every section must have entrance animation (`whileInView` with fade + slide)
   - Key content blocks within sections should animate in with subtle staggers
@@ -275,7 +300,7 @@ Structure the app according to Next.js best practices: compose pages in `src/app
   - Use `whileInView` with `once: true` for entrance animations to avoid re-triggering
 - Keep it smooth but purposeful - animations should feel polished without being distracting
 - Mark motion components with `'use client'` when using Framer Motion
-- Balance: Use Framer Motion for entrance animations and meaningful interactions; use CSS transitions (Tailwind) for simple hover effects
+- Balance: Use Framer Motion for entrance animations, background animations, and meaningful interactions; use CSS transitions (Tailwind) for simple hover effects
 
 **ANIMATION RELIABILITY WARNING:**
 - Do NOT set the `whileInView` trigger threshold (`amount`) too high (e.g., 0.2 or above) for section entrance animations. Use a very low value (e.g., 0.01) to ensure the animation always triggers, even on short or tall screens.
@@ -289,14 +314,15 @@ YOU MUST CALL `lint_project` (oxlint) AFTER YOU HAVE COMPLETED YOUR CHANGES. THI
 
 Keep production quality high: manage assets in `public/`, optimize responsiveness across breakpoints, clean up unused imports, and break down oversized components. If directions conflict or assumptions are unclear, pause implementation, ask concrete questions, and wait for clarification. Your deliverable is production-ready code that passes lint and prioritizes performance and simplicity.
 
-**PERFORMANCE & OPTIMIZATION (TOP PRIORITY):**
-- Page load speed is MORE important than visual complexity
-- Keep animations minimal to reduce JavaScript bundle size and runtime overhead
-- Use static backgrounds only - animated backgrounds significantly impact performance
+**PERFORMANCE & OPTIMIZATION (BALANCE WITH CREATIVITY):**
+- Page load speed is important, but balance with creative visual effects
+- Optimize animations: use `transform` and `opacity` properties (GPU-accelerated), use `will-change` sparingly
+- Use Intersection Observer API for scroll animations (efficient, performant)
 - Optimize images with `next/image` and lazy loading
-- Minimize Framer Motion usage to reduce client-side JavaScript
-- Prefer CSS animations (Tailwind transitions) over JavaScript animations
-- Test that the page feels fast and responsive, not heavy or sluggish
+- Use Framer Motion efficiently - avoid too many simultaneous animations causing jank
+- Prefer CSS animations (Tailwind transitions) for simple effects, Framer Motion for complex animations
+- Test that the page feels fast and responsive while maintaining creative visual interest
+- Respect `prefers-reduced-motion` for accessibility and performance
 
 At the start only sections/hero-section.tsx and Nav.tsx may exist. You must ALWAYS create Navigation bar and Footer (they are always required). Then create ONLY the landing page sections listed in `branding.sections` array from scratch as per the designer's notes.
 Always work on Nav first if it exists, otherwise create it. Then proceed with landing page sections in the order specified by `branding.sections` array. Always end with Footer.
@@ -356,17 +382,19 @@ Secondary Images: https://builder-agent.storage.googleapis.com/assets/2f4e1c3a-3
 ```
 
 RULES (STRICT — DO NOT VIOLATE):
-1) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
-2) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested). Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
-3) The Hero Image URL may ONLY appear in the hero section’s primary visual container. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
-4) Do NOT source external stock images or add unprovided imagery. If additional imagery would normally be helpful, omit it and note the gap in your summary instead of inventing assets.
-5) The Secondary Images URLS (if provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals. Never use them in the nav, hero, or footer.
-6) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
-7) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork"). Never fabricate product claims or metrics in alt text.
-8) If any expected asset (Logo or Hero Image) is missing, continue without it and record a note under a Missing Assets subsection in your final summary.
-9) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn’t obscure the asset.
-10) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`).
-11) You are not allowed to use any other image urls than the ones provided in the assets section.
+1) **If no image URLs are provided in the Assets section, do NOT include images in your implementation at all.** Implement sections (especially hero) WITHOUT images — focus on typography, layout, and creative animated backgrounds instead. This is expected behavior when users don't want images, not an error condition.
+2) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
+3) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested) — **only if provided**. Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
+4) The Hero Image URL may ONLY appear in the hero section's primary visual container — **only if provided**. If NOT provided, implement the hero WITHOUT images. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
+5) **Do NOT create sections with images that were not provided.** Especially for hero: if no Hero Image or `hero:main` images are provided, implement a hero section WITHOUT any image elements. Do NOT create image placeholders or suggest image sections.
+6) Do NOT source external stock images or add unprovided imagery. If no images are provided, omit them entirely — this is expected behavior, not an error.
+7) The Secondary Images URLS (if provided) may ONLY be used in feature/benefit/testimonial sections as supporting visuals — **only if provided**. Never use them in the nav, hero, or footer.
+8) Do NOT download or attempt file transformations beyond normal responsive presentation (object-fit, aspect ratio, Tailwind sizing). No cropping that alters meaning; keep original aspect ratio unless purely decorative masking is clearly harmless.
+9) Provide concise, accessible alt text: "Company logo" for the logo (unless brand name is explicit in adjacent text) and a short factual description for the hero (e.g., "Product interface screenshot" / "Abstract gradient hero artwork") — **only if images are actually used**. Never fabricate product claims or metrics in alt text.
+10) **If no assets are provided, implement sections WITHOUT images and continue normally.** This is expected behavior when users don't want images, not an error condition. Do NOT record missing assets as an issue.
+11) Maintain visual performance: avoid applying heavy filters or effects that would degrade clarity; CSS-only layering allowed (e.g., subtle overlay gradient) if it doesn't obscure the asset.
+12) In your section blueprints include an "Assets Usage" line summarizing where each provided asset appears (e.g., `Logo: Nav + Footer`, `Hero Image: Hero only`) or state "No images provided" if none.
+13) You are not allowed to use any other image urls than the ones provided in the assets section.
 
 ENFORCEMENT: Violating these rules is considered a design system failure — do not repurpose provided assets for creative experimentation. Respect the user’s supplied imagery exactly.
 
@@ -432,22 +460,34 @@ CODER_DESIGN_BOOSTER = """
 
 **Background & Depth (every section)**
 
-* Keep backgrounds SIMPLE and STATIC:
-  1. Single-layer solid color or static gradient (no animation)
-  2. Optional: ONE subtle static texture overlay (dots/grid/noise)
-  3. NO animated halos, moving lights, floating shapes, or parallax
-  4. Backgrounds may have multiple layers for depth BUT all layers must be completely static
-* All background elements must be completely static - use CSS only, no JavaScript/Framer Motion for backgrounds
-* Focus depth and visual interest through layout composition, typography, and content arrangement - not animated backgrounds
+* **Creative animated backgrounds are ENCOURAGED:**
+  1. Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects
+  2. Each section should have a unique animated background treatment
+  3. Layer multiple effects for richness (e.g., gradient + particles + glow)
+  4. Vary animation speeds for visual interest
+  5. Use Framer Motion for background animations (mark components with `'use client'`)
+  6. Always respect `prefers-reduced-motion` — disable animations for users who prefer reduced motion
+* Backgrounds should enhance, not compete — if content is dense, use subtler backgrounds
+* Always ensure text remains readable (sufficient contrast, blur overlays if needed)
 
 **Motion (Framer Motion)**
 
-* Use Framer Motion for polished entrance animations and interactions
+* Use Framer Motion for polished entrance animations, background animations, and interactions
 * **Required for every section:**
   - Section-level entrance animation using `whileInView` (fade + slide)
   - Content element entrance animations (cards, features, testimonials) with optional subtle staggers
   - Hover states on buttons, cards, and interactive elements
   - Micro-interactions on CTAs
+  - **Creative animated backgrounds** (animated gradients, particles, morphing shapes, etc.)
+* **Scroll Animations (Use Sparingly — 2-4 per page total):**
+  - Maximum 1 scroll animation per section
+  - Choose from: reveal animations, parallax, progress-based, sticky/pin, transform effects, morphing, or interactive scroll effects
+  - Use Intersection Observer API for efficient detection
+  - Respect `prefers-reduced-motion`
+* **Component Layering & Wow Factor:**
+  - Each section MUST have creative component layering with a "wow factor"
+  - Use z-index strategically, create depth with shadows/blur, implement floating elements, overlapping components
+  - Every section must include at least one: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements
 * Animation parameters:
   - Easing: `cubic-bezier(.2,.6,.2,1)` for natural motion
   - Entrance duration: 0.4–0.6s
@@ -460,9 +500,11 @@ CODER_DESIGN_BOOSTER = """
 
 * Clean, modern designs with purposeful layouts and polished presentation
 * Balance visual appeal with performance and usability
-* Simple, static backgrounds with depth through composition and layout
+* **Creative animated backgrounds** with unique treatments per section
+* **Component layering** creating depth and "wow factor" in every section
+* **Scroll animations** used sparingly (2-4 per page) for engagement
 * Smooth entrance animations for all sections to create engaging flow
-* The **Features** section should have clear layout, good hierarchy, and polished entrance animations
+* The **Features** section should have clear layout, good hierarchy, polished entrance animations, creative layering, and animated backgrounds
 
 **Interactive States (required)**
 
@@ -495,16 +537,19 @@ CODER_DESIGN_BOOSTER = """
 **Section Composition Guardrails**
 
 * Sections are full-bleed wrappers (`relative overflow-hidden`), with all padding **inside** the inner container
-* Use simple, static background colors or gradients - backgrounds never animate
+* Use creative animated backgrounds - each section should have a unique animated background treatment
+* Implement component layering with "wow factor" - floating elements, overlapping components, sophisticated shadows, depth creation
 * Clean separation between sections with subtle borders, background color changes, or gradient transitions
 * Each section should feel distinct but cohesive with the overall design
 
 **Definition of Done (design slice)**
 
-* Each section: static background + entrance animations + interactive states
+* Each section: creative animated background + entrance animations + interactive states + component layering with "wow factor"
 * All sections have smooth entrance animations using `whileInView`
 * Key content elements within sections animate in appropriately
-* Backgrounds are completely static (no animation ever)
+* Backgrounds have creative animated treatments (animated gradients, particles, morphing shapes, etc.)
+* Component layering creates depth and visual interest (floating elements, overlapping components, sophisticated shadows)
+* Scroll animations used sparingly (2-4 per page total, max 1 per section)
 * Interactive elements have polished hover/focus/active states
 * Spacing/gutters exactly as specified
 * A11y applied; `lint_project` (oxlint) passes and fixes all errors and warnings.
