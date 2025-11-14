@@ -869,8 +869,19 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                     branding_lines.append(
                         f"Testimonials:\n" + "\n\n".join(testimonial_items)
                     )
-            # Custom sections - MAKE THIS VERY PROMINENT
+            # Custom sections - ONLY SHOW THOSE IN SECTIONS LIST
             if sd.get("custom") and isinstance(sd["custom"], list):
+                # First, identify which custom section IDs are in the sections list
+                custom_ids_in_sections = []
+                if payload.branding.sections:
+                    custom_ids_in_sections = [
+                        s.replace(
+                            "custom-", ""
+                        )  # Remove "custom-" prefix to get raw ID
+                        for s in payload.branding.sections
+                        if s.startswith("custom-")
+                    ]
+
                 custom_items = []
                 for item in sd["custom"]:
                     if isinstance(item, dict):
@@ -879,28 +890,32 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                         desc = item.get("description", "")
                         notes = item.get("notes", "")
                         if cid and name:
-                            # Check if this custom section is in the sections list
+                            # ONLY include custom sections that are in the sections list
+                            # Check if the ID matches (with or without "custom-" prefix)
                             is_in_sections = (
-                                payload.branding.sections
-                                and cid in payload.branding.sections
+                                cid in custom_ids_in_sections
+                                or f"custom-{cid}" in (payload.branding.sections or [])
+                                or cid in (payload.branding.sections or [])
                             )
-                            # Format with emphasis
-                            header = f"🚨 CUSTOM SECTION (ID: {cid}) 🚨"
+
                             if is_in_sections:
-                                header += " ⚠️ REQUIRED IN SECTIONS LIST ⚠️"
-                            custom_items.append(header)
-                            custom_items.append(f"Name: {name}")
-                            if desc:
-                                custom_items.append(f"Description: {desc}")
-                            if notes:
-                                custom_items.append(f"Notes: {notes}")
-                            custom_items.append("")  # Empty line for separation
+                                # Format with emphasis - these are REQUIRED
+                                custom_items.append(
+                                    f"🚨 CUSTOM SECTION (ID: {cid}) 🚨 ⚠️ REQUIRED ⚠️"
+                                )
+                                custom_items.append(f"Name: {name}")
+                                if desc:
+                                    custom_items.append(f"Description: {desc}")
+                                if notes:
+                                    custom_items.append(f"Notes: {notes}")
+                                custom_items.append("")  # Empty line for separation
+
                 if custom_items:
                     # Add prominent header
                     branding_lines.append("")
                     branding_lines.append("=" * 60)  # Separator line for emphasis
                     branding_lines.append(
-                        "🚨 CUSTOM SECTIONS (MANDATORY IF IN SECTIONS LIST) 🚨"
+                        "🚨 CUSTOM SECTIONS (REQUIRED - GENERATE THESE) 🚨"
                     )
                     branding_lines.append("=" * 60)
                     # Add note about which ones are required
@@ -912,10 +927,13 @@ def _flatten_init_payload(payload: InitPayload) -> str:
                         ]
                         if custom_in_list:
                             branding_lines.append(
-                                f"⚠️ REQUIRED CUSTOM SECTIONS (found in Sections list): {', '.join(custom_in_list)}"
+                                f"⚠️ THESE CUSTOM SECTIONS ARE IN THE SECTIONS LIST: {', '.join(custom_in_list)}"
                             )
                             branding_lines.append(
-                                "⚠️ YOU MUST GENERATE/IMPLEMENT BLUEPRINTS FOR THESE CUSTOM SECTIONS ⚠️"
+                                "⚠️ YOU MUST GENERATE/IMPLEMENT BLUEPRINTS FOR ALL CUSTOM SECTIONS LISTED ABOVE ⚠️"
+                            )
+                            branding_lines.append(
+                                "⚠️ DO NOT SKIP CUSTOM SECTIONS - THEY ARE EQUALLY IMPORTANT AS STANDARD SECTIONS ⚠️"
                             )
                     branding_lines.append("")
                     branding_lines.extend(custom_items)

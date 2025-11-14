@@ -258,7 +258,12 @@ These guidelines apply ONLY when generating blueprints for landing page sections
 - Header: `@import "tailwindcss";` + `@plugin "tailwindcss-animate"`, `@plugin "@tailwindcss/typography"`, `@plugin "@tailwindcss/forms"` (only if used)
 - Use `@theme inline` for variable mapping
 - `@utility` for custom utilities (names: `^[a-z][a-z0-9-]*$`, no `:`, `::`, `[`, `]`, `#`, `.`, `,`, `>`, `+`, `~`)
-- Never `@apply` custom classes/utilities; only core utilities or arbitrary values (`bg-[color:var(--...)]`)
+- **CRITICAL — NEVER USE `@apply` WITH UNKNOWN UTILITY CLASSES:**
+  - `@apply` can ONLY be used with core Tailwind utilities (e.g., `@apply border`, `@apply bg-white`, `@apply text-sm`)
+  - `@apply` CANNOT be used with custom classes like `border-border`, `bg-background`, `text-foreground` — these are NOT valid utilities
+  - For CSS variables: Use raw CSS properties instead of `@apply` (e.g., `border-color: var(--border);` NOT `@apply border-border`)
+  - For arbitrary values: Use `@apply` with full arbitrary syntax (e.g., `@apply border-[color:var(--border)]` is valid)
+  - **NEVER write `@apply border-border` or `@apply bg-background` or `@apply text-foreground` — these will cause build errors**
 - Compose utilities in markup: `<button class="btn btn-primary">` (where `btn` is `@utility`)
 - For shared patterns: Option A (preferred): `@utility btn` + compose `class="btn btn-primary"` without `@apply btn` in `.btn-primary`. Option B: duplicate minimal shared rules in each variant
 - Opacity + CSS vars: Use `color-mix()` directly in CSS (`.btn-primary:hover { background-color: color-mix(in oklab, var(--brand) 90%, transparent); }`) OR define escaped class in `@layer utilities` (`.hover\\:bg-\\[color\\:var\\(--custom\\)\\]\\/90:hover { ... }`)
@@ -281,7 +286,7 @@ These guidelines apply ONLY when generating blueprints for landing page sections
    - `@theme inline` mapping all tokens
    - Base: html/body height 100%, body font-family, `.font-heading`, `:focus-visible` styles, `prefers-reduced-motion` media query
    - `@utility` blocks (top-level): btn, chip, section-y, container-max, layout-gutter, glass, shadow-soft, shadow-bold, halo, etc.
-   - `@layer base`: `* { @apply border-border; }`, `body { @apply bg-background text-foreground antialiased; }`, `.card`, `.input-base`, `.btn-primary`, `.btn-accent`, `.btn-ghost`, `.halo::before`
+   - `@layer base`: Use raw CSS for CSS variables (e.g., `* { border-color: var(--border); }` NOT `@apply border-border`), `body { background-color: var(--background); color: var(--foreground); @apply antialiased; }` (only use `@apply` for core utilities like `antialiased`), `.card`, `.input-base`, `.btn-primary`, `.btn-accent`, `.btn-ghost`, `.halo::before`
    - `@layer utilities`: Typography helpers, escaped opacity classes if needed, responsive variants for utilities
    - Rules: Never `@apply` custom classes/utilities; compose in markup
 
@@ -302,6 +307,12 @@ These guidelines apply ONLY when generating blueprints for landing page sections
    - Compose custom utilities in markup: `<button className="btn btn-primary">`, `<div className="card glass shadow-soft">`
 
 **Validation & Guardrails (MUST PASS before writing):**
+- **CRITICAL — Check for unknown utility classes in `@apply`:**
+  - Search for `@apply\\s+(border-border|bg-background|text-foreground|bg-muted|text-muted|border-ring|bg-ring|text-ring|bg-accent|text-accent|bg-brand|text-brand)\\b` → these are INVALID and MUST be replaced with raw CSS properties
+  - Example: `@apply border-border` → `border-color: var(--border);`
+  - Example: `@apply bg-background` → `background-color: var(--background);`
+  - Example: `@apply text-foreground` → `color: var(--foreground);`
+  - Only core Tailwind utilities can be used with `@apply` (e.g., `border`, `bg-white`, `text-sm`, `antialiased`, `flex`, `grid`)
 - Search `globals.css` for forbidden patterns: `@apply\\s+glass\b`, `@apply\\s+btn(-[a-z0-9_-]+)?\\b`, `@apply\\s+[a-zA-Z][\\w-]*\\b` (not core/arbitrary) → rewrite to compose in markup
 - Ensure `@utility` blocks are top-level (not nested in `@layer` or `@media`)
 - Ensure `@plugin` lines correspond to actual usage
@@ -360,6 +371,7 @@ Return a concise summary the system can store as `design_guidelines`:
       - **CRITICAL:** Process each section in the "Sections:" comma-separated list in order:
         1. If it's a standard section (hero, features, benefits, etc.) → generate blueprint using standard guidelines
         2. If it's a custom section (starts with `"custom-"`) → find the matching entry in the "Custom Sections:" section by matching the ID (look for `(ID: custom-xxx)`), then generate blueprint using the `name`, `description`, and `notes` from that entry
+        DO NOT IGNORE CUSTOM SECTIONS, GENERATE BLUEPRINTS FOR THEM TOO. THIS IS MANDATORY.
       - For each landing page section (standard OR custom), include:
    - Composition & Layout (Detailed Creative and Structural Notes, no generic layouts, no boring cards)
    - Background & Layering
@@ -387,10 +399,12 @@ Be detailed about what files it needs to read first and then create.
 ## Your Workflow (MUST FOLLOW THIS)
 1) Consider that the following dirs exist: `/src/app`, `src/components/ui/primitives`, `/styles` and start creating directly. do NOT START BY LISTING FILES IN DIR.
 2) `batch_create_files` for ALL `src/app/globals.css`, `tailwind.config.ts` and primitives in `src/components/ui/primitives` IN ONE TOOL CALL.
-3) Plan other necessary changes
-4) `list_files`, `read_file`, `read_lines`, `batch_update_files` / `batch_update_lines` for any edits
-5)  Run `lint_project` and `check_css` parallel to validate
-6) Fix issues if any, then exit with final summary
+3) **BEFORE WRITING `globals.css`:** Review your CSS to ensure you NEVER use `@apply` with unknown utility classes like `border-border`, `bg-background`, `text-foreground`. Use raw CSS properties instead (e.g., `border-color: var(--border);` NOT `@apply border-border`).
+4) Plan other necessary changes
+5) `list_files`, `read_file`, `read_lines`, `batch_update_files` / `batch_update_lines` for any edits
+6) **BEFORE FINALIZING:** Search `globals.css` for patterns like `@apply border-border`, `@apply bg-background`, `@apply text-foreground` and replace them with raw CSS properties — these will cause build errors.
+7) Run `lint_project` and `check_css` parallel to validate
+8) Fix issues if any, then exit with final summary
 """
 
 
