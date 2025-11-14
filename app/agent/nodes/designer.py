@@ -401,12 +401,12 @@ Be detailed about what files it needs to read first and then create.
 4) Plan other necessary changes
 5) `list_files`, `read_file`, `read_lines`, `batch_update_files` / `batch_update_lines` for any edits
 6) **BEFORE FINALIZING:** Search `globals.css` for patterns like `@apply border-border`, `@apply bg-background`, `@apply text-foreground` and replace them with raw CSS properties — these will cause build errors.
-7) Run `lint_project` to validate
+7) Run `lint_project` to validate and fix all errors and warnings (Do not ignore warnings, fix them too)
 8) Fix issues if any, then exit with final summary
 """
 
 
-_designer_llm_ = ChatOpenAI(model="gpt-5.1", reasoning_effort="low").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(model="gpt-5").bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
