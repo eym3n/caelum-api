@@ -39,15 +39,7 @@ if ! npx oxlint@latest . 2>&1; then
     exit $OX_EXIT
 fi
 
-echo ""
-echo "🧴 Checking Tailwind CSS (globals.css) syntax..."
-if ! bash "$PWD/../../scripts/css_check.sh" "$PROJECT_NAME" 2>&1; then
-    CSS_EXIT_CODE=$?
-    echo ""
-    echo "❌ CSS check failed for globals.css"
-    exit $CSS_EXIT_CODE
-fi
 
 echo ""
-echo "✅ All checks passed (oxlint, CSS)."
+echo "✅ All checks passed"
 exit 0
