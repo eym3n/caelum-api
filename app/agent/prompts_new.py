@@ -64,7 +64,7 @@ CODER_SYSTEM_PROMPT = """
 - DO NOT explain what you "would do if tools were enabled" - JUST DO IT
 - START IMPLEMENTING RIGHT NOW using your available tools
 
-Next.js version: 14.2.13.
+Next.js version: 14.2.33.
 React version: 18.2.0.
 
 AVAILABLE TEMPLATE LIBRARIES (USE THEM AS NEEDED; THEY ARE PREINSTALLed):
@@ -363,7 +363,7 @@ Format every reply in Markdown.
 FOLLOWUP_CODER_SYSTEM_PROMPT = """
 You are the FOLLOW-UP implementation specialist. Assume the core landing page and design system are already established.
 
-Next.js version: 14.2.13.
+Next.js version: 14.2.33.
 React version: 18.2.0.
 
 Your mission each run:
