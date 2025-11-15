@@ -196,7 +196,8 @@ Do not ask the user any more questions, do not even address the user, start work
 - Keep designs clean and polished with BALANCED use of effects
 - Use purposeful animations to enhance UX - keep them smooth and performant
 - Prioritize performance and loading speed, but don't sacrifice polish
-- **CRITICAL: Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. **Background Strategy:** Consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate. Refer to designer notes for specific background requirements.
+- **CRITICAL: Only the hero background may animate** - If the designer specifies background motion, constrain it strictly to the hero section (animated gradients, floating particles, morphing shapes, parallax, etc.). All other sections must use static backgrounds (layered gradients, textured planes, light sweeps) that stay within the viewport width. Follow designer notes for specific treatments.
+- **Zero horizontal overflow (MANDATORY)** - Guard the layout against horizontal scrolling at every breakpoint. Enforce `w-full` containers with `max-w-7xl mx-auto` (or designer-defined widths), consistent gutters (`px-6 md:px-8`), and clip decorative layers with `overflow-hidden`, `inset-x-0`, or masks so nothing extends past the viewport. Test at 320px, 768px, 1024px, and 1440px to confirm `document.body` never shows `overflow-x`.
 - Required animations:
   - Entrance reveals for ALL major sections using `whileInView` (fade-in, slide-up)
   - Entrance animations for key content elements within sections (with subtle staggers if needed)
@@ -250,7 +251,7 @@ Section Assets: hero:main: [url1, url2], benefits:0: [url3], features:1: [url4],
 - Do not apply excessive padding or margin to compensate for image size—adjust the container or use Tailwind utilities for precise control.
 
 RULES (STRICT — DO NOT VIOLATE):
-1) **If no image URLs are provided in the Assets section, do NOT include images in your implementation at all.** Implement sections (especially hero) WITHOUT images — focus on typography, layout, and creative animated backgrounds instead. This is expected behavior when users don't want images, not an error condition.
+1) **If no image URLs are provided in the Assets section, do NOT include images in your implementation at all.** Implement sections (especially hero) WITHOUT images — focus on typography, layout, and layered backgrounds (only the hero may animate if allowed). This is expected behavior when users don't want images, not an error condition.
 2) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
 3) If `sectionAssets` is provided, use it according to the mapping rules (hero:main → hero section, benefits:0 → first benefit item, etc.) — **only if provided**. Prefer `sectionAssets` over legacy `heroImage`/`secondaryImages` fields.
 4) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested) — **only if provided**. Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
@@ -283,7 +284,8 @@ Adopt a batch-tool workflow: gather every file you need with `batch_read_files`,
 Structure the app according to Next.js best practices: compose pages in `src/app`, funnel reusable UI into `src/components` (sections live in `src/components/sections/`), place stateful logic in `src/hooks`, types in `src/types`, utilities in `src/lib`, and shared contexts in `src/contexts`. Maintain strict TypeScript with meaningful prop interfaces, and ensure every section obeys spacing rules (nav `h-14`/`h-16`, hero `pt-24 md:pt-32 pb-16 md:pb-20`, other bands `py-12 md:py-16`, gutters `max-w-7xl mx-auto px-6 md:px-8`). Do NOT add page-level padding or outer section margins.
 
 **ANIMATION & MOTION RULES (CREATIVE & ENGAGING):**
-- **Creative animated backgrounds are ENCOURAGED** - Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects. **Background Strategy:** Consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate. Refer to designer notes for specific background requirements.
+- **Hero-only background animation** - If background motion is required, implement it exclusively in the hero section as described by the designer (animated gradients, particles, morphing shapes, parallax, etc.). All subsequent sections must rely on static backgrounds that are visually rich but motionless.
+- **Prevent horizontal overflow** - Ensure every section remains within the viewport width. Use `w-full`, `max-w-7xl mx-auto`, responsive gutters, and wrap decorative layers with `overflow-hidden` or `inset-x-0` containers so nothing triggers horizontal scroll. Validate at 320px, 768px, 1024px, and 1440px that `document.documentElement.clientWidth === window.innerWidth`.
 - **Component Layering & Wow Factor (MANDATORY):**
   - Each section MUST have creative component layering with a "wow factor"
   - Use z-index strategically: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals (100+)
@@ -392,7 +394,7 @@ Secondary Images: https://builder-agent.storage.googleapis.com/assets/2f4e1c3a-3
 ```
 
 RULES (STRICT — DO NOT VIOLATE):
-1) **If no image URLs are provided in the Assets section, do NOT include images in your implementation at all.** Implement sections (especially hero) WITHOUT images — focus on typography, layout, and creative animated backgrounds instead. This is expected behavior when users don't want images, not an error condition.
+1) **If no image URLs are provided in the Assets section, do NOT include images in your implementation at all.** Implement sections (especially hero) WITHOUT images — focus on typography, layout, and layered backgrounds (hero may animate only if allowed). This is expected behavior when users don't want images, not an error condition.
 2) Treat each provided mapping as authoritative. Do NOT swap, repurpose, substitute, or hallucinate alternative imagery.
 3) The Logo URL may ONLY be used where the brand mark logically appears (navigation bar, footer brand area, favicon if later requested) — **only if provided**. Never reuse it as a decorative illustration inside feature/benefit/testimonial sections.
 4) The Hero Image URL may ONLY appear in the hero section's primary visual container — **only if provided**. If NOT provided, implement the hero WITHOUT images. Never reuse it in other sections (features, testimonials, pricing, benefits, CTA, etc.).
@@ -430,6 +432,7 @@ Workflow Template (follow unless task demands deviation):
 5. Brief stakeholder summary (no code listings, no file names, just outcomes)
 
 Design & System Safeguards (still enforced): Typography stacks, spacing scale, 4-layer backgrounds, motion easing (`cubic-bezier(.2,.6,.2,1)`), duration windows (0.4–0.8s), accessibility rules, interactive states, and section composition guardrails remain mandatory for any new or modified section elements.
+- Zero horizontal overflow: Every update must keep the page within the viewport width. Use `max-w-7xl mx-auto`, consistent gutters, and clamp or mask decorative layers (`overflow-hidden`, `inset-x-0`) so no content or background causes horizontal scrolling at 320px, 768px, 1024px, or 1440px.
 Always adhere to design guidelines 
 Read designer notes.
 Read all components/ui/primitives created by the designer. Use these components to build out the sections as intended. You may edit them if necessary to fulfill the user's request.
@@ -470,15 +473,10 @@ CODER_DESIGN_BOOSTER = """
 
 **Background & Depth (every section)**
 
-* **Creative animated backgrounds are ENCOURAGED:**
-  1. Use animated gradients, floating particles, morphing shapes, parallax effects, animated patterns, subtle mesh gradients, flowing waves, pulsing glows, rotating geometric forms, animated noise textures, and other creative motion effects
-  2. **Background Strategy:** Consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate.
-  3. Layer multiple effects for richness (e.g., gradient + particles + glow)
-  4. Vary animation speeds for visual interest
-  5. Use Framer Motion for background animations (mark components with `'use client'`)
-  6. Always respect `prefers-reduced-motion` — disable animations for users who prefer reduced motion
-* Backgrounds should enhance, not compete — if content is dense, use subtler backgrounds
-* Always ensure text remains readable (sufficient contrast, blur overlays if needed)
+* **Hero-only background animation:** If the designer calls for motion, animate ONLY the hero background (animated gradients, floating particles, morphing shapes, parallax, etc.). Every other section must use static yet layered treatments (gradient plates, textured panels, light sweeps) that deliver depth without animation.
+* **Clamp backgrounds to the viewport:** Wrap decorative layers inside `relative overflow-hidden` containers, use `inset-x-0` or centered `max-w-7xl mx-auto` wrappers, and size background elements with percentages/clamp values so nothing introduces horizontal scrolling at 320px, 768px, 1024px, or 1440px breakpoints.
+* Backgrounds should enhance, not compete — if content is dense, use subtler treatments.
+* Always ensure text remains readable (sufficient contrast, blur overlays if needed).
 
 **Motion (Framer Motion)**
 
@@ -488,7 +486,7 @@ CODER_DESIGN_BOOSTER = """
   - Content element entrance animations (cards, features, testimonials) with optional subtle staggers
   - Hover states on buttons, cards, and interactive elements
   - Micro-interactions on CTAs
-  - **Creative animated backgrounds** (animated gradients, particles, morphing shapes, etc.)
+  - **Hero background animation only** when specified (constrain motion layers within the hero container so they never exceed the viewport)
 * **Scroll Animations (Use Sparingly — 2-4 per page total):**
   - Maximum 1 scroll animation per section
   - Choose from: reveal animations, parallax, progress-based, sticky/pin, transform effects, morphing, or interactive scroll effects
@@ -510,11 +508,12 @@ CODER_DESIGN_BOOSTER = """
 
 * Clean, modern designs with purposeful layouts and polished presentation
 * Balance visual appeal with performance and usability
-* **Creative animated backgrounds** — consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background.
+* **Hero-only background animation** — motion belongs solely to the hero. All other sections must keep static backgrounds that are visually rich without movement.
+* **No horizontal overflow** — verify each section at mobile, tablet, laptop, and desktop widths; if any floating layer risks extending past the viewport, wrap it in `overflow-hidden` containers or adjust transforms.
 * **Component layering** creating depth and "wow factor" in every section
 * **Scroll animations** used sparingly (2-4 per page) for engagement
 * Smooth entrance animations for all sections to create engaging flow
-* The **Features** section should have clear layout, good hierarchy, polished entrance animations, creative layering, and animated backgrounds
+* The **Features** section should have clear layout, good hierarchy, polished entrance animations, creative layering, and static yet dimensional backgrounds (no animation).
 
 **Interactive States (required)**
 
@@ -547,17 +546,17 @@ CODER_DESIGN_BOOSTER = """
 **Section Composition Guardrails**
 
 * Sections are full-bleed wrappers (`relative overflow-hidden`), with all padding **inside** the inner container
-* Use creative animated backgrounds — consider a global background for the entire landing page, or shared backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background.
+* Reserve animated backgrounds for the hero only; all other sections should rely on static gradients, textures, and lighting within overflow-hidden wrappers to prevent horizontal scroll.
 * Implement component layering with "wow factor" - floating elements, overlapping components, sophisticated shadows, depth creation
 * Clean separation between sections with subtle borders, background color changes, or gradient transitions
 * Each section should feel distinct but cohesive with the overall design
 
 **Definition of Done (design slice)**
 
-* Backgrounds: creative animated background (global, shared across 2-3 sections, or per-section as appropriate) + entrance animations + interactive states + component layering with "wow factor"
+* Backgrounds: hero may include animated background layers (clipped to viewport); all other sections use static, overflow-safe treatments + entrance animations + interactive states + component layering with "wow factor"
 * All sections have smooth entrance animations using `whileInView`
 * Key content elements within sections animate in appropriately
-* Backgrounds have creative animated treatments (animated gradients, particles, morphing shapes, etc.) — can be global, shared, or per-section
+* Background treatments: hero may use animated layers; all other sections rely on static gradients/textures with overflow containment (no additional animated backgrounds)
 * Component layering creates depth and visual interest (floating elements, overlapping components, sophisticated shadows)
 * Scroll animations used sparingly (2-4 per page total, max 1 per section)
 * Interactive elements have polished hover/focus/active states
