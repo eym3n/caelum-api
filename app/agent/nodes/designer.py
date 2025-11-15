@@ -237,6 +237,7 @@ You will receive structured payload data in the initialization request. You MUST
 **Creativity Mandate:**
 - Unique compositions per section (bento grids, asymmetric layouts, diagonal cuts, overlapping elements, bold typography...ETC use your imagination)
 - Varied layouts: full-bleed, constrained, diagonal, circular/radial
+- Favor balanced, breathable compositions with generous negative space—prioritize clarity, elegance, and efficiency over maximalism
 - **Hero background may animate; all other section backgrounds must remain static:** If you decide to animate a background, confine all motion to the hero. For every other section, craft visually rich yet static backdrops (layered gradients, illustrated geometry, lighting washes) that rely on composition and depth rather than animation. **Background Strategy:** Consider a global static background for the entire landing page, or shared static backdrops across 2-3 related sections for visual cohesion. Not every section needs its own unique treatment — shared backgrounds can create better flow and unity when appropriate.
 - **No horizontal overflow (CRITICAL):** Every composition must fit comfortably within the viewport width at all breakpoints. Use `max-w-7xl` (or designer-specified containers), responsive gutters (`px-6 md:px-8`), and keep floating/decorative layers inside clipping wrappers (`overflow-hidden`, `inset-x`) so nothing causes horizontal scrolling. Large background shapes should respect `max-width` clamps or be masked within centered containers. Verify each section at 320px, 768px, 1024px, and 1440px to guarantee `overflow-x` stays hidden.
 - Entrance animations required (polished)
@@ -244,7 +245,7 @@ You will receive structured payload data in the initialization request. You MUST
 - NO two sections use same layout pattern
 
 **SPECIAL BACKGROUND CREATIVITY INSTRUCTIONS (CRITICAL — BE INNOVATIVE):**
-Backgrounds are your canvas for visual storytelling. **Animation is reserved exclusively for the hero background.** All other sections must rely on static (non-animated) backgrounds that still deliver depth through gradients, textures, lighting, and layered shapes. Keep every background treatment constrained within the page width—use `overflow-hidden`, clipping masks, or centered containers so decorative layers never introduce horizontal scrolling. Consider using a global static background for the entire landing page, or shared static backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique treatment — shared backgrounds can create better flow and unity when appropriate. However, each section (or group of sections sharing a background) should still feel memorable through composition, color, and layering even without animation.
+Backgrounds are your canvas for visual storytelling. **Animation is reserved exclusively for the hero background.** All other sections must rely on static (non-animated) backgrounds that still deliver depth through gradients, textures, lighting, and layered shapes. Keep every background treatment constrained within the page width—use `overflow-hidden`, clipping masks, or centered containers so decorative layers never introduce horizontal scrolling. Consider using a global static background for the entire landing page, or shared static backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique treatment — shared backgrounds can create better flow and unity when appropriate. However, each section (or group of sections sharing a background) should still feel memorable through composition, color, and layering even without animation—keep effects refined and avoid busy textures.
 
 **Hero Background Animation Techniques (ONLY for the hero section):**
 1. **Animated Gradients:**
@@ -325,8 +326,8 @@ Backgrounds are your canvas for visual storytelling. **Animation is reserved exc
 
 **Remember:** Backgrounds should enhance, not compete. If content is dense, use subtler backgrounds. If content is minimal, backgrounds can be more prominent. Always ensure text remains readable (sufficient contrast, blur overlays if needed).
 
-**COMPONENT LAYERING & DESIGN INSTRUCTIONS (CRITICAL — CREATE WOW FACTOR):**
-Every section MUST have a "wow factor" through creative, sophisticated component layering. Layering creates depth, visual hierarchy, and memorable experiences. Think in 3D space, not flat 2D layouts.
+**COMPONENT LAYERING & DESIGN INSTRUCTIONS (BALANCED DEPTH):**
+Layering should feel intentional, not overwhelming. Use it to create depth, hierarchy, and memorable moments—primarily in the hero and one or two supporting sections—while letting other sections breathe with cleaner compositions. Prioritize clarity, readable content zones, and rhythm between high-energy and calm sections; lean on negative space, crisp typography, and precise alignment before adding decorative layers.
 
 **Core Layering Principles:**
 1. **Depth Through Z-Index Strategy:**
@@ -370,22 +371,22 @@ Every section MUST have a "wow factor" through creative, sophisticated component
    - **CTA:** Action-focused — floating form, elevated CTA button, layered background effects
    - **Footer:** Subtle depth — layered links, floating social icons, subtle background separation
 
-**Wow Factor Requirements (MANDATORY for Each Section):**
-Each section MUST include at least ONE of these "wow factor" elements:
-- **Unexpected Depth:** Elements that create surprising 3D-like depth (floating cards, layered shadows, parallax effects)
-- **Creative Overlaps:** Components that intentionally overlap in unexpected ways (text over images, cards over backgrounds, floating elements)
-- **Dynamic Layering:** Layers that respond to interaction (hover elevation, scroll reveals, animated depth changes)
-- **Visual Surprise:** Elements that break the expected flat layout (cutouts, floating elements, peek-through effects)
-- **Sophisticated Shadows:** Multi-layered shadows creating realistic depth (soft + hard shadows, colored shadows, animated shadows)
-- **Glass Morphism:** Frosted glass effects creating depth through blur and transparency
-- **Floating Elements:** At least one element that appears to float above the background (badges, icons, cards, CTAs)
+**Wow Factor Strategy (Use Selectively):**
+Deliver high-impact layering in the hero and at most two additional sections. When you choose to push depth, pick ONE of the techniques below and execute it cleanly; other sections can lean on restrained layering, tidy shadows, and simple overlaps.
+- **Unexpected Depth:** Floating cards, layered shadows, or subtle parallax that feels controlled
+- **Creative Overlaps:** Purposeful overlaps (text over imagery, cards kissing backgrounds) that remain legible
+- **Dynamic Layering:** Interaction-driven depth (hover elevation, scroll reveals) used sparingly
+- **Visual Surprise:** Single standout element (cutout, peek-through, halo) that doesn’t clutter the layout
+- **Sophisticated Shadows:** Multi-layered shadows or lighting cues sparingly applied
+- **Glass Morphism:** One frosted-glass moment where it enhances focus
+- **Floating Elements:** Limited to 1-2 floating accents per section when used
 
 **Implementation Guidelines:**
 - Use CSS `position: relative/absolute/fixed/sticky` strategically for layering
 - Combine `z-index` with `transform: translateZ()` for 3D depth (when using `transform-style: preserve-3d`)
 - Use `isolation: isolate` to create new stacking contexts when needed
 - Layer shadows: `box-shadow: 0 1px 2px rgba(0,0,0,0.1), 0 4px 8px rgba(0,0,0,0.1), 0 16px 32px rgba(0,0,0,0.1)`
-- Combine multiple effects: shadow + blur + transform + opacity for maximum depth
+- Combine multiple effects (shadow + blur + transform + opacity) only when they enhance clarity—avoid stacking them everywhere
 - Use `backdrop-filter: blur()` for glass morphism effects
 - Animate z-index changes sparingly (prefer transform/opacity animations)
 - Ensure touch targets remain accessible (floating elements shouldn't block interactions)
@@ -396,10 +397,11 @@ Each section MUST include at least ONE of these "wow factor" elements:
 - ✅ Use shadows to establish depth relationships
 - ✅ Layer decorative elements behind content
 - ✅ Use blur/transparency to separate layers
-- ✅ Create floating elements for emphasis
+- ✅ Create floating elements for emphasis (limit to a couple per section)
 - ✅ Overlap elements intentionally for visual interest
 - ✅ Use multiple shadow layers for realistic depth
 - ✅ Combine layering with animations for dynamism
+- ✅ Alternate high-energy layered sections with calmer, flatter sections for breathing room
 
 **Layering Don'ts:**
 - ❌ Don't create flat, single-layer layouts
@@ -409,6 +411,7 @@ Each section MUST include at least ONE of these "wow factor" elements:
 - ❌ Don't create layering that breaks mobile layouts
 - ❌ Don't use layering that reduces accessibility (ensure contrast, focus states)
 - ❌ Don't animate z-index directly (use transform/opacity instead)
+- ❌ Don't give every section maximal layering—reserve statement moments for a few key sections
 
 **Remember:** Layering is about creating visual interest and hierarchy. Each section should feel like a carefully composed 3D scene, not a flat 2D layout. The "wow factor" comes from unexpected depth, creative overlaps, and sophisticated visual relationships between layers.
 
@@ -552,6 +555,7 @@ Footer: "A top rounded contrast footer with a large typography and a creative or
 **Landing Page Section Guidelines (APPLY ONLY IF SECTION IS IN `branding.sections` ARRAY):**
 These guidelines apply ONLY when generating blueprints for landing page sections that are explicitly listed in the `branding.sections` array. Do NOT generate landing page sections not in that array. Nav and Footer are exceptions and always required.
 - All sections must remain within the viewport width at every breakpoint — specify `w-full`, centered containers (`max-w-7xl mx-auto`), responsive gutters, and clipping wrappers (`overflow-hidden`, `inset-x-0`) so no background decoration or floating element triggers horizontal scrolling.
+- Start each blueprint with a clean base: strong typography hierarchy, breathing space, and restrained decorative elements; escalate layering only where it adds clear narrative value.
 - Hero (if "hero" in sections array): Pick one extraordinary concept, bold hierarchy, creative animated background layers (animated gradients, floating particles, morphing shapes, parallax effects, etc.). Always vary the hero layout composition — articulate at least a **Primary Layout** and an **Alternate Layout** with distinct structural approaches so the coder has multiple directions beyond the typical split screen. Ensure the hero feels expansive and premium: enforce a commanding minimum height (desktop `min-h-screen` or even `min-h-[110vh]`) with generous vertical spacing so the hero always reads as BIG. **Use 1 scroll animation effect:** Subtle parallax or fade-in. **IMAGES ARE OPTIONAL:** Only include images if valid image URLs are provided in `assets.sectionAssets["hero:main"]` or `assets.heroImage`. If no image URLs are provided, design the hero WITHOUT images — focus on typography, layout, and creative animated backgrounds instead. Do NOT create image placeholders or assume images will be present.
 - Features (if "features" in sections array): Avoid 3-up/4-up card walls; use non-card structures or creative twists. Backgrounds must remain static (layered gradients, engraved line work, geometric panels). **Use 1 scroll animation effect:** Staggered reveals for feature cards (fade+slide as they enter viewport). Smooth scroll-triggered entrances (fade+slide), subtle hover (scale 1.02-1.05), optional pulse on icons/badges sparingly, micro-bounce on cards, CSS transforms only, no continuous animations on cards or backgrounds.
 - Benefits (if "benefits" in sections array): Oversized presence (min-h-screen+), bold typography (huge numbers, oversized headlines), creative layout (not 3 cards). Background must stay static — use bold color blocking, cutouts, and layered textures for energy. **Use 1 scroll animation effect:** Progress counters or scale-in animations. Entrance reveals with staggers (0.05-0.1s), hover lift (translateY -2 to -4px), optional animated counters, subtle pulse on badges, light bounce on CTAs, icons rotate/scale hover (max 10deg, 1.1x)
@@ -688,8 +692,8 @@ Return a concise summary the system can store as `design_guidelines`:
         DO NOT IGNORE CUSTOM SECTIONS, GENERATE BLUEPRINTS FOR THEM TOO. THIS IS MANDATORY.
       - For each landing page section (standard OR custom), include:
    - Composition & Layout (Detailed Creative and Structural Notes, no generic layouts, no boring cards)
-  - Background & Layering (Outline background concept per section; ONLY the hero background may animate. All other sections must use static backgrounds (gradients, textures, lighting, layered geometry) while still feeling premium. **Background Strategy:** Consider a global static background for the entire landing page, or shared static backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate. **CRITICAL:** Include detailed component layering strategy — describe z-index layers, floating elements, overlapping components, shadows, depth creation, and the "wow factor" element. Refer to "COMPONENT LAYERING & DESIGN INSTRUCTIONS" section for techniques. Each section MUST have creative layering that creates visual depth and interest.)
-  - Motion, Interaction and Animations (Entrance animations required, hero background animation optional (other section backgrounds MUST stay static), dynamic layering interactions. **CRITICAL:** Include scroll animation strategy — specify which scroll animation effect is used (refer to "SPECIAL SCROLL ANIMATION EFFECTS" section). Use 1 scroll animation per section maximum, distributed across page (total 2-4 scroll effects per page). Choose from: reveal animations, parallax, progress-based, sticky/pin, transform effects, morphing, or interactive scroll effects. Other motion optional)
+  - Background & Layering (Outline the background concept per section; ONLY the hero background may animate. All other sections must use static backgrounds (gradients, textures, lighting, layered geometry) while still feeling premium. **Background Strategy:** Consider a global static background for the entire landing page, or shared static backgrounds across 2-3 related sections for visual cohesion. Call out which sections get bold layering moments versus calmer layouts, keeping floating elements clipped within the viewport. Refer to the "COMPONENT LAYERING & DESIGN INSTRUCTIONS" section for balanced techniques.)
+  - Motion, Interaction and Animations (Entrance animations required, hero background animation optional (other section backgrounds MUST stay static), layering interactions only where they reinforce clarity. **CRITICAL:** Include scroll animation strategy — specify which scroll animation effect is used (refer to "SPECIAL SCROLL ANIMATION EFFECTS" section). Use 1 scroll animation per section maximum, distributed across page (total 2-4 scroll effects per page). Choose from: reveal animations, parallax, progress-based, sticky/pin, transform effects, morphing, or interactive scroll effects. Keep motion subtle and purposeful; other animation optional)
    - Transition to Next Section
         - Assets Usage (specify which images from section assets are used, e.g., "Uses hero:main images" or "Uses custom:{id} images")
         - Content Data Reference (reference exact data if applicable, e.g., "Uses exact FAQ Q&A pairs" or "Uses custom section description and notes from Custom Sections section")
@@ -824,10 +828,11 @@ Your responsibilities each run:
 
 **Design Guidance (from original system):**
 - Every section must have a unique, innovative composition—avoid generic layouts unless you add a creative twist.
+- Prioritize clean, efficient layouts with ample negative space; avoid visual clutter and keep decorative layers purposeful.
 - **Hero background may animate; all other backgrounds must stay static:** If you animate a background, limit motion to the hero. For every other section, craft static yet dimensional backgrounds (layered gradients, textured planes, light sweeps) that feel premium without animation. **Background Strategy:** Consider a global static background for the entire landing page, or shared static backgrounds across 2-3 related sections for visual cohesion. Not every section needs its own unique background — shared backgrounds can create better flow and unity when appropriate.
 - **CRITICAL — Background Creativity:** Refer to the "SPECIAL BACKGROUND CREATIVITY INSTRUCTIONS" section in the main designer prompt for detailed techniques, implementation guidelines, and section-specific background ideas. Remember: only the hero background may animate; all other sections must deliver wow-factor through static treatments. Explore animation techniques (animated gradients, particle systems, morphing shapes, parallax effects, light/glow effects, geometric patterns, nature-inspired animations) exclusively within the hero, while using layered static approaches elsewhere. Always respect `prefers-reduced-motion` for accessibility.
 - **Zero horizontal overflow:** Audit every layout and floating layer at 320px, 768px, 1024px, and 1440px to ensure no horizontal scrolling. Specify containers (`max-w-7xl mx-auto`), responsive gutters, and overflow management (`overflow-hidden`, `inset-x-0`, `clip-path`) so decorative backgrounds and 3D elements never exceed the viewport width.
-- **CRITICAL — Component Layering & Wow Factor:** Refer to the "COMPONENT LAYERING & DESIGN INSTRUCTIONS" section in the main designer prompt for comprehensive layering strategies. Each section MUST have a "wow factor" through creative component layering. Use z-index strategically, create depth with shadows and blur effects, implement floating elements, overlapping components, and sophisticated visual relationships. Every section must include at least one "wow factor" element: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements. Think in 3D space, not flat layouts.
+- **CRITICAL — Component Layering & Depth Balance:** Refer to the "COMPONENT LAYERING & DESIGN INSTRUCTIONS" section in the main designer prompt for guidance. Deliver bold layering moments in the hero and at most two additional sections; balance the page with calmer, flatter sections elsewhere. Use z-index strategically, create depth with shadows and blur effects where it matters, and keep floating elements purposeful and limited. Think in 3D space when needed, but avoid layering overload.
 - **CRITICAL — Scroll Animations:** Refer to the "SPECIAL SCROLL ANIMATION EFFECTS" section in the main designer prompt for scroll animation techniques. Use scroll animations sparingly — choose 2-4 scroll effects per page total, distributed across different sections. Each section should use maximum 1 scroll animation effect. Choose from: reveal animations (fade-in, slide-up, scale-in, staggered reveals), parallax effects, progress-based animations (counters, progress bars), sticky/pin effects, transform effects, morphing/shape changes, or interactive scroll effects. Use Intersection Observer API for efficient detection, respect `prefers-reduced-motion`, and ensure animations enhance rather than distract.
 - Entrance animations are required for all major sections and should feel polished.
 - All sections must be fully responsive (mobile-first, test at 375px, 768px, 1024px, 1440px+).

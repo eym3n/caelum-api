@@ -194,6 +194,7 @@ Do not ask the user any more questions, do not even address the user, start work
 
 **DESIGN IMPLEMENTATION GUIDELINES:**
 - Keep designs clean and polished with BALANCED use of effects
+- Maintain an efficient, spacious aesthetic—avoid overcrowding sections or stacking decorative layers without purpose
 - Use purposeful animations to enhance UX - keep them smooth and performant
 - Prioritize performance and loading speed, but don't sacrifice polish
 - **CRITICAL: Only the hero background may animate** - If the designer specifies background motion, constrain it strictly to the hero section (animated gradients, floating particles, morphing shapes, parallax, etc.). All other sections must use static backgrounds (layered gradients, textured planes, light sweeps) that stay within the viewport width. Follow designer notes for specific treatments.
@@ -210,13 +211,13 @@ Do not ask the user any more questions, do not even address the user, start work
   - Use small staggers (0.05-0.1s) for lists/grids to create flow without delay
   - Duration: 0.4-0.6s for entrances, 0.2-0.3s for interactions
   - Background animations should be subtle and not distract from content
-- Component layering (CRITICAL - Create Wow Factor):
-  - Each section MUST have creative component layering with a "wow factor"
+- Component layering (CRITICAL - Use with Restraint):
+  - Deliver bold layering in the hero and at most two additional sections; allow other sections to stay calmer
   - Use z-index strategically: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals (100+)
-  - Create depth with: multiple shadow layers, blur/backdrop filters, opacity overlays, floating elements, overlapping components
-  - Every section must include at least one: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements
+  - Create depth with: selective shadow layers, occasional blur/backdrop filters, limited floating elements, purposeful overlaps
+  - When layering, pick one hero technique (unexpected depth, creative overlap, dynamic layering, visual surprise, sophisticated shadow, glass morphism, or floating element accents) and keep it tight
   - Use CSS `position: relative/absolute/fixed/sticky` strategically for layering
-  - Combine shadows, blur, transform, and opacity for maximum depth
+  - Combine shadows, blur, transform, and opacity only when they enhance clarity—avoid stacking effects everywhere
 - Avoid:
   - Overly dramatic or slow animations
   - Too many simultaneous animations causing jank
@@ -285,14 +286,15 @@ Structure the app according to Next.js best practices: compose pages in `src/app
 
 **ANIMATION & MOTION RULES (CREATIVE & ENGAGING):**
 - **Hero-only background animation** - If background motion is required, implement it exclusively in the hero section as described by the designer (animated gradients, particles, morphing shapes, parallax, etc.). All subsequent sections must rely on static backgrounds that are visually rich but motionless.
+- Keep all motion purposeful and lightweight—avoid constant movement, large transform loops, or stacked animations that make sections feel busy.
 - **Prevent horizontal overflow** - Ensure every section remains within the viewport width. Use `w-full`, `max-w-7xl mx-auto`, responsive gutters, and wrap decorative layers with `overflow-hidden` or `inset-x-0` containers so nothing triggers horizontal scroll. Validate at 320px, 768px, 1024px, and 1440px that `document.documentElement.clientWidth === window.innerWidth`.
-- **Component Layering & Wow Factor (MANDATORY):**
-  - Each section MUST have creative component layering with a "wow factor"
+- **Component Layering & Depth Balance:**
+  - Deliver signature layering moments in the hero and no more than two additional sections; let remaining bands stay calmer
   - Use z-index strategically: background (-10 to 0), decorative elements (1-10), content (10-50), overlays (50-100), modals (100+)
-  - Create depth with: multiple shadow layers, blur/backdrop filters, opacity overlays, floating elements, overlapping components
-  - Every section must include at least one: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements
+  - Create depth with: selective shadow layers, occasional blur/backdrop filters, limited floating elements, purposeful overlaps
+  - When layering, choose a single technique (unexpected depth, creative overlap, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating accents) and keep it restrained
   - Use CSS `position: relative/absolute/fixed/sticky` strategically for layering
-  - Combine shadows, blur, transform, and opacity for maximum depth
+  - Combine shadows, blur, transform, and opacity only where they enhance clarity—avoid stacking effects everywhere
 - **Scroll Animations (Use Sparingly — 2-4 per page total):**
   - Use maximum 1 scroll animation per section, distributed across page (total 2-4 scroll effects per page)
   - Choose from: reveal animations (fade-in, slide-up, scale-in, staggered reveals), parallax effects, progress-based animations (counters, progress bars), sticky/pin effects, transform effects, morphing/shape changes, or interactive scroll effects
@@ -492,10 +494,10 @@ CODER_DESIGN_BOOSTER = """
   - Choose from: reveal animations, parallax, progress-based, sticky/pin, transform effects, morphing, or interactive scroll effects
   - Use Intersection Observer API for efficient detection
   - Respect `prefers-reduced-motion`
-* **Component Layering & Wow Factor:**
-  - Each section MUST have creative component layering with a "wow factor"
-  - Use z-index strategically, create depth with shadows/blur, implement floating elements, overlapping components
-  - Every section must include at least one: unexpected depth, creative overlaps, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating elements
+* **Component Layering & Depth Balance:**
+  - Spotlight bold layering in the hero and at most two additional sections; allow remaining sections to stay calmer and more open
+  - Use z-index strategically, create depth with shadows/blur, and keep floating elements intentional and limited
+  - When you do layer, pick a single technique (unexpected depth, creative overlap, dynamic layering, visual surprise, sophisticated shadows, glass morphism, or floating accents) and execute it cleanly
 * Animation parameters:
   - Easing: `cubic-bezier(.2,.6,.2,1)` for natural motion
   - Entrance duration: 0.4–0.6s
@@ -510,7 +512,8 @@ CODER_DESIGN_BOOSTER = """
 * Balance visual appeal with performance and usability
 * **Hero-only background animation** — motion belongs solely to the hero. All other sections must keep static backgrounds that are visually rich without movement.
 * **No horizontal overflow** — verify each section at mobile, tablet, laptop, and desktop widths; if any floating layer risks extending past the viewport, wrap it in `overflow-hidden` containers or adjust transforms.
-* **Component layering** creating depth and "wow factor" in every section
+* Favor generous whitespace, clear typographic hierarchy, and restrained decorative elements so the page feels calm and premium.
+* **Component layering** focused on hero + up to two other sections; keep remaining sections calmer
 * **Scroll animations** used sparingly (2-4 per page) for engagement
 * Smooth entrance animations for all sections to create engaging flow
 * The **Features** section should have clear layout, good hierarchy, polished entrance animations, creative layering, and static yet dimensional backgrounds (no animation).
@@ -547,17 +550,17 @@ CODER_DESIGN_BOOSTER = """
 
 * Sections are full-bleed wrappers (`relative overflow-hidden`), with all padding **inside** the inner container
 * Reserve animated backgrounds for the hero only; all other sections should rely on static gradients, textures, and lighting within overflow-hidden wrappers to prevent horizontal scroll.
-* Implement component layering with "wow factor" - floating elements, overlapping components, sophisticated shadows, depth creation
+* Implement component layering thoughtfully—limit bold floating elements, overlaps, and lighting effects to the hero plus at most two additional sections, keeping the rest minimal and airy
 * Clean separation between sections with subtle borders, background color changes, or gradient transitions
 * Each section should feel distinct but cohesive with the overall design
 
 **Definition of Done (design slice)**
 
-* Backgrounds: hero may include animated background layers (clipped to viewport); all other sections use static, overflow-safe treatments + entrance animations + interactive states + component layering with "wow factor"
+* Backgrounds: hero may include animated background layers (clipped to viewport); all other sections use static, overflow-safe treatments + entrance animations + interactive states + measured layering where it adds clarity
 * All sections have smooth entrance animations using `whileInView`
 * Key content elements within sections animate in appropriately
 * Background treatments: hero may use animated layers; all other sections rely on static gradients/textures with overflow containment (no additional animated backgrounds)
-* Component layering creates depth and visual interest (floating elements, overlapping components, sophisticated shadows)
+* Component layering adds depth in the hero and limited supporting sections (controlled floating elements, overlaps, lighting)
 * Scroll animations used sparingly (2-4 per page total, max 1 per section)
 * Interactive elements have polished hover/focus/active states
 * Spacing/gutters exactly as specified
