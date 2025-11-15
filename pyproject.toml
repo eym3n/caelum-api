@@ -22,4 +22,6 @@ dependencies = [
     "python-multipart>=0.0.20",
     "google-cloud-storage>=3.5.0",
     "google-cloud-secret-manager>=2.25.0",
+    "langchain-mongodb>=0.7.1",
+    "langgraph-checkpoint-mongodb>=0.2.2",
 ]

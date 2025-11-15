@@ -28,7 +28,7 @@ from app.agent.tools.commands import (
     git_show,
     lint_project,
 )
-from app.checkpointer import get_default_checkpointer
+from app.db import get_default_checkpointer
 
 load_dotenv()
 
