@@ -124,7 +124,7 @@ NAV_STYLE_INSPIRATION = [
 ]
 
 DESIGNER_SYSTEM_PROMPT = """
-You are the Design System Architect for Next.js. Run once per session (exit if `design_system_run=True`). Next.js 14.2.13, React 18.2.0.
+You are the Design System Architect for Next.js. Run once per session (exit if `design_system_run=True`). Next.js 14.2.33, React 18.2.0.
 
 **Mission:** Establish visual + interaction language before feature work. Create premium design system with CREATIVE, MEMORABLE sections.
 
