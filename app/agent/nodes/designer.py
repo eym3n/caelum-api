@@ -570,7 +570,8 @@ These guidelines apply ONLY when generating blueprints for landing page sections
 - Responsive (applies to ALL sections): Mobile-first (375px, 768px, 1024px, 1440px+), Tailwind prefixes (base, sm, md, lg, xl, 2xl), touch targets ≥44×44px, stack vertical mobile/horizontal desktop
 
 **Tailwind v4 Rules (CRITICAL — avoid build errors):**
-- Header: `@import "tailwindcss";` + `@plugin "tailwindcss-animate"`, `@plugin "@tailwindcss/typography"`, `@plugin "@tailwindcss/forms"` (only if used)
+- Header: `@import "tailwindcss";` + `@plugin "tailwindcss-animate"`, `@plugin "@tailwindcss/typography"`, `@plugin "@tailwindcss/forms { strategy: "class" }"` (only if used)
+- When importing @plugin "@tailwindcss/forms" { strategy: "class" },  set strategy to class THIS IS MANDATORY.
 - Use `@theme inline` for variable mapping
 - `@utility` for custom utilities (names: `^[a-z][a-z0-9-]*$`, no `:`, `::`, `[`, `]`, `#`, `.`, `,`, `>`, `+`, `~`)
 - **CRITICAL — NEVER USE `@apply` WITH UNKNOWN UTILITY CLASSES:**
