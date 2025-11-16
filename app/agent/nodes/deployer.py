@@ -1,0 +1,87 @@
+"""Deployer node that handles deployment to Vercel after code changes."""
+
+import subprocess
+from pathlib import Path
+from app.agent.state import BuilderState
+
+# Resolve repository root (three levels up: /repo/app/agent/nodes/deployer.py → /repo)
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SCRIPTS_DIR = REPO_ROOT / "scripts"
+
+
+def _run_with_live_logs(cmd: list[str], label: str, timeout: int = 300) -> subprocess.CompletedProcess:
+    """Run a shell command streaming stdout lines immediately.
+    
+    Returns a CompletedProcess surrogate with aggregated stdout for downstream parsing.
+    """
+    print(f"[{label}] EXEC: {' '.join(cmd)} (cwd={REPO_ROOT})")
+    try:
+        process = subprocess.Popen(
+            cmd,
+            cwd=str(REPO_ROOT),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+    except Exception as e:
+        print(f"[{label}] ERROR: Failed to start process: {e}")
+        raise
+    
+    lines: list[str] = []
+    try:
+        for line in process.stdout:  # type: ignore[attr-defined]
+            if line is None:
+                break
+            lines.append(line)
+            clean = line.rstrip("\n")
+            if clean:
+                print(f"[{label}] {clean}")
+        ret_code = process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        print(f"[{label}] ERROR: Timeout after {timeout}s; process killed")
+        ret_code = -1
+    except Exception as e:
+        print(f"[{label}] ERROR: Exception while streaming: {e}")
+        ret_code = -1
+    
+    stdout_all = "".join(lines)
+    return subprocess.CompletedProcess(cmd, ret_code, stdout_all, None)
+
+
+def deployer(state: BuilderState) -> BuilderState:
+    """Deploy the project to Vercel after code changes are complete.
+    
+    This node runs after the coder finishes and deploys the generated
+    Next.js project to Vercel using the deploy_to_vercel.sh script.
+    """
+    session_id = state.session_id
+    
+    print(f"🚀 [DEPLOYER] Starting deployment for session: {session_id}")
+    
+    try:
+        # Run the deploy script with the session_id
+        result = _run_with_live_logs(
+            ["bash", str(SCRIPTS_DIR / "deploy_to_vercel.sh"), session_id],
+            label="deployer",
+            timeout=300,  # 5 minutes timeout for deployment
+        )
+        
+        output = result.stdout or ""
+        
+        if result.returncode == 0:
+            print(f"✅ [DEPLOYER] Deployment successful for session: {session_id}")
+            print(f"[DEPLOYER] Output:\n{output}")
+        else:
+            print(f"❌ [DEPLOYER] Deployment failed for session: {session_id} (exit code: {result.returncode})")
+            print(f"[DEPLOYER] Output:\n{output}")
+            
+    except subprocess.TimeoutExpired:
+        print(f"⏱️ [DEPLOYER] Deployment timed out after 5 minutes for session: {session_id}")
+    except Exception as e:
+        print(f"💥 [DEPLOYER] Deployment exception for session: {session_id}: {e}")
+    
+    # Return empty dict - we don't modify state, just perform side effect
+    return {}
+

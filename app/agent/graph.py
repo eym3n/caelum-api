@@ -7,6 +7,7 @@ from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
 from app.agent.nodes.coder import coder
+from app.agent.nodes.deployer import deployer
 from app.agent.tools.files import (
     batch_read_files,
     batch_create_files,
@@ -92,11 +93,11 @@ designer_tools_node = ToolNode(file_tools + command_tools)
 
 def edge_after_coder(
     state: BuilderState,
-) -> Literal["router", "__end__"]:
+) -> Literal["deployer", "coder"]:
     coder_run = state.coder_run
     if coder_run:
-        print("🔄 Coder made tool calls, ending.")
-        return "__end__"
+        print("🔄 Coder made tool calls, proceeding to deployment.")
+        return "deployer"
     else:
         print("🔄 Coder made no tool calls, routing back to coder.")
         return "coder"
@@ -114,6 +115,7 @@ graph.add_node("clarify", clarify)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
 graph.add_node("check", noop)
+graph.add_node("deployer", deployer)
 graph.add_node("clarify_tools", clarify_tools_node)
 
 graph.add_edge(START, "router")
@@ -137,7 +139,7 @@ graph.add_conditional_edges(
 )
 graph.add_edge("coder_tools", "coder")
 graph.add_conditional_edges("check", edge_after_coder)
-graph.add_edge("check", END)
+graph.add_edge("deployer", END)
 
 graph.add_conditional_edges(
     "clarify", tools_condition, {"tools": "clarify_tools", "__end__": END}
