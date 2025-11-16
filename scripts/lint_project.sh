@@ -32,8 +32,22 @@ if ! command -v npx >/dev/null 2>&1; then
     echo "❌ npx not found (Node toolchain missing)."; exit 1; fi
 
 echo "📋 Running oxlint..."
-if ! npx oxlint --type-aware . 2>&1; then
-    OX_EXIT=$?
+OX_OUTPUT=$(npx oxlint --type-aware . 2>&1)
+OX_EXIT=$?
+echo "$OX_OUTPUT"
+
+# Check for warnings or errors in output
+if echo "$OX_OUTPUT" | grep -qE "Found [0-9]+ warnings?"; then
+    WARNINGS=$(echo "$OX_OUTPUT" | grep -oE "Found [0-9]+ warnings?" | grep -oE "[0-9]+" | head -1)
+    if [ -n "$WARNINGS" ] && [ "$WARNINGS" -gt 0 ]; then
+        echo ""
+        echo "❌ oxlint reported $WARNINGS warning(s). Fix them before proceeding."
+        exit 1
+    fi
+fi
+
+# Also check exit code
+if [ $OX_EXIT -ne 0 ]; then
     echo ""
     echo "❌ oxlint reported issues (exit $OX_EXIT). Fix them before proceeding."
     exit $OX_EXIT
