@@ -44,10 +44,16 @@ echo "🚀 Deploying '${SESSION_NAME}' to Vercel..."
 
 pushd "$TARGET_DIR" >/dev/null
 
+VERCEL_TOKEN="${VERCEL_TOKEN:-}"
+if [ -z "$VERCEL_TOKEN" ]; then
+  echo "❌ VERCEL_TOKEN not found. Set it in the environment variables."
+  exit 1
+fi
+
 # Check if already linked to Vercel
 if [ -d ".vercel" ]; then
   echo "📦 Project already linked to Vercel. Deploying updates..."
-  vercel --prod --yes
+  vercel --token "$VERCEL_TOKEN" --prod --yes
 else
   echo "🔗 Setting up new Vercel project for '${SESSION_NAME}'..."
   # Deploy with automatic setup
@@ -55,7 +61,7 @@ else
   # - Uses session name as project name
   # - Auto-detects Next.js settings
   # - Deploys to production
-  vercel --prod --yes --name="${SESSION_NAME}"
+  vercel --token "$VERCEL_TOKEN" --prod --yes --name="${SESSION_NAME}"
 fi
 
 popd >/dev/null
