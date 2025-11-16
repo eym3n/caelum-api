@@ -30,6 +30,8 @@ RUN set -eux; \
 	node -v; npm -v; rsync --version | head -n 1; \
 	npm install -g oxlint@latest; \
 	oxlint --version || true; \
+	npm install -g vercel; \
+	vercel --version || true; \
 	rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
