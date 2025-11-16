@@ -37,13 +37,30 @@ OX_EXIT=$?
 echo "$OX_OUTPUT"
 
 # Check for warnings or errors in output
+HAS_WARNINGS=false
+WARNINGS=0
+
+# Check for summary line like "Found X warnings and Y errors"
 if echo "$OX_OUTPUT" | grep -qE "Found [0-9]+ warnings?"; then
     WARNINGS=$(echo "$OX_OUTPUT" | grep -oE "Found [0-9]+ warnings?" | grep -oE "[0-9]+" | head -1)
     if [ -n "$WARNINGS" ] && [ "$WARNINGS" -gt 0 ]; then
-        echo ""
-        echo "❌ oxlint reported $WARNINGS warning(s). Fix them before proceeding."
-        exit 1
+        HAS_WARNINGS=true
     fi
+fi
+
+# Also check for warning markers (!) in output as fallback
+# oxlint outputs warnings with "!" prefix (may be indented or prefixed)
+if echo "$OX_OUTPUT" | grep -qE "[[:space:]]*!"; then
+    HAS_WARNINGS=true
+    if [ "$WARNINGS" -eq 0 ]; then
+        WARNINGS=$(echo "$OX_OUTPUT" | grep -cE "[[:space:]]*!" || echo "0")
+    fi
+fi
+
+if [ "$HAS_WARNINGS" = true ]; then
+    echo ""
+    echo "❌ oxlint reported $WARNINGS warning(s). Fix them before proceeding."
+    exit 1
 fi
 
 # Also check exit code
