@@ -13,6 +13,12 @@ def replace(a, b):
 class BuilderState(BaseModel):
     """Shared state between Designer, Coder, Clarifier, and other agents in the landing page builder graph."""
 
+    # 📂 Session management
+    session_id: Annotated[str, replace] = Field(
+        default="default",
+        description="The ID of the session.",
+    )
+
     # 🗣️ Core conversational stream
     messages: Annotated[list, add_messages]
 

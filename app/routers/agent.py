@@ -261,7 +261,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
 
     last_text = ""
     for event in agent.stream(
-        {"messages": [HumanMessage(content=req.message)]},
+        {"messages": [HumanMessage(content=req.message)], "session_id": session_id},
         config={
             "configurable": {
                 "thread_id": session_id,
@@ -392,7 +392,8 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                             content="This is a follow-up request: user prompt:\n"
                             + req.message
                         )
-                    ]
+                    ],
+                    "session_id": session_id,
                 },
                 config={
                     "configurable": {
@@ -1176,6 +1177,7 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
                     "messages": [HumanMessage(content=combined)],
                     "init_payload": req_payload.model_dump(),
                     "init_payload_text": payload_text,
+                    "session_id": session_id,
                 },
                 config={
                     "configurable": {"thread_id": session_id, "session_id": session_id},
