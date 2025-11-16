@@ -59,6 +59,16 @@ class BuilderState(BaseModel):
         description="Response from Clarifier Agent when no code/design action is needed.",
     )
 
+    # 🚢 Deployment tracking
+    deployment_failed: Annotated[bool, replace] = Field(
+        default=False,
+        description="Indicates whether the deployment failed and needs fixing.",
+    )
+    deployment_error: Annotated[str, replace] = Field(
+        default="",
+        description="Error message from failed deployment attempt.",
+    )
+
     # 🚀 Initialization Payload
     init_payload: Annotated[Dict[str, Any], replace] = Field(
         default_factory=dict,

@@ -33,6 +33,8 @@ RUN set -eux; \
 	oxlint --version || true; \
 	npm install -g vercel; \
 	vercel --version || true; \
+	npm install -g pnpm; \
+	pnpm --version || true; \
 	rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

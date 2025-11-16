@@ -72,12 +72,24 @@ def coder(state: BuilderState) -> BuilderState:
 
     files = "\n".join(list_files_internal(state.session_id))
 
+    # Add deployment error context if present
+    deployment_context = ""
+    if state.deployment_failed and state.deployment_error:
+        deployment_context = (
+            "\n\n⚠️ DEPLOYMENT ERROR - FIX REQUIRED:\n"
+            "The previous deployment to Vercel failed with the following error:\n"
+            f"{state.deployment_error}\n\n"
+            "You MUST fix the issues that caused the deployment to fail. "
+            "Review the error message carefully and make the necessary code changes."
+        )
+
     SYS = SystemMessage(
         content=_coder_prompt
         + project_spec
         + design_context_section
         + CODER_DESIGN_BOOSTER
         + f"\n\nThe following files exist in the session: {files}"
+        + deployment_context
     )
     messages = [SYS, *state.messages]
 
@@ -107,7 +119,13 @@ def coder(state: BuilderState) -> BuilderState:
         print(
             f"[CODER] Calling {len(coder_response.tool_calls)} tool(s) to establish design system"
         )
-        return {"messages": [coder_response], "coder_run": True}
+        # Clear deployment error flags when coder starts working
+        return {
+            "messages": [coder_response],
+            "coder_run": True,
+            "deployment_failed": False,
+            "deployment_error": "",
+        }
 
     # Extract content as string (handle both str and list responses)
     output = ""

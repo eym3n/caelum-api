@@ -9,9 +9,11 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 SCRIPTS_DIR = REPO_ROOT / "scripts"
 
 
-def _run_with_live_logs(cmd: list[str], label: str, timeout: int = 300) -> subprocess.CompletedProcess:
+def _run_with_live_logs(
+    cmd: list[str], label: str, timeout: int = 300
+) -> subprocess.CompletedProcess:
     """Run a shell command streaming stdout lines immediately.
-    
+
     Returns a CompletedProcess surrogate with aggregated stdout for downstream parsing.
     """
     print(f"[{label}] EXEC: {' '.join(cmd)} (cwd={REPO_ROOT})")
@@ -27,7 +29,7 @@ def _run_with_live_logs(cmd: list[str], label: str, timeout: int = 300) -> subpr
     except Exception as e:
         print(f"[{label}] ERROR: Failed to start process: {e}")
         raise
-    
+
     lines: list[str] = []
     try:
         for line in process.stdout:  # type: ignore[attr-defined]
@@ -45,21 +47,24 @@ def _run_with_live_logs(cmd: list[str], label: str, timeout: int = 300) -> subpr
     except Exception as e:
         print(f"[{label}] ERROR: Exception while streaming: {e}")
         ret_code = -1
-    
+
     stdout_all = "".join(lines)
     return subprocess.CompletedProcess(cmd, ret_code, stdout_all, None)
 
 
 def deployer(state: BuilderState) -> BuilderState:
     """Deploy the project to Vercel after code changes are complete.
-    
+
     This node runs after the coder finishes and deploys the generated
     Next.js project to Vercel using the deploy_to_vercel.sh script.
+
+    If deployment fails, sets deployment_failed flag and returns error
+    message so the coder can fix the issues.
     """
     session_id = state.session_id
-    
+
     print(f"🚀 [DEPLOYER] Starting deployment for session: {session_id}")
-    
+
     try:
         # Run the deploy script with the session_id
         result = _run_with_live_logs(
@@ -67,21 +72,43 @@ def deployer(state: BuilderState) -> BuilderState:
             label="deployer",
             timeout=300,  # 5 minutes timeout for deployment
         )
-        
+
         output = result.stdout or ""
-        
+
         if result.returncode == 0:
             print(f"✅ [DEPLOYER] Deployment successful for session: {session_id}")
             print(f"[DEPLOYER] Output:\n{output}")
+            return {
+                "deployment_failed": False,
+                "deployment_error": "",
+            }
         else:
-            print(f"❌ [DEPLOYER] Deployment failed for session: {session_id} (exit code: {result.returncode})")
+            error_msg = (
+                f"Deployment failed with exit code {result.returncode}\n\n{output}"
+            )
+            print(
+                f"❌ [DEPLOYER] Deployment failed for session: {session_id} (exit code: {result.returncode})"
+            )
             print(f"[DEPLOYER] Output:\n{output}")
-            
-    except subprocess.TimeoutExpired:
-        print(f"⏱️ [DEPLOYER] Deployment timed out after 5 minutes for session: {session_id}")
-    except Exception as e:
-        print(f"💥 [DEPLOYER] Deployment exception for session: {session_id}: {e}")
-    
-    # Return empty dict - we don't modify state, just perform side effect
-    return {}
+            return {
+                "deployment_failed": True,
+                "deployment_error": error_msg,
+                "found_error": True,
+            }
 
+    except subprocess.TimeoutExpired:
+        error_msg = "Deployment timed out after 5 minutes. This may indicate a network issue or the deployment process is taking too long."
+        print(f"⏱️ [DEPLOYER] Deployment timed out for session: {session_id}")
+        return {
+            "deployment_failed": True,
+            "deployment_error": error_msg,
+            "found_error": True,
+        }
+    except Exception as e:
+        error_msg = f"Deployment exception: {str(e)}"
+        print(f"💥 [DEPLOYER] Deployment exception for session: {session_id}: {e}")
+        return {
+            "deployment_failed": True,
+            "deployment_error": error_msg,
+            "found_error": True,
+        }

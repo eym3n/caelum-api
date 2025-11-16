@@ -103,6 +103,18 @@ def edge_after_coder(
         return "coder"
 
 
+def edge_after_deployer(
+    state: BuilderState,
+) -> Literal["coder", "__end__"]:
+    """Route back to coder if deployment failed, otherwise end."""
+    if state.deployment_failed:
+        print("🔄 Deployment failed, routing back to coder to fix issues.")
+        return "coder"
+    else:
+        print("✅ Deployment successful, ending workflow.")
+        return "__end__"
+
+
 def noop(state: BuilderState) -> BuilderState:
     print("⏭️ No operation node reached.")
     return {}
@@ -139,7 +151,7 @@ graph.add_conditional_edges(
 )
 graph.add_edge("coder_tools", "coder")
 graph.add_conditional_edges("check", edge_after_coder)
-graph.add_edge("deployer", END)
+graph.add_conditional_edges("deployer", edge_after_deployer)
 
 graph.add_conditional_edges(
     "clarify", tools_condition, {"tools": "clarify_tools", "__end__": END}
