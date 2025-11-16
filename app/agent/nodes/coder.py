@@ -22,6 +22,7 @@ from app.agent.tools.files import (
     batch_update_lines,
     # Utility
     list_files,
+    list_files_internal,
 )
 
 from app.agent.tools.commands import (
@@ -69,11 +70,14 @@ def coder(state: BuilderState) -> BuilderState:
         + state.init_payload_text
     )
 
+    files = "\n".join(list_files_internal(state.session_id))
+
     SYS = SystemMessage(
         content=_coder_prompt
         + project_spec
         + design_context_section
         + CODER_DESIGN_BOOSTER
+        + f"\n\nThe following files exist in the session: {files}"
     )
     messages = [SYS, *state.messages]
 

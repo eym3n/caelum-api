@@ -40,6 +40,21 @@ def _get_session_from_config(config: RunnableConfig) -> str:
     return session_id
 
 
+def list_files_internal(session_id: str) -> list[str]:
+    """List all files in the session directory, including nested folders."""
+    session_dir = get_session_dir(session_id)
+    files = []
+    for root, dirs, filenames in os.walk(session_dir):
+        # Skip node_modules and .next directories
+        dirs[:] = [d for d in dirs if d not in ["node_modules", ".next", ".git"]]
+        for filename in filenames:
+            full_path = Path(root) / filename
+            # Get relative path from session_dir
+            relative_path = full_path.relative_to(session_dir)
+            files.append(str(relative_path))
+    return files
+
+
 @tool
 def list_files(config: Annotated[RunnableConfig, InjectedToolArg]) -> list[str]:
     """List all files in the session directory, including nested folders.

@@ -17,6 +17,7 @@ from app.agent.tools.files import (
     batch_update_lines,
     # Utility
     list_files,
+    list_files_internal,
     read_file,
     read_lines,
     update_file,
@@ -733,6 +734,7 @@ _designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(to
 
 def designer(state: BuilderState) -> BuilderState:
     # Use followup prompt if this is a followup run
+    files = "\n".join(list_files_internal(state.session_id))
     if getattr(state, "is_followup", False):
         prompt = FOLLOWUP_DESIGNER_SYSTEM_PROMPT
     else:
@@ -776,7 +778,10 @@ def designer(state: BuilderState) -> BuilderState:
             )
         )
 
-    SYS = SystemMessage(content=prompt)
+    SYS = SystemMessage(
+        content=prompt + f"\n\nThe following files exist in the session: {files}"
+    )
+
     messages = [SYS, *state.messages]
     designer_response = _designer_llm_.invoke(messages)
 
