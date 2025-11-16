@@ -32,7 +32,7 @@ if ! command -v npx >/dev/null 2>&1; then
     echo "❌ npx not found (Node toolchain missing)."; exit 1; fi
 
 echo "📋 Running oxlint..."
-if ! npx oxlint@latest . 2>&1; then
+if ! npx oxlint --type-aware . 2>&1; then
     OX_EXIT=$?
     echo ""
     echo "❌ oxlint reported issues (exit $OX_EXIT). Fix them before proceeding."

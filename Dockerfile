@@ -29,6 +29,7 @@ RUN set -eux; \
 	apt-get install -y nodejs rsync; \
 	node -v; npm -v; rsync --version | head -n 1; \
 	npm install -g oxlint@latest; \
+	npm install -g oxlint-tsgolint@latest; \
 	oxlint --version || true; \
 	npm install -g vercel; \
 	vercel --version || true; \
