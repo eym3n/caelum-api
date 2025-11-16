@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, DM_Serif_Display } from "next/font/google";
 import "./globals.css";
-import { Nav } from "@/components/ui/Nav";
+// import { Nav } from "@/components/ui/Nav";
 
 // Font setup: Jakarta for UI, DM Serif Display for expressive headings
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-sans" });
@@ -19,7 +19,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="en" className="bg-background" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${dmSerif.variable} antialiased min-h-dvh bg-background text-foreground`}>
         {/* Compact, unobtrusive navigation. No global padding. */}
-        <Nav />
+        {/* <Nav /> */}
         {children}
       </body>
     </html>
