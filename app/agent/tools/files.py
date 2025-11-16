@@ -52,6 +52,8 @@ def list_files_internal(session_id: str) -> list[str]:
             # Get relative path from session_dir
             relative_path = full_path.relative_to(session_dir)
             files.append(str(relative_path))
+    print(f"[FILES] list_files_internal → Found {len(files)} files")
+    print(f"[FILES] list_files_internal → Files: {files}")
     return files
 
 
