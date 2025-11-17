@@ -703,7 +703,9 @@ Be detailed about what files it needs to read first and then create.
 """
 
 
-_designer_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(model="gpt-5-codex", reasoning_effort="minimal").bind_tools(
+    tools
+)
 
 
 def designer(state: BuilderState) -> BuilderState:
