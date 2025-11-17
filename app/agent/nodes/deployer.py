@@ -66,6 +66,9 @@ def deployer(state: BuilderState) -> BuilderState:
     session_id = state.session_id
 
     print(f"🚀 [DEPLOYER] Starting deployment for session: {session_id}")
+    
+    # Reset deployment_fixer_run flag before attempting deployment
+    state.deployment_fixer_run = False
 
     try:
         # Run the deploy script with the session_id
@@ -98,6 +101,7 @@ def deployer(state: BuilderState) -> BuilderState:
             return {
                 "deployment_failed": False,
                 "deployment_error": "",
+                "deployment_fixer_run": False,
             }
         else:
             error_msg = (
@@ -119,6 +123,7 @@ def deployer(state: BuilderState) -> BuilderState:
                 "deployment_failed": True,
                 "deployment_error": error_msg,
                 "found_error": True,
+                "deployment_fixer_run": False,
             }
 
     except subprocess.TimeoutExpired:
@@ -134,6 +139,7 @@ def deployer(state: BuilderState) -> BuilderState:
             "deployment_failed": True,
             "deployment_error": error_msg,
             "found_error": True,
+            "deployment_fixer_run": False,
         }
     except Exception as e:
         error_msg = f"Deployment exception: {str(e)}"
@@ -148,4 +154,5 @@ def deployer(state: BuilderState) -> BuilderState:
             "deployment_failed": True,
             "deployment_error": error_msg,
             "found_error": True,
+            "deployment_fixer_run": False,
         }

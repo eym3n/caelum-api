@@ -68,6 +68,10 @@ class BuilderState(BaseModel):
         default="",
         description="Error message from failed deployment attempt.",
     )
+    deployment_fixer_run: Annotated[bool, replace] = Field(
+        default=False,
+        description="Indicates whether the deployment fixer has made changes.",
+    )
 
     # 🚀 Initialization Payload
     init_payload: Annotated[Dict[str, Any], replace] = Field(

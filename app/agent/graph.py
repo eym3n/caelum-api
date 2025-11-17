@@ -8,6 +8,7 @@ from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
 from app.agent.nodes.coder import coder
 from app.agent.nodes.deployer import deployer
+from app.agent.nodes.deployment_fixer import deployment_fixer
 from app.agent.tools.files import (
     batch_read_files,
     batch_create_files,
@@ -89,6 +90,8 @@ coder_tools_node = ToolNode(file_tools + command_tools)
 clarify_tools_node = ToolNode([batch_read_files, list_files])
 # Designer has access to both file and command tools (batch operations only)
 designer_tools_node = ToolNode(file_tools + command_tools)
+# Deployment fixer has access to both file and command tools (batch operations only)
+deployment_fixer_tools_node = ToolNode(file_tools + command_tools)
 
 
 def edge_after_coder(
@@ -105,14 +108,26 @@ def edge_after_coder(
 
 def edge_after_deployer(
     state: BuilderState,
-) -> Literal["coder", "__end__"]:
-    """Route back to coder if deployment failed, otherwise end."""
+) -> Literal["deployment_fixer", "__end__"]:
+    """Route to deployment_fixer if deployment failed, otherwise end."""
     if state.deployment_failed:
-        print("🔄 Deployment failed, routing back to coder to fix issues.")
-        return "coder"
+        print("🔄 Deployment failed, routing to deployment fixer.")
+        return "deployment_fixer"
     else:
         print("✅ Deployment successful, ending workflow.")
         return "__end__"
+
+
+def edge_after_deployment_fixer(
+    state: BuilderState,
+) -> Literal["deployer", "deployment_fixer"]:
+    """Route back to deployer after fixes, or stay in fixer if no tool calls."""
+    if state.deployment_fixer_run:
+        print("🔄 Deployment fixer made changes, re-running deployment.")
+        return "deployer"
+    else:
+        print("🔄 Deployment fixer analyzing, continuing...")
+        return "deployment_fixer"
 
 
 def noop(state: BuilderState) -> BuilderState:
@@ -128,6 +143,8 @@ graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
 graph.add_node("check", noop)
 graph.add_node("deployer", deployer)
+graph.add_node("deployment_fixer", deployment_fixer)
+graph.add_node("deployment_fixer_tools", deployment_fixer_tools_node)
 graph.add_node("clarify_tools", clarify_tools_node)
 
 graph.add_edge(START, "router")
@@ -152,6 +169,17 @@ graph.add_conditional_edges(
 graph.add_edge("coder_tools", "coder")
 graph.add_conditional_edges("check", edge_after_coder)
 graph.add_conditional_edges("deployer", edge_after_deployer)
+
+# Deployment fixer workflow
+graph.add_conditional_edges(
+    "deployment_fixer",
+    tools_condition,
+    {
+        "tools": "deployment_fixer_tools",
+        "__end__": "deployer",  # If no tool calls, try deployment again anyway
+    },
+)
+graph.add_edge("deployment_fixer_tools", "deployment_fixer")
 
 graph.add_conditional_edges(
     "clarify", tools_condition, {"tools": "clarify_tools", "__end__": END}
