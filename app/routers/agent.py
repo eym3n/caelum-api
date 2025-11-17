@@ -270,7 +270,7 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
                 "thread_id": session_id,
                 "session_id": session_id,  # Pass session_id to tools
             },
-            "recursion_limit": 200,
+            "recursion_limit": 25,
         },
     ):
         for node, update in event.items():
@@ -403,7 +403,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         "thread_id": session_id,
                         "session_id": session_id,  # Pass session_id to tools
                     },
-                    "recursion_limit": 200,
+                    "recursion_limit": 25,
                 },
             ):
                 for node, update in event.items():
@@ -1204,7 +1204,7 @@ async def init_stream(
                 },
                 config={
                     "configurable": {"thread_id": session_id, "session_id": session_id},
-                    "recursion_limit": 200,
+                    "recursion_limit": 25,
                 },
             ):
                 for node, update in event.items():
@@ -1350,6 +1350,105 @@ class DeployResponse(BaseModel):
     status: str
     message: str
     url: str | None = None
+
+
+class KillSessionResponse(BaseModel):
+    status: str
+    message: str
+    session_id: str
+
+
+@router.delete("/sessions/{session_id}", response_model=KillSessionResponse)
+async def kill_session(
+    session_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Kill/terminate a session and clean up all associated resources.
+    
+    This endpoint will:
+    - Clear all session files
+    - Update landing page status to 'failed'
+    - Clear LangGraph checkpoints
+    
+    Only the user who owns the session can kill it.
+    """
+    from app.db import get_default_checkpointer
+    from app.utils.landing_pages import get_landing_page_by_session_id, update_landing_page_status
+    from app.models.landing_page import LandingPageStatus
+    
+    print(f"[KILL_SESSION] User {current_user.id} requesting to kill session: {session_id}")
+    
+    # Verify user owns this session via landing page
+    landing_page = get_landing_page_by_session_id(session_id)
+    if landing_page and landing_page.user_id != current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You don't have permission to kill this session"
+        )
+    
+    try:
+        # 1. Clear session files
+        session_dir = get_session_dir(session_id)
+        if session_dir.exists():
+            clear_session_dir(session_id)
+            print(f"[KILL_SESSION] Cleared session directory: {session_dir}")
+        
+        # 2. Update landing page status to failed
+        if landing_page:
+            update_landing_page_status(
+                session_id=session_id,
+                status=LandingPageStatus.FAILED
+            )
+            print(f"[KILL_SESSION] Updated landing page status to FAILED")
+        
+        # 3. Clear LangGraph checkpoints
+        checkpointer = get_default_checkpointer()
+        
+        # Try to clear checkpoints if possible
+        try:
+            # For MemorySaver, we can access internal storage
+            if hasattr(checkpointer, 'storage'):
+                # MemorySaver stores by (thread_id, checkpoint_ns)
+                # Remove all entries for this session
+                keys_to_remove = [
+                    key for key in checkpointer.storage.keys()
+                    if key[0] == session_id  # thread_id matches session_id
+                ]
+                for key in keys_to_remove:
+                    del checkpointer.storage[key]
+                print(f"[KILL_SESSION] Cleared {len(keys_to_remove)} checkpoint(s) from memory")
+            
+            # For MongoDBSaver, delete from MongoDB
+            elif hasattr(checkpointer, 'checkpoint_collection'):
+                result = checkpointer.checkpoint_collection.delete_many(
+                    {"thread_id": session_id}
+                )
+                print(f"[KILL_SESSION] Deleted {result.deleted_count} checkpoint(s) from MongoDB")
+                
+                # Also clear writes collection if exists
+                if hasattr(checkpointer, 'writes_collection'):
+                    writes_result = checkpointer.writes_collection.delete_many(
+                        {"thread_id": session_id}
+                    )
+                    print(f"[KILL_SESSION] Deleted {writes_result.deleted_count} write(s) from MongoDB")
+        except Exception as checkpoint_error:
+            print(f"[KILL_SESSION] Warning: Could not clear checkpoints: {checkpoint_error}")
+        
+        print(f"[KILL_SESSION] Successfully killed session: {session_id}")
+        
+        return KillSessionResponse(
+            status="success",
+            message=f"Session {session_id} has been terminated and cleaned up",
+            session_id=session_id
+        )
+        
+    except Exception as e:
+        print(f"[KILL_SESSION] Error killing session {session_id}: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to kill session: {str(e)}"
+        )
 
 
 @router.post("/deploy/vercel", response_model=DeployResponse)
