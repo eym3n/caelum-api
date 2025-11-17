@@ -20,11 +20,13 @@ class LandingPageBase(BaseModel):
     status: LandingPageStatus = LandingPageStatus.PENDING
     preview_url: Optional[str] = None
     deployment_url: Optional[str] = None
+    business_data: Optional[dict] = None
 
 
 class LandingPageCreate(BaseModel):
     """Schema for creating a new landing page."""
     session_id: str
+    business_data: Optional[dict] = None
 
 
 class LandingPageUpdate(BaseModel):
@@ -32,6 +34,7 @@ class LandingPageUpdate(BaseModel):
     status: Optional[LandingPageStatus] = None
     preview_url: Optional[str] = None
     deployment_url: Optional[str] = None
+    business_data: Optional[dict] = None
 
 
 class LandingPageInDB(LandingPageBase):
