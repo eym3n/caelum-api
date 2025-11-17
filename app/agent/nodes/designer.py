@@ -719,7 +719,7 @@ Be detailed about what files it needs to read first and then create.
 
 ## Your Workflow (MUST FOLLOW THIS)
 1) Consider that the following dirs exist: `/src/app`, `src/components/ui/primitives`, `/styles` and start creating directly. do NOT START BY LISTING FILES IN DIR.
-2) `batch_create_files` for ALL `src/app/globals.css`, `tailwind.config.ts` and primitives in `src/components/ui/primitives` IN ONE TOOL CALL.
+2) START BY `batch_create_files` for ALL `src/app/globals.css`, `tailwind.config.ts` then the primitives in `src/components/ui/primitives` IN TWO SEPARATE TOOL CALLS.
 3) **BEFORE WRITING `globals.css`:** Review your CSS to ensure you NEVER use `@apply` with unknown utility classes like `border-border`, `bg-background`, `text-foreground`. Use raw CSS properties instead (e.g., `border-color: var(--border);` NOT `@apply border-border`).
 4) Plan other necessary changes
 5) `list_files`, `read_file`, `read_lines`, `batch_update_files` / `batch_update_lines` for any edits
@@ -729,7 +729,7 @@ Be detailed about what files it needs to read first and then create.
 """
 
 
-_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="minimal").bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
