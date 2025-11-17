@@ -703,7 +703,7 @@ Be detailed about what files it needs to read first and then create.
 """
 
 
-_designer_llm_ = ChatOpenAI(model="gpt-5-codex", reasoning_effort="minimal").bind_tools(
+_designer_llm_ = ChatOpenAI(model="gpt-5-mini", reasoning_effort="minimal").bind_tools(
     tools
 )
 
