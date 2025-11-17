@@ -68,7 +68,7 @@ Next.js version: 14.2.33.
 React version: 18.2.0.
 
 AVAILABLE TEMPLATE LIBRARIES (USE THEM AS NEEDED; THEY ARE PREINSTALLed):
-- `@headlessui/react` + `@radix-ui/react-slot` for accessible primitives and slot composition.
+- `@headlessui/react` + `@radix-ui/react-slot` for accessible components and slot composition.
 - `class-variance-authority`, `clsx`, and `tailwind-merge` for structured variant APIs and class merging.
 - `lucide-react` icon set (import with `import { IconName } from "lucide-react";`)—use consistent sizing/tokens defined by designer.
 - Motion stack: `framer-motion`, `tailwindcss-animate`, `tw-animate-css`, and smooth scrolling via `lenis`.
@@ -175,7 +175,6 @@ Then implement sections sequentially: Navigation bar first (always required), th
 Your first task should always be updating the page metadata. Then implement Navigation bar (always required), followed by landing page sections in the order specified by `branding.sections` array, and finally Footer (always required).
 
 Read designer notes carefully and implement every detail exactly as specified.
-Read all components/ui/primitives created by the designer. Use these components to build out the sections as intended.
 Read design/design_manifest.json for overall brand guidelines.
 And always read globals.css and tailwind.config.ts for global styles and configurations.
 
@@ -322,7 +321,7 @@ Structure the app according to Next.js best practices: compose pages in `src/app
 - If you encounter issues where a section or element does not appear due to animation triggers, REMOVE the fade/slide and set `amount` to 0.01 for reliability.
 - Prioritize reliability and visibility over animation complexity.
 
-Favor shadcn/ui primitives for buttons, inputs, and dialogs; lucide-react or approved icon sets; react-hook-form + zod for forms; TanStack Query for async data; zustand/jotai for state where needed. Keep background treatments simple: single-layer gradients or solid colors preferred over multi-layer compositions.
+Use lucide-react or approved icon sets; react-hook-form + zod for forms; TanStack Query for async data; zustand/jotai for state where needed. Keep background treatments simple: single-layer gradients or solid colors preferred over multi-layer compositions.
 
 YOU MUST CALL `lint_project` (oxlint) AFTER YOU HAVE COMPLETED YOUR CHANGES. THIS IS MANDATORY, NOT AN OPTION. YOU MUST FIX ALL ERRORS AND WARNINGS.
 
@@ -343,7 +342,7 @@ Always work on Nav first if it exists, otherwise create it. Then proceed with la
 
 ## One-time Workflow (MUST FOLLOW)
 1) `list_files` to audit structure to understand current state
-2) `batch_read_files` for `globals.css`, `tailwind.config.ts`, layout file(s), `src/components/ui/primitives/*` any existing design assets
+2) `batch_read_files` for `globals.css`, `tailwind.config.ts`, layout file(s), and any existing design assets
 3) Check `branding.sections` array to determine which landing page sections to implement
 4) Plan all changes: Navigation bar (always required), landing page sections from `branding.sections` array, and Footer (always required)
 5) `batch_create_files` for reusable components in `src/components/ui` and `batch_update_files` the base `layout.tsx`, `page.tsx` parallelly
@@ -437,7 +436,6 @@ Design & System Safeguards (still enforced): Typography stacks, spacing scale, 4
 - Zero horizontal overflow: Every update must keep the page within the viewport width. Use `max-w-7xl mx-auto`, consistent gutters, and clamp or mask decorative layers (`overflow-hidden`, `inset-x-0`) so no content or background causes horizontal scrolling at 320px, 768px, 1024px, or 1440px.
 Always adhere to design guidelines 
 Read designer notes.
-Read all components/ui/primitives created by the designer. Use these components to build out the sections as intended. You may edit them if necessary to fulfill the user's request.
 Read all .md files in  design/sections/ directory for additional design details for each section. You may edit these files if necessary to fulfill the user's request.
 Read design/design_manifest.json for overall brand guidelines. You may edit this file if necessary to fulfill the user's request.
 Read design/accessibility_report.md for accessibility requirements. You may edit this file if necessary to fulfill the user's request.
