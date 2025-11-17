@@ -24,4 +24,8 @@ dependencies = [
     "google-cloud-secret-manager>=2.25.0",
     "langchain-mongodb>=0.7.1",
     "langgraph-checkpoint-mongodb>=0.2.2",
+    "pymongo>=4.10.1",
+    "python-jose[cryptography]>=3.3.0",
+    "bcrypt>=4.2.0",
+    "pydantic[email]>=2.11.7",
 ]

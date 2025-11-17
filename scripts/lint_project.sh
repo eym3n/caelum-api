@@ -33,7 +33,7 @@ if ! command -v npx >/dev/null 2>&1; then
 
 echo "📋 Running oxlint..."
 OX_OUTPUT=$(npx oxlint --type-aware . 2>&1)
-OX_EXIT=$?
+    OX_EXIT=$?
 echo "$OX_OUTPUT"
 
 # Check for warnings or errors in output

@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.prompts_new import ROUTER_SYSTEM_PROMPT
 from app.agent.state import BuilderState
+from app.models.landing_page import LandingPageStatus
+from app.utils.landing_pages import update_landing_page_status
 
 load_dotenv()
 
@@ -51,6 +53,15 @@ def router(state: BuilderState) -> BuilderState:
 
     # No LLM call if no design system yet, go to design
     if not state.design_system_run:
+        # Update landing page status to generating (starting design work)
+        session_id = state.session_id
+        if session_id:
+            update_landing_page_status(
+                session_id=session_id,
+                status=LandingPageStatus.GENERATING
+            )
+            print(f"[ROUTER] Landing page status updated to 'generating' for session {session_id}")
+        
         return {
             "user_intent": "design",
             "coder_run": False,

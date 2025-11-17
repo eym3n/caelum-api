@@ -110,3 +110,42 @@ def get_default_checkpointer() -> object:
     else:
         _DEFAULT_SAVER = MemorySaver()
     return _DEFAULT_SAVER
+
+
+def get_database():
+    """
+    Get MongoDB database for the application (users, sessions, etc.)
+    Returns None if MongoDB is not available.
+    """
+    from app.config import Config
+    
+    client = get_mongo_client()
+    if client is None:
+        return None
+    return client[Config.MONGODB_DB_NAME]
+
+
+def get_users_collection():
+    """
+    Get the users collection from MongoDB.
+    Returns None if MongoDB is not available.
+    """
+    from app.config import Config
+    
+    db = get_database()
+    if db is None:
+        return None
+    return db[Config.MONGODB_USERS_COLLECTION]
+
+
+def get_landing_pages_collection():
+    """
+    Get the landing pages collection from MongoDB.
+    Returns None if MongoDB is not available.
+    """
+    from app.config import Config
+    
+    db = get_database()
+    if db is None:
+        return None
+    return db[Config.MONGODB_LANDING_PAGES_COLLECTION]

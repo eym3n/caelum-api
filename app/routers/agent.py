@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, Request, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse, Response, FileResponse
 from pydantic import BaseModel
-from app.deps import get_session_id
+from app.deps import get_session_id, get_current_user
+from app.models.user import User
+from app.models.landing_page import LandingPageCreate, LandingPageStatus
+from app.utils.landing_pages import create_landing_page, get_landing_page_by_session_id
 from langchain_core.messages import HumanMessage
 from app.agent.graph import agent
 from app.agent.tools.files import get_session_dir, clear_session_dir
@@ -1030,8 +1033,13 @@ def _flatten_init_payload(payload: InitPayload) -> str:
 
 
 @router.post("/init/stream")
-async def init_stream(request: Request, session_id: str = Depends(get_session_id)):
+async def init_stream(
+    request: Request,
+    session_id: str = Depends(get_session_id),
+    current_user: User = Depends(get_current_user),
+):
     """Initialization stream endpoint supporting both application/json and multipart/form-data.
+    Requires authentication. Creates a landing page record and starts agent workflow.
 
     Multipart format: field name 'payload' containing JSON blob.
     Optional 'session_id' key inside JSON can override header.
@@ -1160,6 +1168,21 @@ async def init_stream(request: Request, session_id: str = Depends(get_session_id
         clear_session_dir(session_id)
         print(f"[INIT] Copying static project template for session {session_id}")
         app_ready = _copy_static_project(session_id, "INIT")
+
+        # Create landing page record for this session
+        print(
+            f"[INIT] Creating landing page record for session {session_id} and user {current_user.id}"
+        )
+        existing_lp = get_landing_page_by_session_id(session_id)
+        if not existing_lp:
+            landing_page_data = LandingPageCreate(session_id=session_id)
+            created_lp = create_landing_page(current_user.id, landing_page_data)
+            if created_lp:
+                print(f"[INIT] ✅ Landing page created: {created_lp.id}")
+            else:
+                print(f"[INIT] ⚠️ Failed to create landing page (DB unavailable)")
+        else:
+            print(f"[INIT] Landing page already exists for session {session_id}")
     # No dev server management in static mode
 
     payload_text = _flatten_init_payload(req_payload)

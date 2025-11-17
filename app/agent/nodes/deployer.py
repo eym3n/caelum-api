@@ -3,6 +3,8 @@
 import subprocess
 from pathlib import Path
 from app.agent.state import BuilderState
+from app.models.landing_page import LandingPageStatus
+from app.utils.landing_pages import update_landing_page_status
 
 # Resolve repository root (three levels up: /repo/app/agent/nodes/deployer.py → /repo)
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -78,6 +80,21 @@ def deployer(state: BuilderState) -> BuilderState:
         if result.returncode == 0:
             print(f"✅ [DEPLOYER] Deployment successful for session: {session_id}")
             print(f"[DEPLOYER] Output:\n{output}")
+
+            # Construct deployment URL using Vercel's predictable format
+            # Format: {session_id}.vercel.app
+            deployment_url = f"https://{session_id}.vercel.app"
+            print(f"[DEPLOYER] Deployment URL: {deployment_url}")
+
+            # Update landing page status to generated
+            updated_lp = update_landing_page_status(
+                session_id=session_id,
+                status=LandingPageStatus.GENERATED,
+                deployment_url=deployment_url,
+            )
+            if updated_lp:
+                print(f"✅ [DEPLOYER] Landing page status updated to 'generated'")
+
             return {
                 "deployment_failed": False,
                 "deployment_error": "",
@@ -90,6 +107,14 @@ def deployer(state: BuilderState) -> BuilderState:
                 f"❌ [DEPLOYER] Deployment failed for session: {session_id} (exit code: {result.returncode})"
             )
             print(f"[DEPLOYER] Output:\n{output}")
+
+            # Update landing page status to failed
+            updated_lp = update_landing_page_status(
+                session_id=session_id, status=LandingPageStatus.FAILED
+            )
+            if updated_lp:
+                print(f"❌ [DEPLOYER] Landing page status updated to 'failed'")
+
             return {
                 "deployment_failed": True,
                 "deployment_error": error_msg,
@@ -99,6 +124,12 @@ def deployer(state: BuilderState) -> BuilderState:
     except subprocess.TimeoutExpired:
         error_msg = "Deployment timed out after 5 minutes. This may indicate a network issue or the deployment process is taking too long."
         print(f"⏱️ [DEPLOYER] Deployment timed out for session: {session_id}")
+
+        # Update landing page status to failed
+        update_landing_page_status(
+            session_id=session_id, status=LandingPageStatus.FAILED
+        )
+
         return {
             "deployment_failed": True,
             "deployment_error": error_msg,
@@ -107,6 +138,12 @@ def deployer(state: BuilderState) -> BuilderState:
     except Exception as e:
         error_msg = f"Deployment exception: {str(e)}"
         print(f"💥 [DEPLOYER] Deployment exception for session: {session_id}: {e}")
+
+        # Update landing page status to failed
+        update_landing_page_status(
+            session_id=session_id, status=LandingPageStatus.FAILED
+        )
+
         return {
             "deployment_failed": True,
             "deployment_error": error_msg,

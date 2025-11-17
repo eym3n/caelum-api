@@ -36,3 +36,21 @@ class Config:
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME", "builder-agent")
 
     OUTPUT_PATH = "./storage" if ENV in ["local", "testing"] else "/mnt/storage"
+
+    # MongoDB settings
+    MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
+    MONGODB_DB_NAME = os.getenv("MONGODB_DB_NAME", "langgraph_app")
+    MONGODB_USERS_COLLECTION = os.getenv("MONGODB_USERS_COLLECTION", "users")
+    MONGODB_LANDING_PAGES_COLLECTION = os.getenv(
+        "MONGODB_LANDING_PAGES_COLLECTION", "landing_pages"
+    )
+
+    # JWT settings
+    JWT_SECRET_KEY = os.getenv(
+        "JWT_SECRET_KEY", "your-secret-key-change-this-in-production"
+    )
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
+        os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+    )
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "7"))

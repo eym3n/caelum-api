@@ -12,14 +12,11 @@ services:
       # Override or ensure defaults
       APP_ENV: ${APP_ENV:-local}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      # Database connection pieces (compose style)
-      POSTGRES_HOST: db
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB:-appdb}
-      POSTGRES_USER: ${POSTGRES_USER:-appuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppass}
-      # Optional full URL (your code can assemble from parts or use this directly)
-      DATABASE_URL: postgresql://${POSTGRES_USER:-appuser}:${POSTGRES_PASSWORD:-apppass}@db:5432/${POSTGRES_DB:-appdb}
+      # MongoDB connection
+      MONGODB_URI: mongodb://db:27017
+      MONGODB_DB_NAME: ${MONGODB_DB_NAME:-langgraph_app}
+      MONGODB_USERS_COLLECTION: ${MONGODB_USERS_COLLECTION:-users}
+      MONGODB_LANDING_PAGES_COLLECTION: ${MONGODB_LANDING_PAGES_COLLECTION:-landing_pages}
     ports:
       - "8080:8080"
     depends_on:
@@ -33,39 +30,46 @@ services:
       - backend
 
   db:
-    image: postgres:16-alpine
+    image: mongo:7.0
     restart: unless-stopped
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-appdb}
-      POSTGRES_USER: ${POSTGRES_USER:-appuser}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-apppass}
+      # MongoDB doesn't require authentication for local dev
+      # Add these if you want authentication:
+      # MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-admin}
+      # MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password}
+      MONGO_INITDB_DATABASE: ${MONGODB_DB_NAME:-langgraph_app}
     volumes:
-      - pg_data:/var/lib/postgresql/data
+      - mongodb_data:/data/db
     ports:
-      - "5432:5432" # expose for local tools
+      - "27017:27017" # expose for local tools
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-appuser} -d ${POSTGRES_DB:-appdb}"]
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    logging:
+      driver: "none"  # Disable console logging
     networks:
       - backend
 
-# Optional pgadmin service (uncomment to use)
-#  pgadmin:
-#    image: dpage/pgadmin4:8.11
+# Optional MongoDB Express for web UI (uncomment to use)
+#  mongo-express:
+#    image: mongo-express:latest
+#    restart: unless-stopped
 #    environment:
-#      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
-#      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin123}
+#      ME_CONFIG_MONGODB_URL: mongodb://db:27017/
+#      ME_CONFIG_BASICAUTH_USERNAME: ${MONGO_EXPRESS_USER:-admin}
+#      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD:-admin123}
 #    ports:
-#      - "5050:80"
+#      - "8081:8081"
 #    depends_on:
 #      - db
 #    networks:
 #      - backend
 
 volumes:
-  pg_data:
+  mongodb_data:
 
 networks:
   backend:
