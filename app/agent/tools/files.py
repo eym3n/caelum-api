@@ -174,7 +174,7 @@ def read_lines(
         print("[FILES] read_lines → ERROR: start_line greater than end_line")
         return "Error: start_line must be less than or equal to end_line."
 
-    content = file_path.read_text().splitlines(keepends=False)
+    content = file_path.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=False)
     total_lines = len(content)
 
     start_index = start_line - 1
@@ -257,7 +257,7 @@ def remove_lines(
     if not file_path.exists():
         return f"Error: File {name} not found."
 
-    lines = file_path.read_text().splitlines(keepends=True)
+    lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=True)
     # Convert 1-based indices to 0-based positions
     zero_based = {i - 1 for i in indices if i > 0}
     new_lines = [line for i, line in enumerate(lines) if i not in zero_based]
@@ -295,7 +295,7 @@ def insert_lines(
     if not file_path.exists():
         return f"Error: File {name} not found."
 
-    content = file_path.read_text().splitlines(keepends=True)
+    content = file_path.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=True)
 
     # Sort by index in reverse to insert from bottom to top
     sorted_inserts = sorted(lines, key=lambda x: x.index, reverse=True)
@@ -331,7 +331,7 @@ def update_lines(
         print(f"[FILES] update_lines → ERROR: {name} not found")
         return f"Error: File {name} not found."
 
-    content = file_path.read_text().splitlines(keepends=True)
+    content = file_path.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=True)
     print(f"[FILES] update_lines → Updating {len(updates)} range(s) in {name}")
 
     # Sort by start_index in reverse to process from bottom to top
@@ -434,7 +434,7 @@ def batch_read_files(
             results[file_read.name] = f"Error: File {file_read.name} not found."
             continue
 
-        content = file_path.read_text()
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
         lines = content.splitlines(keepends=False)
 
         # Add 1-based line numbers
@@ -648,7 +648,7 @@ def designer_batch_update_lines(
             errors.append(f"{file_update.name}: not found")
             continue
 
-        content = file_path.read_text().splitlines(keepends=True)
+        content = file_path.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=True)
 
         # Sort by start_index in reverse to process from bottom to top
         sorted_updates = sorted(
@@ -745,7 +745,7 @@ def batch_update_lines(
             errors.append(f"{file_update.name}: not found")
             continue
 
-        content = file_path.read_text().splitlines(keepends=True)
+        content = file_path.read_text(encoding="utf-8", errors="ignore").splitlines(keepends=True)
 
         # Sort by start_index in reverse to process from bottom to top
         sorted_updates = sorted(

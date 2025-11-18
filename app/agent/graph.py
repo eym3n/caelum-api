@@ -2,6 +2,7 @@ from typing import Literal
 from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from dotenv import load_dotenv
+from app.agent.nodes.design_planner import design_planner
 from app.agent.nodes.designer import designer
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
@@ -45,14 +46,20 @@ graph = StateGraph(BuilderState)
 
 def edge_after_router(
     state: BuilderState,
-) -> Literal["designer", "coder", "clarify", "__end__"]:
+) -> Literal["design_planner", "coder", "clarify", "__end__"]:
     if state.user_intent == "design":
-        return "designer"
+        # Route to design_planner first (it will then go to designer)
+        return "design_planner"
     if state.user_intent == "code":
         return "coder"
     if state.user_intent == "clarify":
         return "clarify"
     return "__end__"
+
+
+def edge_after_design_planner(state: BuilderState) -> Literal["designer"]:
+    """After design_planner generates guidelines, always proceed to designer."""
+    return "designer"
 
 
 def edge_after_designer(state: BuilderState) -> Literal["router"]:
@@ -94,7 +101,6 @@ clarify_tools_node = ToolNode([batch_read_files, list_files])
 designer_file_tools = [
     # Read any files (needed to understand context)
     batch_read_files,
-    list_files,
     read_file,
     read_lines,
     # Design-only create/update operations: restricted to globals.css, tailwind.config.ts, layout.tsx
@@ -149,6 +155,7 @@ def noop(state: BuilderState) -> BuilderState:
 
 
 graph.add_node("router", router)
+graph.add_node("design_planner", design_planner)
 graph.add_node("designer", designer)
 graph.add_node("designer_tools", designer_tools_node)
 graph.add_node("clarify", clarify)
@@ -162,6 +169,9 @@ graph.add_node("clarify_tools", clarify_tools_node)
 
 graph.add_edge(START, "router")
 graph.add_conditional_edges("router", edge_after_router)
+
+# Design planner → designer (no tools, just structured output)
+graph.add_edge("design_planner", "designer")
 
 graph.add_conditional_edges(
     "designer",
