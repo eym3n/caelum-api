@@ -306,7 +306,7 @@ Structure the app according to Next.js best practices: compose pages in `src/app
   - Interactive elements need hover states (scale, shadow, color shifts)
   - CTAs and important UI elements should have micro-interactions
 - Animation specs:
-  - Easing: `cubic-bezier(.2,.6,.2,1)` for smooth, natural motion
+  - Easing: use **named easings** or easing helpers supported by the current Framer Motion typings (e.g. `ease: "easeInOut"` or `ease: "easeOut"`). **Do NOT** pass raw `number[]` arrays like `ease: [0.2, 0.6, 0.2, 1]` — this causes TypeScript errors (`Type 'number[]' is not assignable to type 'Easing | Easing[]'`).
   - Entrance duration: 0.4–0.6s
   - Hover/interaction duration: 0.2–0.3s
   - Staggers: 0.05–0.1s (keep minimal to avoid sluggishness)
