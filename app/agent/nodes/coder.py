@@ -67,7 +67,9 @@ def coder(state: BuilderState) -> BuilderState:
         {"tool_choice": None if state.coder_run else "any"}
     )
 
-    design_context_section = "\n### Designer Notes:\n" + state.raw_designer_output
+    design_context_section = (
+        "\n### Your design system instructions:\n" + state.raw_designer_output
+    )
 
     project_spec = (
         "\n### You are tasked with building and coding this project:\n"
@@ -78,7 +80,6 @@ def coder(state: BuilderState) -> BuilderState:
 
     SYS = SystemMessage(
         content=_coder_prompt
-        + project_spec
         + design_context_section
         + f"\n\nThe following files exist in the session: {files}"
     )
