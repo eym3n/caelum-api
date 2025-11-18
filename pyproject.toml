@@ -28,4 +28,5 @@ dependencies = [
     "python-jose[cryptography]>=3.3.0",
     "bcrypt>=4.2.0",
     "pydantic[email]>=2.11.7",
+    "python-toon>=0.1.3",
 ]

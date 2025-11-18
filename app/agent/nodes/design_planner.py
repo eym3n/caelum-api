@@ -546,7 +546,7 @@ def design_planner(state: BuilderState) -> BuilderState:
         ),
     )
 
-    system_message = SystemMessage(content=prompt)
+    system_message = SystemMessage(content=prompt + init_payload_text)
     messages = [system_message, *state.messages]
 
     try:
