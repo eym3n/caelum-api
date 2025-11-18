@@ -45,6 +45,7 @@ Fix the deployment error that caused the Vercel deployment to fail. You have acc
    - Server/client component mismatches
    - Missing 'use client' directives
    - Invalid API routes
+   - **Module not found** errors for App Router pages or components
 
 3. **Configuration Issues**:
    - Incorrect build commands
@@ -64,11 +65,29 @@ Fix the deployment error that caused the Vercel deployment to fail. You have acc
 
 📋 YOUR PROCESS:
 
-1. **Analyze the Error**: Read the deployment error carefully
-2. **Identify Root Cause**: Determine what's causing the failure
-3. **Read Relevant Files**: Use batch_read_files to examine problem files
-4. **Apply Fixes**: Use batch_update_files or batch_update_lines to fix issues
-5. **Verify**: Run lint_project to ensure no syntax errors
+1. **Analyze the Error**: Read the deployment error carefully.
+2. **Identify Root Cause**: Determine what's causing the failure.
+3. **Read Relevant Files** (ALWAYS via batch_read_files):
+   - For **Next.js module-not-found errors** (e.g. `Module not found: Can't resolve '@/src/components/sections/navigation'`):
+     - Read:
+       - `tsconfig.json`
+       - `next.config.js`
+       - `src/app/page.tsx`
+       - Any referenced section/component files under `src/components/sections/`.
+     - Compare the alias in `tsconfig.json` (e.g. `paths: {{ "@/*": ["./src/*"] }}`) with the failing import.
+       - If the import uses `@/src/...` but the alias is `@/*` → `./src/*`, then **remove the extra `src` segment** and import from `@/components/...` or the correct path.
+       - If the import path points to a file that does not exist, either:
+         - Create the missing file in `src/components/sections/`, or
+         - Update the import to match the actual file name and path (respecting case).
+   - For other errors, read only the files mentioned in the error message (configs, pages, components, etc.).
+4. **Apply Fixes**:
+   - Use `batch_update_files` or `batch_update_lines` to:
+     - Fix incorrect import paths.
+     - Align `tsconfig.json` path aliases and actual file locations.
+     - Create missing section/component files when appropriate.
+5. **Verify**:
+   - Run `lint_project` to ensure no syntax/lint errors remain.
+   - If the error was a module-not-found issue, double-check that all imports in `src/app/page.tsx` and any shared layouts are resolvable given the actual `src/` structure.
 
 🛠️ AVAILABLE TOOLS:
 
@@ -120,6 +139,7 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
     Focuses exclusively on analyzing deployment failures and making
     targeted fixes to resolve the issues.
     """
+    response = None  # ensure defined for exception handling
     try:
         print("\n\n[DEPLOYMENT_FIXER] 🔧 Starting deployment error analysis...")
 
@@ -139,11 +159,11 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
 
         # Use GPT-5 with minimal reasoning for fast, focused fixes
         _deployment_fixer_llm_ = ChatOpenAI(
-            model="gpt-5", reasoning_effort="minimal"
+            model="gpt-5", reasoning_effort="low"
         ).bind_tools(
             tools,
             parallel_tool_calls=True,
-            tool_choice="any",  # Force tool use - we need to make changes
+            tool_choice="any" if not state.deployment_fixer_run else None,
         )
 
         SYS = SystemMessage(content=prompt_with_context)
