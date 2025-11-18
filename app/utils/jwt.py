@@ -17,7 +17,7 @@ def create_access_token(user_id: str) -> str:
     Returns:
         Encoded JWT access token
     """
-    expires_delta = timedelta(minutes=Config.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    expires_delta = timedelta(days=Config.JWT_ACCESS_TOKEN_EXPIRE_DAYS)
     expire = datetime.now(timezone.utc) + expires_delta
 
     to_encode = {"sub": user_id, "exp": expire, "type": "access"}

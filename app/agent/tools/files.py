@@ -519,6 +519,173 @@ def batch_update_files(
     return summary
 
 
+# ============================================================================
+# DESIGNER-SCOPED BATCH OPERATIONS
+# These are restricted to core design system files only so the designer agent
+# cannot create or modify section/Nav/Footer components. This enforces the
+# "designer only touches globals/tailwind/layout" contract at the tool layer.
+# ============================================================================
+
+ALLOWED_DESIGN_FILES = {
+    "src/app/globals.css",
+    "tailwind.config.ts",
+    "src/app/layout.tsx",
+}
+
+
+@tool
+def designer_batch_create_files(
+    files: list[FileCreate], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Create ONLY design-system files: `src/app/globals.css`, `tailwind.config.ts`, `src/app/layout.tsx`.
+
+    Any other paths will be rejected. This tool is intended for the designer
+    agent so it cannot create section, Nav, or Footer components.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    created: list[str] = []
+    errors: list[str] = []
+
+    print(f"[FILES] designer_batch_create_files → Creating {len(files)} design file(s)")
+
+    for file_create in files:
+        if file_create.name not in ALLOWED_DESIGN_FILES:
+            errors.append(
+                f"{file_create.name}: not allowed (designer may only create globals.css, tailwind.config.ts, layout.tsx)"
+            )
+            continue
+
+        file_path = session_dir / file_create.name
+        if file_path.exists():
+            errors.append(
+                f"{file_create.name}: already exists (use designer_batch_update_files to modify)"
+            )
+            continue
+
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        file_path.write_text(file_create.content)
+        created.append(file_create.name)
+
+    summary = f"Created {len(created)} design file(s): {', '.join(created)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] designer_batch_create_files → {summary}")
+    return summary
+
+
+@tool
+def designer_batch_update_files(
+    files: list[FileUpdate], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Update ONLY design-system files: `src/app/globals.css`, `tailwind.config.ts`, `src/app/layout.tsx`.
+
+    Any other paths will be rejected. This prevents the designer from editing
+    section/Nav/Footer components or other app code.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    updated: list[str] = []
+    errors: list[str] = []
+
+    print(f"[FILES] designer_batch_update_files → Updating {len(files)} design file(s)")
+
+    for file_update in files:
+        if file_update.name not in ALLOWED_DESIGN_FILES:
+            errors.append(
+                f"{file_update.name}: not allowed (designer may only update globals.css, tailwind.config.ts, layout.tsx)"
+            )
+            continue
+
+        file_path = session_dir / file_update.name
+
+        if not file_path.exists():
+            errors.append(
+                f"{file_update.name}: not found (use designer_batch_create_files to create)"
+            )
+            continue
+
+        file_path.write_text(file_update.content)
+        updated.append(file_update.name)
+
+    summary = f"Updated {len(updated)} design file(s): {', '.join(updated)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] designer_batch_update_files → {summary}")
+    return summary
+
+
+@tool
+def designer_batch_update_lines(
+    files: list[FileLineUpdate], config: Annotated[RunnableConfig, InjectedToolArg]
+) -> str:
+    """Update lines in ONLY design-system files: `src/app/globals.css`, `tailwind.config.ts`, `src/app/layout.tsx`.
+
+    Any other paths will be rejected.
+    """
+    session_id = _get_session_from_config(config)
+    session_dir = get_session_dir(session_id)
+    updated: list[str] = []
+    errors: list[str] = []
+
+    print(
+        f"[FILES] designer_batch_update_lines → Updating lines in {len(files)} design file(s) "
+        f"with {sum(len(f.updates) for f in files)} total edit(s)"
+    )
+
+    for file_update in files:
+        if file_update.name not in ALLOWED_DESIGN_FILES:
+            errors.append(
+                f"{file_update.name}: not allowed (designer may only update globals.css, tailwind.config.ts, layout.tsx)"
+            )
+            continue
+
+        file_path = session_dir / file_update.name
+
+        if not file_path.exists():
+            errors.append(f"{file_update.name}: not found")
+            continue
+
+        content = file_path.read_text().splitlines(keepends=True)
+
+        # Sort by start_index in reverse to process from bottom to top
+        sorted_updates = sorted(
+            file_update.updates, key=lambda x: x.start_index, reverse=True
+        )
+
+        for update in sorted_updates:
+            start0 = update.start_index - 1
+            end0 = update.end_index - 1
+
+            if start0 < 0 or end0 >= len(content) or start0 > end0:
+                errors.append(
+                    f"{file_update.name}: invalid range {update.start_index}-{update.end_index}"
+                )
+                continue
+
+            replacement: list[str] = []
+            for line_text in update.replacement_lines:
+                if not line_text.endswith("\n"):
+                    line_text += "\n"
+                replacement.append(line_text)
+
+            del content[start0 : end0 + 1]
+            for i, line in enumerate(replacement):
+                content.insert(start0 + i, line)
+
+        file_path.write_text("".join(content))
+        updated.append(f"{file_update.name} ({len(file_update.updates)} edit(s))")
+
+    summary = f"Updated {len(updated)} design file(s): {', '.join(updated)}"
+    if errors:
+        summary += f"\nErrors: {'; '.join(errors)}"
+
+    print(f"[FILES] designer_batch_update_lines → {summary}")
+    return summary
+
+
 @tool
 def batch_delete_files(
     files: list[FileDelete], config: Annotated[RunnableConfig, InjectedToolArg]

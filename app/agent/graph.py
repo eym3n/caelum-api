@@ -15,6 +15,9 @@ from app.agent.tools.files import (
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
+    designer_batch_create_files,
+    designer_batch_update_files,
+    designer_batch_update_lines,
     # Utility
     list_files,
     read_file,
@@ -88,8 +91,18 @@ command_tools = [
 coder_tools_node = ToolNode(file_tools + command_tools)
 # Clarify only needs file reading (batch reads)
 clarify_tools_node = ToolNode([batch_read_files, list_files])
-# Designer has access to both file and command tools (batch operations only)
-designer_tools_node = ToolNode(file_tools + command_tools)
+designer_file_tools = [
+    # Read any files (needed to understand context)
+    batch_read_files,
+    list_files,
+    read_file,
+    read_lines,
+    # Design-only create/update operations: restricted to globals.css, tailwind.config.ts, layout.tsx
+    designer_batch_create_files,
+    designer_batch_update_files,
+    designer_batch_update_lines,
+]
+designer_tools_node = ToolNode(designer_file_tools + command_tools)
 # Deployment fixer has access to both file and command tools (batch operations only)
 deployment_fixer_tools_node = ToolNode(file_tools + command_tools)
 

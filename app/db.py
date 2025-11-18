@@ -118,7 +118,7 @@ def get_database():
     Returns None if MongoDB is not available.
     """
     from app.config import Config
-    
+
     client = get_mongo_client()
     if client is None:
         return None
@@ -131,7 +131,7 @@ def get_users_collection():
     Returns None if MongoDB is not available.
     """
     from app.config import Config
-    
+
     db = get_database()
     if db is None:
         return None
@@ -144,8 +144,21 @@ def get_landing_pages_collection():
     Returns None if MongoDB is not available.
     """
     from app.config import Config
-    
+
     db = get_database()
     if db is None:
         return None
     return db[Config.MONGODB_LANDING_PAGES_COLLECTION]
+
+
+def get_jobs_collection():
+    """
+    Get the jobs collection from MongoDB.
+    Returns None if MongoDB is not available.
+    """
+    from app.config import Config
+
+    db = get_database()
+    if db is None:
+        return None
+    return db[Config.MONGODB_JOBS_COLLECTION]

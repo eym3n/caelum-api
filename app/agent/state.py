@@ -18,6 +18,10 @@ class BuilderState(BaseModel):
         default="default",
         description="The ID of the session.",
     )
+    job_id: Annotated[str | None, replace] = Field(
+        default=None,
+        description="Optional job id for this graph execution (used for async logging).",
+    )
 
     # 🗣️ Core conversational stream
     messages: Annotated[list, add_messages]

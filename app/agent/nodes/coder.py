@@ -28,6 +28,7 @@ from app.agent.tools.files import (
 from app.agent.tools.commands import (
     lint_project,
 )
+from app.utils.jobs import log_job_event
 
 load_dotenv()
 
@@ -44,10 +45,6 @@ tools = [
     lint_project,
 ]
 
-CODER_LLM = ChatOpenAI(model="gpt-5", reasoning_effort="minimal").bind_tools(
-    tools, parallel_tool_calls=True
-)
-
 
 def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
@@ -63,8 +60,10 @@ def coder(state: BuilderState) -> BuilderState:
         "DEFAULT" if not state.is_followup else "FOLLOW-UP",
     )
 
-    _coder_llm_ = CODER_LLM.with_config(
-        {"tool_choice": None if state.coder_run else "any"}
+    _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="minimal").bind_tools(
+        tools,
+        parallel_tool_calls=True,
+        tool_choice=None if state.coder_run else "batch_read_files",
     )
 
     design_context_section = (
@@ -80,8 +79,10 @@ def coder(state: BuilderState) -> BuilderState:
 
     SYS = SystemMessage(
         content=_coder_prompt
+        + project_spec
         + design_context_section
         + f"\n\nThe following files exist in the session: {files}"
+        + "\n\nSTART WORKING, YOU CANNOT CIRCLE BACK TO THE USER UNTIL YOU HAVE COMPLETED THE TASK. DO NOT ASK THE USER FOR ANYTHING UNTIL YOU HAVE COMPLETED THE TASK. DO NOT ASK FOR CONFIRMATION OR ANYTHING, JUST ACT."
     )
     messages = [SYS, *state.messages]
 
@@ -111,7 +112,6 @@ def coder(state: BuilderState) -> BuilderState:
         print(
             f"[CODER] Calling {len(coder_response.tool_calls)} tool(s) to establish design system"
         )
-        # Clear deployment error flags when coder starts working
         return {
             "messages": [coder_response],
             "coder_run": True,
@@ -136,5 +136,14 @@ def coder(state: BuilderState) -> BuilderState:
 
     if not output:
         output = "Task completed."
+
+    # Log final coder output as a node-level job event
+    log_job_event(
+        state.job_id,
+        node="coder",
+        message="Coder completed implementation pass.",
+        event_type="node_completed",
+        data={"summary_preview": output[:400]},
+    )
 
     return {"messages": [coder_response], "coder_output": output}

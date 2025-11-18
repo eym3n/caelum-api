@@ -44,13 +44,14 @@ class Config:
     MONGODB_LANDING_PAGES_COLLECTION = os.getenv(
         "MONGODB_LANDING_PAGES_COLLECTION", "landing_pages"
     )
+    MONGODB_JOBS_COLLECTION = os.getenv("MONGODB_JOBS_COLLECTION", "jobs")
 
     # JWT settings
     JWT_SECRET_KEY = os.getenv(
         "JWT_SECRET_KEY", "your-secret-key-change-this-in-production"
     )
     JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(
-        os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30")
+    JWT_ACCESS_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_DAYS", "30"))
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(
+        os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "45")
     )
-    JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "7"))

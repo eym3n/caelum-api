@@ -6,6 +6,7 @@ from app.routers import uploads as uploads_router
 from app.routers import files as files_router
 from app.routers import auth as auth_router
 from app.routers import landing_pages as landing_pages_router
+from app.routers import jobs as jobs_router
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -76,6 +77,7 @@ app.include_router(landing_pages_router.router, prefix="/v1/landing-pages")
 app.include_router(agent_router.router, prefix="/v1/agent")
 app.include_router(uploads_router.router, prefix="/v1/uploads")
 app.include_router(files_router.router, prefix="/v1/files")
+app.include_router(jobs_router.router, prefix="/v1")
 
 
 # Basic health

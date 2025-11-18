@@ -213,7 +213,7 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
     except Exception as e:
         print(f"[DEPLOYMENT_FIXER] Error: {e}")
         return {
-            "messages": [response],
+            "messages": [response] if response is not None else state.messages,
             "deployment_fixer_run": True,
             "deployment_failed": True,
             "deployment_error": str(e),

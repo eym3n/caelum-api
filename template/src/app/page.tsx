@@ -1,10 +1,10 @@
-import HeroSection from "@/components/sections/hero-section";
+// import HeroSection from "@/components/sections/hero-section";
 // import other sections here
 
 export default function Home() {
   return (
     <main>
-      <HeroSection />
+      {/* <HeroSection /> */}
       {/* add other sections here */}
     </main>
   );

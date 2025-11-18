@@ -1,10 +1,20 @@
-from fastapi import APIRouter, Depends, Request, HTTPException, UploadFile
+from fastapi import (
+    APIRouter,
+    Depends,
+    Request,
+    HTTPException,
+    UploadFile,
+    BackgroundTasks,
+)
 from fastapi.responses import StreamingResponse, Response, FileResponse
 from pydantic import BaseModel
 from app.deps import get_session_id, get_current_user
 from app.models.user import User
 from app.models.landing_page import LandingPageCreate, LandingPageStatus
 from app.utils.landing_pages import create_landing_page, get_landing_page_by_session_id
+from app.models.job import Job, JobCreate, JobType, JobStatus
+from app.utils.jobs import create_job, append_job_event, update_job_status
+from app.agent.job_runner import run_chat_job, run_init_job
 from langchain_core.messages import HumanMessage
 from app.agent.graph import agent
 from app.agent.tools.files import get_session_dir, clear_session_dir
@@ -55,6 +65,7 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     reply: str
+    job_id: str | None = None
 
 
 class ChatMessage(BaseModel):
@@ -241,7 +252,11 @@ def _copy_static_project(session_id: str, label: str) -> bool:
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
+async def chat(
+    req: ChatRequest,
+    background_tasks: BackgroundTasks,
+    session_id: str = Depends(get_session_id),
+):
     # Check if this is the first message - clear session directory
     try:
         state_snapshot = agent.get_state(
@@ -262,42 +277,31 @@ async def chat(req: ChatRequest, session_id: str = Depends(get_session_id)):
         print(f"[CHAT] Continuing session: {session_id}")
     # No dev server management in static mode
 
-    last_text = ""
-    for event in agent.stream(
-        {"messages": [HumanMessage(content=req.message)], "session_id": session_id},
-        config={
-            "configurable": {
-                "thread_id": session_id,
-                "session_id": session_id,  # Pass session_id to tools
-            },
-            "recursion_limit": 25,
-        },
-    ):
-        for node, update in event.items():
-            if node in ("__start__", "__end__"):
-                continue
+    # Create a job record for this chat execution (user_id may be None in this endpoint)
+    job = create_job(
+        JobCreate(
+            type=JobType.CHAT,
+            session_id=session_id,
+            user_id=None,
+            title="Chat request",
+            description="Asynchronous chat execution",
+            initial_payload={"message": req.message},
+        )
+    )
+    job_id = job.id if job else None
 
-            if not isinstance(update, dict):
-                continue
+    # Kick off background execution of the graph job
+    if job_id:
+        background_tasks.add_task(run_chat_job, job_id, session_id, req.message)
 
-            # Handle different node response types
-            if "clarify_response" in update:
-                last_text = update["clarify_response"]
-            elif "coder_output" in update:
-                last_text = update["coder_output"]
-            elif "messages" in update:
-                msg = update["messages"][-1]
-                content = getattr(msg, "content", "")
-                if isinstance(content, str) and content:
-                    last_text = content
-            elif "planner_output" in update:
-                todo_list = update["planner_output"]
-                if isinstance(todo_list, list):
-                    last_text = "\n".join(f"- {item}" for item in todo_list)
-                else:
-                    last_text = str(todo_list)
-
-    return ChatResponse(reply=last_text or "(no reply)")
+    # Asynchronous architecture: reply is not the final graph output anymore.
+    # Frontend should poll /v1/jobs/{job_id} for status and events.
+    return ChatResponse(
+        reply="Chat job accepted. Poll /v1/jobs/{job_id} for progress.".format(
+            job_id=job_id or ""
+        ),
+        job_id=job_id,
+    )
 
 
 @router.post("/chat/stream")
@@ -403,7 +407,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         "thread_id": session_id,
                         "session_id": session_id,  # Pass session_id to tools
                     },
-                    "recursion_limit": 25,
+                    "recursion_limit": 35,
                 },
             ):
                 for node, update in event.items():
@@ -1032,17 +1036,26 @@ def _flatten_init_payload(payload: InitPayload) -> str:
     return "\n\n".join(sections)
 
 
-@router.post("/init/stream")
-async def init_stream(
+class InitJobResponse(BaseModel):
+    job_id: str
+    session_id: str
+    landing_page_id: str | None = None
+
+
+@router.post("/init", response_model=InitJobResponse)
+async def init_job(
     request: Request,
+    background_tasks: BackgroundTasks,
     session_id: str = Depends(get_session_id),
     current_user: User = Depends(get_current_user),
 ):
-    """Initialization stream endpoint supporting both application/json and multipart/form-data.
-    Requires authentication. Creates a landing page record and starts agent workflow.
+    """Initialization endpoint (asynchronous).
 
-    Multipart format: field name 'payload' containing JSON blob.
-    Optional 'session_id' key inside JSON can override header.
+    - Accepts JSON or multipart/form-data like the previous /init/stream
+    - Creates a landing page record for the session
+    - Enqueues a graph execution job and returns immediately with a job_id
+
+    Frontend should poll `/v1/jobs/{job_id}` for progress and node outputs.
     """
     content_type = request.headers.get("content-type", "")
     raw_json: dict | None = None
@@ -1163,7 +1176,10 @@ async def init_stream(
         is_first_message = not state_snapshot.values.get("messages", [])
     except Exception:
         is_first_message = True
+
     app_ready = not is_first_message
+    landing_page_id: str | None = None
+
     if is_first_message:
         clear_session_dir(session_id)
         print(f"[INIT] Copying static project template for session {session_id}")
@@ -1183,171 +1199,47 @@ async def init_stream(
             created_lp = create_landing_page(current_user.id, landing_page_data)
             if created_lp:
                 print(f"[INIT] ✅ Landing page created: {created_lp.id}")
+                landing_page_id = created_lp.id
             else:
                 print(f"[INIT] ⚠️ Failed to create landing page (DB unavailable)")
         else:
             print(f"[INIT] Landing page already exists for session {session_id}")
+            landing_page_id = existing_lp.id  # type: ignore[assignment]
+
     # No dev server management in static mode
 
     payload_text = _flatten_init_payload(req_payload)
-    combined = "INITIAL CREATION PAYLOAD\n" + payload_text
 
-    def sse(data: dict) -> str:
-        return f"data: {json.dumps(data, ensure_ascii=False)}\n\n"
+    # Create a job record for this init execution
+    job = create_job(
+        JobCreate(
+            type=JobType.INIT,
+            session_id=session_id,
+            user_id=current_user.id,
+            title="Init request",
+            description="Asynchronous init graph execution",
+            initial_payload=req_payload.model_dump(),
+        )
+    )
+    if not job:
+        raise HTTPException(
+            status_code=500, detail="Failed to create job for init execution"
+        )
 
-    def event_gen():
-        tool_calls_map = {}
+    # Run the graph in the background
+    background_tasks.add_task(
+        run_init_job,
+        job.id,
+        session_id,
+        req_payload.model_dump(),
+        payload_text,
+    )
 
-        try:
-            for event in agent.stream(
-                {
-                    "messages": [HumanMessage(content=combined)],
-                    "init_payload": req_payload.model_dump(),
-                    "init_payload_text": payload_text,
-                    "session_id": session_id,
-                },
-                config={
-                    "configurable": {"thread_id": session_id, "session_id": session_id},
-                    "recursion_limit": 25,
-                },
-            ):
-                for node, update in event.items():
-                    if node in ("__start__", "__end__"):
-                        continue
-                    if not isinstance(update, dict):
-                        continue
-
-                    text_to_send = None
-
-                    if "coder_output" in update:
-                        text_to_send = update["coder_output"]
-                    elif "clarify_response" in update:
-                        text_to_send = update["clarify_response"]
-                    elif "messages" in update:
-                        msg = update["messages"][-1]
-                        msg_type = getattr(msg, "type", None)
-
-                        # Track tool calls from AI messages
-                        if msg_type == "ai" and hasattr(msg, "tool_calls"):
-                            for tc in msg.tool_calls:
-                                tool_calls_map[tc.get("id")] = tc
-
-                        # Handle tool messages with ultra-brief summaries
-                        if (
-                            node
-                            in (
-                                "coder_tools",
-                                "clarify_tools",
-                                "planner_tools",
-                                "designer_tools",
-                                "architect_tools",
-                            )
-                            or msg_type == "tool"
-                        ):
-                            tool_name = getattr(msg, "name", None)
-                            tool_call_id = getattr(msg, "tool_call_id", None)
-                            tool_call = (
-                                tool_calls_map.get(tool_call_id)
-                                if tool_call_id
-                                else None
-                            )
-
-                            def brief_tool_summary(name: str, call: dict | None) -> str:
-                                args = (
-                                    call.get("args", {})
-                                    if isinstance(call, dict)
-                                    else {}
-                                )
-                                # Batch counts
-                                count = 0
-                                if name.startswith("batch_"):
-                                    files = (
-                                        args.get("files") or args.get("updates") or []
-                                    )
-                                    if isinstance(files, list):
-                                        count = len(files)
-                                simple_map = {
-                                    "create_file": "Creating file...",
-                                    "update_file": "Editing file...",
-                                    "delete_file": "Deleting file...",
-                                    "read_file": "Reading file...",
-                                    "insert_lines": "Editing file...",
-                                    "remove_lines": "Editing file...",
-                                    "update_lines": "Editing file...",
-                                    "read_lines": "Reading file...",
-                                    "list_files": "Listing files...",
-                                    "init_nextjs_app": "Initializing app...",
-                                    "install_dependencies": "Installing dependencies...",
-                                    "run_dev_server": "Starting dev server...",
-                                    "run_npm_command": "Running npm command...",
-                                    "run_npx_command": "Running npx command...",
-                                    "run_git_command": "Running git command...",
-                                    "git_log": "Viewing commit log...",
-                                    "git_show": "Viewing commit...",
-                                    "lint_project": "Running linter...",
-                                    "check_css": "Checking CSS...",
-                                }
-                                if name == "batch_create_files":
-                                    return (
-                                        f"Creating {count} file(s)..."
-                                        if count
-                                        else "Creating files..."
-                                    )
-                                if name == "batch_update_files":
-                                    return (
-                                        f"Editing {count} file(s)..."
-                                        if count
-                                        else "Editing files..."
-                                    )
-                                if name == "batch_delete_files":
-                                    return (
-                                        f"Deleting {count} file(s)..."
-                                        if count
-                                        else "Deleting files..."
-                                    )
-                                if name == "batch_read_files":
-                                    return (
-                                        f"Reading {count} file(s)..."
-                                        if count
-                                        else "Reading files..."
-                                    )
-                                if name == "batch_update_lines":
-                                    return (
-                                        f"Editing {count} file(s)..."
-                                        if count
-                                        else "Editing files..."
-                                    )
-                                return simple_map.get(name, "Running tool...")
-
-                            # Skip streaming for read operations - user doesn't want file content
-                            read_tools = {
-                                "read_file",
-                                "read_lines",
-                                "batch_read_files",
-                                "list_files",
-                            }
-                            if tool_name and tool_name in read_tools:
-                                # Skip entirely - don't send anything for read operations
-                                text_to_send = None
-                            elif tool_name:
-                                text_to_send = brief_tool_summary(tool_name, tool_call)
-                            else:
-                                text_to_send = "Ran tool"
-                        else:
-                            c = getattr(msg, "content", "")
-                            if isinstance(c, str) and c:
-                                text_to_send = c
-
-                    if text_to_send:
-                        yield sse(
-                            {"type": "message", "node": node, "text": text_to_send}
-                        )
-        except Exception as e:
-            yield sse({"type": "error", "error": str(e)})
-        finally:
-            yield sse({"type": "done"})
-
-    return StreamingResponse(event_gen(), media_type="text/event-stream")
+    return InitJobResponse(
+        job_id=job.id,
+        session_id=session_id,
+        landing_page_id=landing_page_id,
+    )
 
 
 class DeployResponse(BaseModel):
