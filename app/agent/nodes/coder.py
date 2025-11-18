@@ -44,6 +44,10 @@ tools = [
     lint_project,
 ]
 
+CODER_LLM = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(
+    tools, parallel_tool_calls=True
+)
+
 
 def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
@@ -59,8 +63,8 @@ def coder(state: BuilderState) -> BuilderState:
         "DEFAULT" if not state.is_followup else "FOLLOW-UP",
     )
 
-    _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(
-        tools, parallel_tool_calls=True, tool_choice=None if state.coder_run else "any"
+    _coder_llm_ = CODER_LLM.with_config(
+        {"tool_choice": None if state.coder_run else "any"}
     )
 
     design_context_section = "\n### Designer Notes:\n" + state.raw_designer_output
@@ -72,24 +76,11 @@ def coder(state: BuilderState) -> BuilderState:
 
     files = "\n".join(list_files_internal(state.session_id))
 
-    # Add deployment error context if present
-    deployment_context = ""
-    if state.deployment_failed and state.deployment_error:
-        deployment_context = (
-            "\n\n⚠️ DEPLOYMENT ERROR - FIX REQUIRED:\n"
-            "The previous deployment to Vercel failed with the following error:\n"
-            f"{state.deployment_error}\n\n"
-            "You MUST fix the issues that caused the deployment to fail. "
-            "Review the error message carefully and make the necessary code changes."
-        )
-
     SYS = SystemMessage(
         content=_coder_prompt
         + project_spec
         + design_context_section
-        + CODER_DESIGN_BOOSTER
         + f"\n\nThe following files exist in the session: {files}"
-        + deployment_context
     )
     messages = [SYS, *state.messages]
 
