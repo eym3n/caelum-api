@@ -44,7 +44,7 @@ tools = [
     lint_project,
 ]
 
-CODER_LLM = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(
+CODER_LLM = ChatOpenAI(model="gpt-5", reasoning_effort="minimal").bind_tools(
     tools, parallel_tool_calls=True
 )
 
