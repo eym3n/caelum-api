@@ -6,9 +6,7 @@ from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from app.agent.state import BuilderState
-from app.agent.tools.commands import (
-    lint_project,
-)
+from app.agent.tools.commands import lint_project
 from app.agent.tools.files import (
     # Batch operations (ONLY USE THESE)
     batch_read_files,
@@ -568,10 +566,9 @@ These guidelines apply ONLY when generating blueprints for landing page sections
 - Pseudo-elements: Define base `@utility halo { position: relative; }`, then `.halo::before { ... }` in `@layer base`
 
 **Scope & Boundaries:**
-- Own: `globals.css` (MOST IMPORTANT), `tailwind.config.ts`, `layout.tsx`, fonts via `next/font/google`, token files, and section composition documentation
+- Own: `globals.css` (MOST IMPORTANT), `tailwind.config.ts`, `layout.tsx`, fonts via `next/font/google`,  and section composition documentation
 - Do NOT: pages/features/sections business logic
-- Dirs: `/src/app` (prefer if exists), `src/components/ui`, `/styles`
-- When both `/app` and `/src/app` exist, use `/src/app` (same for `layout.tsx`, `globals.css`)
+- Dirs: `/src/app`
 
 **Deliverables:**
 
@@ -596,10 +593,6 @@ These guidelines apply ONLY when generating blueprints for landing page sections
    - Use `next/font/google` (variable) → expose as `--font-sans`, `--font-heading`
 - Body class: `bg-[color:var(--color-background)] text-[color:var(--color-foreground)] antialiased`
    - NO padding on `body`/`main` (sections manage spacing; inside sections use `max-w-7xl mx-auto px-6 md:px-8`)
-
-4. **Reusable Components** (`src/components/ui/`):
-   - Basic UI components like `button.tsx`, `card.tsx`, `input.tsx` using token bridges
-   - Compose custom utilities in markup: `<button className="btn btn-primary">`, `<div className="card glass shadow-soft">`
 
 **Validation & Guardrails (MUST PASS before writing):**
 - **CRITICAL — Check for unknown utility classes in `@apply`:**
@@ -692,14 +685,16 @@ Be detailed about what files it needs to read first and then create.
 - Use **Framer Motion** as default motion stack; outline `motion.div`, `AnimatePresence`, `LayoutGroup` usage per section.
 
 ## Your Workflow (MUST FOLLOW THIS)
-1) Consider that the following dirs exist: `/src/app`, `src/components/ui`, `/styles` and start creating directly. do NOT START BY LISTING FILES IN DIR.
-2) START BY `batch_create_files` for ALL `src/app/globals.css`, `tailwind.config.ts` and any basic UI components in `src/components/ui` IN TWO SEPARATE TOOL CALLS.
+1) Consider that the following dirs exist: `/src/app`, and start creating directly. do NOT START BY LISTING FILES IN DIR.
+2) START BY `batch_create_files` for ALL `src/app/globals.css`, `tailwind.config.ts`.
 3) **BEFORE WRITING `globals.css`:** Review your CSS to ensure you NEVER use `@apply` with unknown utility classes like `border-border`, `bg-background`, `text-foreground`. Use raw CSS properties instead (e.g., `border-color: var(--border);` NOT `@apply border-border`).
 4) Plan other necessary changes
 5) `list_files`, `read_file`, `read_lines`, `batch_update_files` / `batch_update_lines` for any edits
 6) **BEFORE FINALIZING:** Search `globals.css` for patterns like `@apply border-border`, `@apply bg-background`, `@apply text-foreground` and replace them with raw CSS properties — these will cause build errors.
 7) Run `lint_project` to validate and fix all errors and warnings (Do not ignore warnings, fix them too)
 8) Fix issues if any, then exit with final summary
+
+YOU DO NOT TOUCH ANY OTHER FILES THAN `globals.css`, `tailwind.config.ts` and `layout.tsx`. THOSE ARE THE ONLY FILES YOU ARE ALLOWED TO TOUCH.
 """
 
 
