@@ -6,13 +6,102 @@ to MongoDB as nodes run. Frontend can poll job state via the jobs API.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Tuple
 
 from langchain_core.messages import HumanMessage
 
 from app.agent.graph import agent
 from app.models.job import JobStatus
 from app.utils.jobs import log_job_event, update_job_status
+
+
+DEFAULT_NODE_MESSAGES = {
+    "router": "Planning next steps...",
+    "design_planner": "Generating design system...",
+    "designer": "Creating design system...",
+    "coder": "Implementing landing page...",
+    "deployer": "Deploying landing page...",
+    "deployment_fixer": "Fixing deployment errors...",
+    "clarify": "Clarifying the request...",
+}
+
+
+def _count_list_items(value: Any) -> int:
+    if isinstance(value, list):
+        return len(value)
+    if value is None:
+        return 0
+    # Treat single objects as one item
+    return 1
+
+
+def _summarize_tool_event(
+    tool_name: str, tool_calls: list[dict[str, Any]]
+) -> Tuple[str, dict[str, Any]]:
+    """Return (message, extra_meta) for a tool execution..."""
+
+    total_files = 0
+    total_edits = 0
+
+    for call in tool_calls:
+        args = call.get("args") or {}
+        files_arg = args.get("files")
+        total_files += _count_list_items(files_arg)
+
+        if isinstance(files_arg, list):
+            for entry in files_arg:
+                updates = (entry or {}).get("updates")
+                if isinstance(updates, list):
+                    total_edits += len(updates)
+
+    normalized = tool_name.replace("designer_", "")
+
+    if normalized.endswith("batch_create_files"):
+        message = f"Created {total_files} file(s)." if total_files else "Created files."
+        return message, {"file_count": total_files} if total_files else {}
+
+    if normalized.endswith("batch_update_files"):
+        message = f"Updated {total_files} file(s)." if total_files else "Updated files."
+        return message, {"file_count": total_files} if total_files else {}
+
+    if normalized.endswith("batch_delete_files"):
+        message = f"Deleted {total_files} file(s)." if total_files else "Deleted files."
+        return message, {"file_count": total_files} if total_files else {}
+
+    if normalized.endswith("batch_update_lines"):
+        meta: dict[str, Any] = {}
+        if total_files:
+            meta["file_count"] = total_files
+        if total_edits:
+            meta["edit_count"] = total_edits
+        if total_files and total_edits:
+            message = f"Updated {total_files} file(s) with {total_edits} edit(s)."
+        elif total_files:
+            message = f"Updated {total_files} file(s)."
+        elif total_edits:
+            message = f"Applied {total_edits} edit(s)."
+        else:
+            message = "Updated file lines."
+        return message, meta
+
+    if normalized.endswith("batch_read_files"):
+        message = f"Read {total_files} file(s)." if total_files else "Read files."
+        return message, {"file_count": total_files} if total_files else {}
+
+    if normalized == "read_file":
+        return "Read 1 file.", {"file_count": 1}
+
+    if normalized == "read_lines":
+        return "Read file segment.", {}
+
+    if normalized == "list_files":
+        return "Listed workspace files.", {}
+
+    if normalized == "lint_project":
+        return "Lint and type checks completed.", {}
+
+    # Default fallback for other tools
+    return f"Ran tool {tool_name}.", {}
 
 
 def _extract_message_from_update(
@@ -24,26 +113,9 @@ def _extract_message_from_update(
     """
     tool_name = tool_meta.get("tool_name")
 
-    # Tool nodes: keep messages concise and NEVER include full file contents.
+    # Tool nodes have dedicated summaries; this branch should be unreachable.
     if node.endswith("_tools") and tool_name:
-        # Reads: don't log contents at all.
-        if tool_name in {"read_file", "batch_read_files", "read_lines"}:
-            return "Read file(s)."
-        # Lint: short status message only.
-        if tool_name == "lint_project":
-            return "Lint and type checks completed."
-
-        # For other tools (creates/updates/deletes, etc.), their own summaries are
-        # already short (e.g. "Created 2 file(s): ..."). Use that, but truncate
-        # just in case.
-        if "messages" in update:
-            try:
-                msg_obj = update["messages"][-1]
-                content = getattr(msg_obj, "content", "")
-                if isinstance(content, str) and content:
-                    return content[:400]
-            except Exception:
-                pass
+        return ""
 
     # Highest priority: explicit clarify/coder outputs
     if "clarify_response" in update:
@@ -170,15 +242,33 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     tool_meta.get("tool_name") or tool_meta.get("tool_calls")
                 )
 
-                # For non-tool nodes, skip per-tool logs when there are tool calls.
-                # The actual tool execution will be logged separately under the
-                # "*_tools" node with a concise summary.
-                if (not node.endswith("_tools")) and has_tool_activity:
-                    continue
+                if node.endswith("_tools") and tool_meta.get("tool_name"):
+                    msg, extra_meta = _summarize_tool_event(
+                        tool_meta["tool_name"], tool_meta.get("tool_calls", [])
+                    )
+                    if extra_meta:
+                        tool_meta.update(extra_meta)
+                else:
+                    if has_tool_activity:
+                        continue
 
-                msg = _extract_message_from_update(
-                    update, node=node, tool_meta=tool_meta
-                )
+                    msg = _extract_message_from_update(
+                        update, node=node, tool_meta=tool_meta
+                    )
+                    default_msg = DEFAULT_NODE_MESSAGES.get(node)
+                    if not msg:
+                        msg = default_msg or ""
+                    elif len(msg) > 240:
+                        msg = msg[:240] + "…"
+                        if default_msg:
+                            msg = default_msg
+                    elif default_msg and msg.strip().startswith("Thanks"):
+                        # Replace overly conversational designer/coder chatter.
+                        msg = default_msg
+
+                if not msg:
+                    msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded.")
+
                 # NOTE: we deliberately avoid storing the raw `update` object in MongoDB,
                 # because it may contain non-serializable LangChain message objects.
                 # Instead, we capture only JSON-friendly tool metadata and a summary message.
@@ -245,12 +335,32 @@ def run_init_job(
                     tool_meta.get("tool_name") or tool_meta.get("tool_calls")
                 )
 
-                if (not node.endswith("_tools")) and has_tool_activity:
-                    continue
+                if node.endswith("_tools") and tool_meta.get("tool_name"):
+                    msg, extra_meta = _summarize_tool_event(
+                        tool_meta["tool_name"], tool_meta.get("tool_calls", [])
+                    )
+                    if extra_meta:
+                        tool_meta.update(extra_meta)
+                else:
+                    if has_tool_activity:
+                        continue
 
-                msg = _extract_message_from_update(
-                    update, node=node, tool_meta=tool_meta
-                )
+                    msg = _extract_message_from_update(
+                        update, node=node, tool_meta=tool_meta
+                    )
+                    default_msg = DEFAULT_NODE_MESSAGES.get(node)
+                    if not msg:
+                        msg = default_msg or ""
+                    elif len(msg) > 240:
+                        msg = msg[:240] + "…"
+                        if default_msg:
+                            msg = default_msg
+                    elif default_msg and msg.strip().startswith("Thanks"):
+                        msg = default_msg
+
+                if not msg:
+                    msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded.")
+
                 log_job_event(
                     job_id,
                     node=node,

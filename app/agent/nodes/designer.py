@@ -49,39 +49,36 @@ _designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(to
 def designer(state: BuilderState) -> BuilderState:
     # Check if we have design_guidelines from design_planner
     design_guidelines = state.design_guidelines
-    has_guidelines = bool(design_guidelines and state.design_planner_run)
 
     files = "\n".join(list_files_internal(state.session_id))
 
-    if has_guidelines:
-        # Use simplified implementation prompt with guidelines
-
-        guidelines = encode(design_guidelines)
-        prompt = DESIGNER_SYSTEM_PROMPT.replace("**_guidelines_**", guidelines)
-
-        SYS = SystemMessage(content=prompt)
-    elif getattr(state, "is_followup", False):
-        prompt = FOLLOWUP_DESIGNER_SYSTEM_PROMPT
-        SYS = SystemMessage(
-            content=prompt + f"\n\nThe following files exist in the session: {files}"
-        )
-    elif (
-        "globals.css" in files
-        and "tailwind.config.ts" in files
-        and "layout.tsx" in files
-    ):
-        prompt = SUMMARIZE_DESIGNER_SYSTEM_PROMPT
-        print("[DESIGNER] Summarizing design system")
-        SYS = SystemMessage(content=prompt)
+    if not state.is_followup:
+        if (
+            "globals.css" in files
+            and "tailwind.config.ts" in files
+            and "layout.tsx" in files
+        ):
+            SYS = SystemMessage(
+                content=SUMMARIZE_DESIGNER_SYSTEM_PROMPT
+                + f"\n\nThe following files exist in the session: {files}"
+            )
+        else:
+            SYS = SystemMessage(
+                content=DESIGNER_SYSTEM_PROMPT.replace(
+                    "{guidelines}", encode(design_guidelines)
+                )
+                + f"\n\nThe following files exist in the session: {files}"
+            )
     else:
         SYS = SystemMessage(
-            content=prompt + f"\n\nThe following files exist in the session: {files}"
+            content=FOLLOWUP_DESIGNER_SYSTEM_PROMPT
+            + f"\n\nThe following files exist in the session: {files}"
         )
 
-    messages = [SYS, *state.messages] if not state.design_system_run else state.messages
-    designer_response = _designer_llm_.invoke(messages)
+    print(f"[DESIGNER] Prompt: {SYS.content}")
 
-    print(f"[DESIGNER] Response: {designer_response}")
+    messages = [SYS, *state.messages]
+    designer_response = _designer_llm_.invoke(messages)
 
     # Check for malformed function call
     finish_reason = getattr(designer_response, "response_metadata", {}).get(

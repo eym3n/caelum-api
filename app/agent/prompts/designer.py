@@ -22,7 +22,7 @@ YOU DO NOT:
 📋 DESIGN GUIDELINES (FOLLOW EXACTLY) 📋
 ═══════════════════════════════════════════════════════════════════════════════
 
-**_guidelines_**
+{guidelines}
 
 ═══════════════════════════════════════════════════════════════════════════════
 🔧 IMPLEMENTATION INSTRUCTIONS 🔧
