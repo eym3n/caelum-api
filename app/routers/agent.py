@@ -257,6 +257,7 @@ async def chat(
     req: ChatRequest,
     background_tasks: BackgroundTasks,
     session_id: str = Depends(get_session_id),
+    current_user: User = Depends(get_current_user),
 ):
     # Check if this is the first message - clear session directory
     try:
@@ -278,12 +279,12 @@ async def chat(
         print(f"[CHAT] Continuing session: {session_id}")
     # No dev server management in static mode
 
-    # Create a job record for this chat execution (user_id may be None in this endpoint)
+    # Create a job record for this chat execution with the authenticated user id
     job = create_job(
         JobCreate(
             type=JobType.CHAT,
             session_id=session_id,
-            user_id=None,
+            user_id=current_user.id,
             title="Chat request",
             description="Asynchronous chat execution",
             initial_payload={"message": req.message},

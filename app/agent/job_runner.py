@@ -17,12 +17,12 @@ from app.utils.jobs import log_job_event, update_job_status
 
 DEFAULT_NODE_MESSAGES = {
     "router": "Planning next steps...",
-    "design_planner": "Generating design system...",
-    "designer": "Creating design system...",
-    "coder": "Implementing landing page...",
-    "deployer": "Deploying landing page...",
-    "deployment_fixer": "Fixing deployment errors...",
-    "clarify": "Clarifying the request...",
+    "design_planner": "Generated design system",
+    "designer": "Created design system",
+    "coder": "Implemented landing page",
+    "deployer": "Deployed landing page",
+    "deployment_fixer": "Fixed deployment errors",
+    "clarify": "Clarified the request",
 }
 
 
@@ -204,6 +204,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
     Streams LangGraph events and appends them as JobEvents in MongoDB.
     """
     try:
+        saw_graph_end = False
         for event in agent.stream(
             {
                 "messages": [HumanMessage(content=message)],
@@ -232,6 +233,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                         data={"session_id": session_id},
                     )
                     update_job_status(job_id, status=JobStatus.COMPLETED)
+                    saw_graph_end = True
                     continue
 
                 if not isinstance(update, dict):
@@ -279,6 +281,15 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     event_type="node",
                     data=tool_meta,
                 )
+        if not saw_graph_end:
+            log_job_event(
+                job_id,
+                node="__end__",
+                message="Graph execution completed.",
+                event_type="job_completed",
+                data={"session_id": session_id},
+            )
+            update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
         print(f"[JOB_RUNNER] Chat job failed: {e}")
         update_job_status(job_id, status=JobStatus.FAILED, error_message=str(e))
@@ -297,6 +308,7 @@ def run_init_job(
     node events to the jobs collection instead of streaming SSE.
     """
     try:
+        saw_graph_end = False
         combined = "INITIAL CREATION PAYLOAD\n" + init_payload_text
 
         for event in agent.stream(
@@ -325,6 +337,7 @@ def run_init_job(
                         data={"session_id": session_id},
                     )
                     update_job_status(job_id, status=JobStatus.COMPLETED)
+                    saw_graph_end = True
                     continue
 
                 if not isinstance(update, dict):
@@ -368,6 +381,15 @@ def run_init_job(
                     event_type="node",
                     data=tool_meta,
                 )
+        if not saw_graph_end:
+            log_job_event(
+                job_id,
+                node="__end__",
+                message="Init graph execution completed.",
+                event_type="job_completed",
+                data={"session_id": session_id},
+            )
+            update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
         print(f"[JOB_RUNNER] Init job failed: {e}")
         update_job_status(job_id, status=JobStatus.FAILED, error_message=str(e))
