@@ -85,7 +85,6 @@ def coder(state: BuilderState) -> BuilderState:
 
     SYS = SystemMessage(
         content=_coder_prompt
-        + project_spec
         + design_context_section
         + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
     )
@@ -122,6 +121,7 @@ def coder(state: BuilderState) -> BuilderState:
             "coder_run": True,
             "deployment_failed": False,
             "deployment_error": "",
+            # "coder_first_pass_run": False,
         }
 
     # Extract content as string (handle both str and list responses)
@@ -150,4 +150,8 @@ def coder(state: BuilderState) -> BuilderState:
         event_type="node_completed",
     )
 
-    return {"messages": [coder_response], "coder_output": output}
+    return {
+        "messages": [coder_response],
+        "coder_output": output,
+        # "coder_first_pass_run": True,
+    }
