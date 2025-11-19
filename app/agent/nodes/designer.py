@@ -43,7 +43,7 @@ tools = [
 ]
 
 
-_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(tools)
+_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(tools)
 
 
 def designer(state: BuilderState) -> BuilderState:
