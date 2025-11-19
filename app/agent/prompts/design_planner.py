@@ -1,81 +1,77 @@
 PRICING_PLANS_OPTIONS = [
-    "Sliding Comparison: Plans in horizontal scrollable track, active plan enlarges/highlights",
-    "Layered Tiers: Plans stack with perspective, higher tiers literally elevated and larger",
-    "Feature Matrix Table: Bold table design with animated checkmarks, sticky headers, color-coded rows",
-    "Spotlight Circles: Each plan in circular containers with size indicating value, arranged creatively",
-    "Timeline Pricing: Plans as timeline events showing progression from basic to premium",
-    "Split Hero Pricing: One dominant recommended plan takes 60%, others share 40% with compact styling",
-    "Interactive Feature Builder: Users select features, price updates, shows matching plan",
-    "Comparison Slider: Drag slider to compare 2 plans side-by-side with highlighting differences",
-]
-
-HERO_CONCEPTS = [
-    "Sliding Comparison: Plans in horizontal scrollable track, active plan enlarges/highlights",
-    "Layered Tiers: Plans stack with perspective, higher tiers literally elevated and larger",
-    "Feature Matrix Table: Bold table design with animated checkmarks, sticky headers, color-coded rows",
-    "Spotlight Circles: Each plan in circular containers with size indicating value, arranged creatively",
-    "Timeline Pricing: Plans as timeline events showing progression from basic to premium",
-    "Split Hero Pricing: One dominant recommended plan takes 60%, others share 40% with compact styling",
-    "Interactive Feature Builder: Users select features, price updates, shows matching plan",
-    "Comparison Slider: Drag slider to compare 2 plans side-by-side with highlighting differences",
+    "Sliding Comparison: horizontal scrollable track",
+    "Layered Tiers: perspective stacking",
+    "Feature Matrix Table: animated checkmarks",
+    "Spotlight Circles: circular containers",
+    "Timeline Pricing: progression timeline",
+    "Split Hero Pricing: 60/40 layout",
+    "Interactive Feature Builder: dynamic pricing",
+    "Comparison Slider: side-by-side comparison",
 ]
 
 CTA_SECTION_GUIDELINES = [
-    "Forms must be clear and usable, but section design should be BOLD",
-    "Consider: diagonal split with form on one side, floating form over striking layered gradient backdrop, centered card with dramatic static light wash",
-    "Creative CTAs: button with icon animation, multi-step micro-wizard, benefit reminder sidebar",
-    "Use strong visual hierarchy and whitespace to make form inviting",
-    "Creative static backgrounds: bold color fields, layered gradients, sculpted lighting, geometric patterns",
+    "Forms clear and usable, section design BOLD",
+    "Diagonal split, floating form, dramatic gradient backdrop",
+    "Creative CTAs: icon animation, multi-step wizard, benefit sidebar",
+    "Static backgrounds: bold color fields, layered gradients, sculpted lighting",
 ]
 
 TESTIMONIALS_SOCIAL_PROOF_OPTIONS = [
-    "Bento Testimonial Grid: Varied-size testimonial boxes in asymmetric grid, some with photos, some text-only, different heights",
-    "Floating Quote Cards: Testimonials as overlapping cards at angles with subtle shadows creating depth",
-    "Split Narrative: Large featured testimonial split-screen with smaller supporting quotes in sidebar",
-    "Timeline Stories: Customer journey testimonials in timeline format with connecting path",
-    "Stat-Heavy Grid: Mix testimonials with impressive numbers/stats in unified grid design",
-    "Magazine Layout: Editorial-style with pull quotes, author photos, large text excerpts",
+    "Bento Grid: asymmetric varied-size boxes",
+    "Floating Quote Cards: overlapping at angles",
+    "Split Narrative: featured + supporting quotes",
+    "Timeline Stories: customer journey timeline",
+    "Stat-Heavy Grid: testimonials + numbers",
+    "Magazine Layout: editorial-style with pull quotes",
 ]
 
 HERO_CONCEPTS = [
-    "Cinematic Scene Breaker: Movie-poster style hero with dramatic lighting, layered typography, and a strong central CTA zone",
-    "Oversized Monochrome Collage: Black-and-white cropped UI collage with a bold color-pop CTA and editorial headline",
-    "Soft Atmosphere Gradient: Ambient blurry-orb background with a glowing halo around centered content and floating stat chips",
-    "Architectural Blueprint: Precise grid lines, measurement ticks, and engineered 3D blocks supporting a sharp, technical headline",
-    "Halo Center Stage: Massive radial halo with product or illustration in the middle and stat cards orbiting around",
-    "Ultra Minimal Brutalist: Giant left-aligned headline, hard 1px separators, monotone palette, and a boxed CTA",
-    "Micro-Story Process: Four-step horizontal visual storyline culminating in a CTA card, headline above acts as narrative title",
-    "Framed Glass Layers: Multiple frosted-glass panels stacked with slight offsets creating depth behind headline and CTA",
-    "Workbench Desktop Scene: Virtual desk layout with scattered tools, sticky notes, and product window framed as the centerpiece",
-    "Gradient Beam Split: Vertical gradient beam dividing the hero; headline on one side, product on the other, subtle overlap",
-    "Soft Glowing Frame: Faint neon frame around the hero area, highlighting headline and CTA with futuristic minimalism",
+    "Cinematic Scene Breaker — movie-poster look with dramatic lighting",
+    "Cinematic Video Loop Hero — subtle ambient hero video with overlay",
+    "Soft Atmosphere Gradient — ambient blurry orbs with soft halos",
+    "Gradient Mesh Field — AI-style mesh gradients with depth",
+    "Halo Center Stage — radial halo illuminating central content",
+    "Portal Ring Hero — circular gradient portal with depth",
+    "Liquid Glass Morphism — translucent blobs with refractive highlights",
+    "Ultra Minimal Brutalist — giant headline, raw layout, sharp dividers",
+    "Hyper-Contrasted Editorial Block — bold serif headline, magazine style",
+    "Vertical Typographic Stack — tall stacked headline structure",
+    "Studio Spotlight Stage — product or UI on a pedestal, spotlighted",
+    "Floating App Window Cluster — multiple UI windows layered in 3D",
+    "Dynamic Split Layout — left headline + right 3D/visual animation",
+    "Orbiting Feature Pods — central visual with circular feature pods around",
+    "Layered Cutout Collage — tear-edge shapes and editorial cutouts",
+    "Curated Moodboard Spread — polaroid frames, swatches, textures",
+    "Workbench Desktop Scene — virtual desk with floating items",
+    "3D Floating Blocks — abstract or branded 3D blocks floating",
+    "Gradient Beam Split — vertical beam dividing hero frame",
+    "Diagonal Card Stack — angled cards layered behind headline",
 ]
 
-
 FEATURES_LAYOUT_OPTIONS = [
-    "Alternating Diagonal Rows: Features in diagonal bands alternating left/right, each with unique background color/texture",
-    "Radial Timeline: Features arranged in circular/spiral timeline pattern with connecting pathways",
-    "Bento Feature Grid: Varied-size boxes in bento/masonry layout, some boxes 1x1, others 2x1 or 1x2, mixed content types",
-    "Stepping Stones: Features in staggered overlapping panels creating stepping-stone visual path down page",
-    "Split-Screen Sticky: Left side sticky feature navigation, right side scrolling feature details with media",
-    "Isometric Grid: Features in isometric/3D grid perspective (CSS transforms), creates dimensional depth",
-    "Serpentine Flow: Zigzag S-curve layout with features alternating sides, connected by flowing line",
-    "Card Cascade: Features in overlapping cascade like falling cards, each slightly offset and rotated",
-    "Spotlight Gallery: Dark background with individual spotlight circles (static) highlighting each feature area",
-    "Magazine Spread: Two-page magazine layout with dominant feature + smaller supporting features in columns",
+    "Alternating Diagonal Rows: diagonal bands left/right",
+    "Radial Timeline: circular/spiral timeline",
+    "Bento Feature Grid: varied-size masonry layout",
+    "Stepping Stones: staggered overlapping panels",
+    "Split-Screen Sticky: sticky nav with scrolling details",
+    "Isometric Grid: 3D grid perspective",
+    "Serpentine Flow: zigzag S-curve layout",
+    "Card Cascade: overlapping cascade",
+    "Spotlight Gallery: dark with spotlight circles",
+    "Magazine Spread: two-page magazine layout",
 ]
 
 NAV_STYLE_INSPIRATION = [
-    "Floating Island Nav: Small rounded pill/island container floating at top with blur backdrop, centered or offset",
-    "Liquid Glass Nav: Frosted glass effect with blur, subtle border, spans full width or contained",
-    "Sticky Minimal: Clean sticky nav that appears/hides on scroll, simple border bottom",
-    "Split Navigation: Logo left side, primary links center, CTA/actions right in separate groups",
-    "Inline Nav: Logo and links inline in single row, ultra-minimal, no background",
-    "Rounded Container Nav: Nav wrapped in rounded container with subtle shadow, sits within page margins",
-    "Borderless Floating: No background/border, just links floating on transparent backdrop, becomes solid on scroll",
-    "Pill Links Nav: Individual nav links as rounded pills with hover states, spaced apart",
-    "Compact Bar: Slim height bar (h-12) with tight spacing, minimal padding, very subtle",
-    "Elevated Nav: Subtle shadow/elevation, clean white/dark background depending on theme",
+    "Floating Island Nav: rounded pill with blur",
+    "Liquid Glass Nav: frosted glass effect",
+    "Sticky Minimal: clean sticky nav",
+    "Split Navigation: logo left, links center, CTA right",
+    "Inline Nav: logo and links inline",
+    "Rounded Container Nav: rounded with shadow",
+    "Borderless Floating: transparent backdrop",
+    "Pill Links Nav: rounded pill links",
+    "Compact Bar: slim height (h-12)",
+    "Elevated Nav: subtle shadow/elevation",
 ]
 
 DESIGN_PLANNER_PROMPT_TEMPLATE = """
@@ -152,6 +148,8 @@ You will receive structured payload data in the initialization request. You MUST
      - `custom:{custom-id}` → custom section images (ONLY if provided)
    - **If no images are provided for a section (especially hero), design that section WITHOUT images.**
    - In your section blueprints, specify exactly which images from `sectionAssets` are used where (or state "No images provided" if none)
+   - Do NOT swap, repurpose, substitute, or hallucinate imagery.
+   - Do NOT create image placeholders if no URLs provided.
 
 6. **Color Palette (USE EXACTLY):**
    - If `branding.colorPalette.raw` exists: use it as-is for color description
@@ -198,9 +196,9 @@ You will receive structured payload data in the initialization request. You MUST
 - Varied layouts: full-bleed, constrained, diagonal, circular/radial
 - Favor balanced, breathable compositions with generous negative space
 - Prioritize clarity, elegance, and efficiency over maximalism
-- **Hero background may animate; all other section backgrounds must remain static**
+- **Hero background may animate; all other section backgrounds MUST remain static**
 - Consider a global static background for the entire landing page, or shared static backdrops across 2-3 related sections for visual cohesion
-- **No horizontal overflow (CRITICAL):** Every composition must fit within viewport width at all breakpoints
+- **No horizontal overflow (CRITICAL):** Use max-w-7xl, responsive gutters, overflow-hidden
 - Entrance animations required (polished)
 - Avoid generic card grids; think Apple/Stripe/Linear quality
 - NO two sections use same layout pattern
@@ -210,84 +208,117 @@ Backgrounds are your canvas for visual storytelling. **Animation is reserved exc
 
 **Hero Background Animation Techniques (ONLY for hero):**
 1. **Animated Gradients:**
-   - Multi-stop gradients that shift colors smoothly (CSS `@keyframes` with `background-position` or `hue-rotate`)
-   - Radial gradients that pulse or expand/contract
-   - Conic gradients that rotate slowly (360deg rotation over 10-20s)
-   - Mesh gradients with multiple color stops that morph positions
-   - Gradient overlays that blend modes (multiply, screen, overlay) for depth
-
+   - Multi-stop gradients with color shifts, radial pulses, conic rotations, mesh morphing
+   - Gradient overlays that blend modes for depth
 2. **Particle Systems:**
-   - Floating geometric shapes (circles, squares, polygons) with CSS animations or Framer Motion
+   - Floating particles/dots, geometric shapes, sparkles, bubbles, confetti effects
    - Subtle parallax layers moving at different speeds
-   - Glowing orbs or light particles drifting across the background
-   - Grid patterns that shift or pulse
+3. **Morphing Shapes:**
+   - Organic blob shapes with SVG filters, animated paths, clip-path animations
+4. **Pattern Animations:**
+   - Animated grids, wave patterns, noise textures, dot matrices
+5. **Parallax & Depth:**
+   - Multi-layer parallax, 3D transforms, floating elements, depth-of-field blur
+6. **Light & Glow:**
+   - Pulsing glows, light rays, halo effects, neon glows, spotlight effects
+7. **Geometric & Abstract:**
+   - Rotating forms, tessellated patterns, fractals, brush strokes, grid distortions
+8. **Nature-Inspired:**
+   - Flowing water, drifting clouds, aurora effects, fire gradients, wind effects
 
-3. **Generative Patterns:**
-   - SVG patterns with animated transforms
-   - Noise textures with shifting opacity
-   - Geometric tessellations that morph
-   - Voronoi diagrams or Delaunay triangulations with animated vertices
+**Implementation Guidelines (Hero Animation):**
+- Use CSS @keyframes for smooth animations
+- Prefer transform and opacity over layout properties
+- Use will-change for performance
+- Respect prefers-reduced-motion media query
+- Keep animations subtle (300-800ms durations where applicable, longer for loops)
 
-4. **Lighting Effects:**
-   - Spotlight or searchlight effects that sweep across
-   - Ambient light sources that pulse or change intensity
-   - Glow effects that expand/contract
-   - Radial light bursts or lens flares
+**Section-Specific Background Strategy (Static backgrounds for non-hero):**
+- **Hero:** Bold animated gradients/particles (ONLY section with animation)
+- **Features:** Static layered patterns, etched geometry
+- **Benefits:** Static color blocking, cutout overlays
+- **Stats:** Static grid lattices, geometric forms
+- **Pricing:** Static layered gradient plates, spotlight lighting
+- **Testimonials:** Static warm gradient washes, particle clusters
+- **CTA:** Static bold gradients, frozen dynamic shapes
+- **Footer:** Static micro-patterns, elegant fades
 
-**Static Background Techniques (for ALL other sections):**
-1. **Layered Gradients:**
-   - Multi-layer radial/linear gradients with different blend modes
-   - Gradient meshes with multiple color stops
-   - Subtle noise textures overlaid on gradients
-   - Duotone or tritone color washes
+**Component Layering & Depth (Balanced Depth):**
+**Core Layering Principles:**
+- **Z-Index Strategy:** background (-10 to 0), decorative (1-10), content (10-50), overlays (50-100), modals (100+)
+- **Visual Depth:** Shadows, blur/backdrop filters, opacity overlays, borders, gradient separators
+- **Creative Techniques:** Floating elements, overlapping components, cutout effects, peek-through layers, stacked cards
+- **Advanced Patterns:** Card stacks, layered typography, image overlays, floating CTAs, badge layers
 
-2. **Geometric Patterns:**
-   - SVG shapes (circles, polygons, lines) positioned strategically
-   - Grid overlays or dot patterns
-   - Diagonal stripes or chevrons
-   - Abstract geometric compositions
+**Section-Specific Layering:**
+- **Hero:** Maximum depth — floating headline, layered background, floating CTA, decorative particles at different depths
+- **Features:** Card-based depth — elevated cards, floating icons, hover elevation
+- **Benefits:** Dynamic layering — floating stat numbers, layered illustrations
+- **Stats:** Data-focused — floating numbers, elevated stat cards
+- **Pricing:** Card hierarchy — recommended plan elevated, floating badges
+- **Testimonials:** Quote depth — floating quote cards, layered avatars
+- **CTA:** Action-focused — floating form, elevated CTA button
 
-3. **Lighting & Depth:**
-   - Vignettes or spotlight effects (static)
-   - Layered shadows for depth
-   - Glow effects around key elements
-   - Ambient occlusion-style shading
+**Implementation Guidelines (Layering):**
+- Use position: relative/absolute/fixed/sticky strategically
+- Combine z-index with transform: translateZ()
+- Use isolation: isolate for new stacking contexts
+- Layer shadows: multiple box-shadow values
+- Use backdrop-filter: blur() for glass morphism
+- Test layering on mobile to avoid overlaps
 
-4. **Textures:**
-   - Subtle grain or noise
-   - Paper or fabric textures
-   - Brushed metal or glass effects
-   - Organic patterns (topographic, organic shapes)
+**Scroll Animation Effects (Use Sparingly):**
+- **Total:** 2-4 scroll effects per page maximum, distributed across sections
+- **Categories:**
+  - **Reveal Animations:** Fade in, slide up, slide in from sides, scale in, staggered reveals, rotate in, blur to focus
+  - **Parallax Effects:** Background parallax, element parallax, multi-layer parallax, horizontal parallax
+  - **Progress-Based:** Progress bars, number counters, progress circles, timeline progress
+  - **Sticky & Pin:** Sticky elements, pin on scroll, sticky header, sticky sidebar
+  - **Transform Effects:** Tilt on scroll, scale on scroll, skew effects, 3D rotate
+  - **Morphing:** Shape morphing, path drawing, blob morphing, gradient shift
+  - **Interactive:** Scroll snap, scroll-triggered animations, color changes, opacity changes
+- **Recommended Distribution (1 effect per section max):**
+  - **Hero:** Subtle parallax or fade-in
+  - **Features:** Staggered reveals for feature cards
+  - **Benefits:** Progress counters or scale-in
+  - **Stats:** Number counters or progress bars
+  - **Pricing:** Slide-in or fade-in for cards
+  - **Testimonials:** Staggered reveals or parallax
+  - **CTA:** Scale-in or slide-up for form
+- **Implementation Guidelines (Scroll):**
+  - Use Intersection Observer API for efficient scroll detection
+  - Use CSS animation-timeline: scroll() when supported
+  - Use Framer Motion's useScroll hook
+  - Respect prefers-reduced-motion
+  - Use transform and opacity for performance
+  - Start animations at 10-20% visibility
+  - Keep durations short (300-800ms)
 
-**Motion & Animation Philosophy:**
-- **Hero only:** Background animation allowed (subtle, 10-30s loops)
-- **All sections:** Entrance animations required (fade-in, slide-up, stagger)
-- **Scroll effects:** 1 per section maximum, distributed across page (2-4 total)
-  - Reveal animations (fade/slide on scroll)
-  - Parallax (subtle depth, 0.3-0.7 speed multipliers)
-  - Progress-based (scale, rotate, opacity tied to scroll position)
-  - Sticky/pin (section pins while content scrolls)
-  - Transform effects (3D rotations, perspective shifts)
-  - Morphing (shape or color transitions)
-  - Interactive scroll (cursor-following, magnetic effects)
-- **Hover states:** Subtle (scale 1.02-1.05, opacity shifts, glow)
-- **Transitions:** Fast (150-300ms), purposeful
-- **Respect `prefers-reduced-motion`:** Disable animations if user prefers reduced motion
+**Global Landing Page Design Principles (Mandatory for Every Section & Component):**
+1. **Typography & Consistency:** One primary typeface family, consistent scale (H1-H6, Body), 2-3 font weights max, clean hierarchy.
+2. **Layout, Spacing & Alignment:** 12-column grid, consistent alignment, generous spacing between sections (min vertical padding), never cram content.
+3. **Color, Contrast & Visual Hierarchy:** High contrast CTAs (AAA/AA), accent color for micro-emphasis only, section backgrounds must not fight text.
+4. **Buttons, CTAs & Interactions:** Button shapes match brand style (corp: small radius, consumer: large radius), gentle hover effects, one primary CTA per section.
+5. **Motion, Animation & Interactivity:** Micro-interactions support meaning, smooth easing, lightweight Lottie if used, avoid constant motion loops.
+6. **Images, Visuals & Composition:** Logically aligned visuals, high-res assets, visual consistency, balanced composition (don't oversaturate).
+7. **Responsive Behavior & Adaptive Layout:** Dynamic units (vh, vw, %), adaptive components (desktop->mobile), no horizontal scroll, mobile vertical spacing increases.
+8. **Component Structure & Reusability:** Consistent padding, global tokens for shadows/borders, shared card structures, uniform icon sizes.
+9. **Accessibility & Usability:** WCAG AA/AAA contrast, clickable hit area ≥ 40px, legible text on all backgrounds, don't rely solely on color.
+10. **Visual Rhythm, Balance & Aesthetic Coherence:** Clear visual anchor points, consistent symmetry/asymmetry, strategic negative space, bold Hero simplifying down page.
+11. **Branding, Accent, and Personality Rules:** Accent for micro-emphasis, neutral backgrounds dominate, visual personality matches brand tone.
+12. **Mandatory “Do Not Ever” Rules:** Never use low-contrast text, overly loud hover effects, CTA on low-visibility bg, multiple accent colors/section, overuse gradients/animations, break alignment/spacing.
 
-**Component Layering & Depth:**
-- Use `z-index` sparingly (prefer stacking context)
-- Shadows for elevation (sm, md, lg, xl)
-- Overlapping elements for visual interest (keep clipped within viewport)
-- Floating elements anchored to sections (no horizontal overflow)
-- Glass morphism or backdrop blur for depth (use sparingly)
-
-**Navigation Styles (pick one per project):**
-- Floating Nav: Centered, pill-shaped, glassmorphism, sticky
-- Full-Width Bar: Edge-to-edge, subtle border, backdrop blur
-- Minimal Nav: Text-only links, no background, clean
-- Pill Links Nav: Individual nav links as rounded pills
-- Compact Bar: Slim height, tight spacing, minimal padding
-- Elevated Nav: Subtle shadow/elevation, clean background
+**Nav Style Inspiration (Pick one per project):**
+- **Floating Island Nav:** Rounded pill with blur, centered or offset
+- **Liquid Glass Nav:** Frosted glass effect, subtle border
+- **Sticky Minimal:** Clean sticky nav, appears/hides on scroll
+- **Split Navigation:** Logo left, links center, CTA right
+- **Inline Nav:** Logo and links inline, single row, ultra-minimal
+- **Rounded Container Nav:** Rounded with shadow, within page margins
+- **Borderless Floating:** Transparent backdrop, solid on scroll
+- **Pill Links Nav:** Individual rounded pill links
+- **Compact Bar:** Slim height (h-12), tight spacing
+- **Elevated Nav:** Subtle shadow, clean background
 
 ═══════════════════════════════════════════════════════════════════════════════
 📐 DESIGN SYSTEM SPECIFICATIONS 📐
@@ -319,25 +350,9 @@ Backgrounds are your canvas for visual storytelling. **Animation is reserved exc
 - Responsive breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px), 2xl (1536px)
 
 **Component Styles:**
-- **Buttons:**
-  - Primary: brand color, white text, hover state, focus ring
-  - Secondary: outline or ghost style
-  - Sizes: sm (px-3 py-1.5), md (px-4 py-2), lg (px-6 py-3)
-  - Rounding: rounded-md (6px) or rounded-lg (8px) typical
-  - Transitions: 150ms ease-out
-- **Inputs:**
-  - Border: 1px solid border color
-  - Focus: ring-2 ring-brand/50
-  - Padding: px-3 py-2 (md size)
-  - Rounding: rounded-md
-  - Background: surface color
-- **Cards:**
-  - Background: surface color (slightly lighter/darker than page bg)
-  - Border: 1px solid border color or none
-  - Shadow: sm or md
-  - Padding: p-6 or p-8
-  - Rounding: rounded-lg or rounded-xl
-  - Hover: subtle lift (shadow-lg, translate-y-1)
+- **Buttons:** Primary (brand, white text), Secondary (outline/ghost), Sizes (sm, md, lg), Rounding (md/lg), Transitions (150ms ease-out).
+- **Inputs:** Border (1px solid), Focus (ring-2), Padding (px-3 py-2), Rounding (md), Background (surface).
+- **Cards:** Background (surface), Border (1px/none), Shadow (sm/md), Padding (p-6/p-8), Rounding (lg/xl), Hover (lift).
 
 **Accessibility:**
 - Contrast ratios: ≥4.5:1 (body), ≥3:1 (large text)
@@ -346,59 +361,43 @@ Backgrounds are your canvas for visual storytelling. **Animation is reserved exc
 - Respect `prefers-reduced-motion`
 - Support RTL if locales include Arabic/Hebrew
 
+**Tailwind v4 Rules (CRITICAL for Guidelines):**
+- **NEVER USE @apply WITH UNKNOWN UTILITY CLASSES.**
+- @apply can ONLY be used with core Tailwind utilities.
+- NO `@apply border-border`, `@apply bg-background`, `@apply text-foreground`.
+- For CSS variables: Use raw CSS properties (e.g., `border-color: var(--border)`).
+- Use `@theme` inline for variable mapping.
+- `@utility` for custom utilities (names: ^[a-z][a-z0-9-]*$, no special chars).
+- No `@apply` inside `@utility` — use raw CSS properties.
+
 ═══════════════════════════════════════════════════════════════════════════════
 📝 SECTION BLUEPRINT GUIDELINES 📝
 ═══════════════════════════════════════════════════════════════════════════════
 
 For each section (Nav, landing page sections, Footer), provide a detailed blueprint including:
 
-1. **Composition & Layout:**
-   - Structure (grid, flex, bento, asymmetric, etc.)
-   - Spacing and hierarchy
-   - Element positioning
-   - Responsive behavior
-
-2. **Background & Layering:**
-   - Background treatment (gradient, pattern, texture, animation if hero)
-   - Layering strategy (z-index, overlapping elements)
-   - Depth cues (shadows, blur, opacity)
-
-3. **Content Guidance:**
-   - What elements to include (headings, body text, CTAs, images, icons, etc.)
-   - Copywriting tone and structure
-   - Data sources (if using sectionData)
-   - CTA text (use exact primaryCTA/secondaryCTA from payload)
-
-4. **Motion & Interaction:**
-   - Entrance animations (fade-in, slide-up, stagger, etc.)
-   - Scroll effects (parallax, reveal, progress-based, etc.) - 1 max per section
-   - Hover states
-   - Transitions
-
-5. **Assets Usage:**
-   - Which images from sectionAssets are used (e.g., "hero:main images", "benefits:0 image")
-   - Or "No images provided" if none
-
-6. **Responsive Notes:**
-   - Mobile adjustments (stacking, reordering, hiding elements)
-   - Breakpoint-specific changes
-   - Touch interactions
+1. **Composition & Layout:** Structure, spacing, hierarchy, element positioning, responsive behavior.
+2. **Background & Layering:** Background treatment (static unless Hero), layering strategy (z-index), depth cues.
+3. **Content Guidance:** Elements included, copywriting tone, data sources, exact CTA text.
+4. **Motion & Interaction:** Entrance animations, scroll effects (1 max), hover states, transitions.
+5. **Assets Usage:** Exact usage of `sectionAssets` images (or "No images provided").
+6. **Responsive Notes:** Mobile adjustments, breakpoint changes, touch interactions.
 
 **Standard Section Types:**
-- **Hero:** Bold headline, subheadline, primary CTA, secondary CTA, optional image/video, background animation allowed
-- **Benefits:** 3-6 benefit cards/items, icons, short descriptions
-- **Features:** Detailed feature showcase, alternating layouts, images/diagrams
-- **Stats:** 3-5 key metrics, large numbers, labels, optional accent font
-- **Testimonials:** Quotes, author info, company logos, carousel or grid
-- **Pricing:** 2-4 pricing tiers, feature lists, CTAs, highlight popular plan
-- **FAQ:** Accordion or list, Q&A pairs from sectionData.faq
-- **CTA:** Final conversion push, headline, CTA button, optional form
-- **Team:** Team member cards, photos, names, roles, bios
-- **Custom:** Follow name, description, and notes from Custom Sections section
+- **Hero:** Bold headline, subheadline, primary CTA, secondary CTA, optional image/video, background animation allowed.
+- **Benefits:** 3-6 benefit cards/items, icons, short descriptions.
+- **Features:** Detailed feature showcase, alternating layouts, images/diagrams.
+- **Stats:** 3-5 key metrics, large numbers, labels, optional accent font.
+- **Testimonials:** Quotes, author info, company logos, carousel or grid.
+- **Pricing:** 2-4 pricing tiers, feature lists, CTAs, highlight popular plan.
+- **FAQ:** Accordion or list, Q&A pairs from sectionData.faq.
+- **CTA:** Final conversion push, headline, CTA button, optional form.
+- **Team:** Team member cards, photos, names, roles, bios.
+- **Custom:** Follow name, description, and notes from Custom Sections section.
 
 **Nav & Footer (ALWAYS REQUIRED):**
-- **Nav:** Logo, links, CTA button, mobile menu, sticky behavior, choose a nav style from the list
-- **Footer:** Links (columns), social icons, copyright, newsletter signup (optional), minimal or detailed
+- **Nav:** Logo, links, CTA button, mobile menu, sticky behavior, choose a nav style from the list.
+- **Footer:** Links (columns), social icons, copyright, newsletter signup (optional), minimal or detailed.
 
 ═══════════════════════════════════════════════════════════════════════════════
 🎯 OUTPUT FORMAT (STRUCTURED) 🎯
@@ -436,16 +435,16 @@ You MUST output a valid DesignGuidelines structured object with ALL fields popul
 3. Footer (always last)
 
 **Be Specific and Detailed:**
-- Don't say "use a gradient" — specify colors, direction, stops
-- Don't say "add animations" — specify type, duration, easing, target
-- Don't say "make it responsive" — specify breakpoint adjustments
-- Don't say "use the brand colors" — reference specific token names
+- Don't say "use a gradient" — specify colors, direction, stops.
+- Don't say "add animations" — specify type, duration, easing, target.
+- Don't say "make it responsive" — specify breakpoint adjustments.
+- Don't say "use the brand colors" — reference specific token names.
 
 **Be Creative and Unique:**
-- Avoid generic layouts (boring card grids, centered text blocks)
-- Think outside the box (diagonal cuts, overlapping elements, asymmetric grids, bento layouts)
-- Make each section visually distinct
-- Use motion purposefully to guide attention
+- Avoid generic layouts (boring card grids, centered text blocks).
+- Think outside the box (diagonal cuts, overlapping elements, asymmetric grids, bento layouts).
+- Make each section visually distinct.
+- Use motion purposefully to guide attention.
 
 ═══════════════════════════════════════════════════════════════════════════════
 🎨 DESIGN INSPIRATION (USE THESE FOR CREATIVE IDEAS) 🎨
@@ -459,15 +458,6 @@ You MUST output a valid DesignGuidelines structured object with ALL fields popul
 
 **NAV STYLE INSPIRATION (PICK ONE):**
 **_nav_inspiration_**
-
-**PRICING LAYOUT OPTIONS (BE CREATIVE):**
-**_pricing_inspiration_**
-
-**CTA SECTION GUIDELINES (BOLD BUT USABLE):**
-**_cta_inspiration_**
-
-**TESTIMONIALS & SOCIAL PROOF OPTIONS (AVOID BORING CAROUSELS):**
-**_testimonials_inspiration_**
 
 **IMPORTANT:** These are inspiration examples. You can use them as-is or combine/modify them to create something even more unique. The goal is to avoid generic layouts and create memorable, premium experiences.
 
