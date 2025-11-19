@@ -68,6 +68,37 @@ You will receive structured payload data in the initialization request. You MUST
    - Secondary CTA text: `conversion.secondaryCTA` (e.g., "Book a live demo")
    - Use these exact strings in button components
    - Do NOT modify CTA text
+   - **CRITICAL — CTA Form Submissions:**
+     - All CTA forms (contact forms, newsletter signups, lead capture forms) MUST submit to an API endpoint if one is provided
+     - **Look for the API endpoint in the user input/payload** — it will be specified in the initialization request (check for fields like `advanced.submitEndpoint`, `conversion.submitEndpoint`, or similar)
+     - If an endpoint is provided in the user input, use that exact endpoint URL and implement form submission
+     - If no endpoint is provided, do NOT implement any form submission logic — forms should be presentational only (no fetch/API calls)
+     - Hardcode the endpoint URL directly in the form submission handler (only if endpoint is provided)
+     - Use POST requests with `Content-Type: application/json`
+     - Send form data as JSON in the request body
+     - Handle loading states, success, and error responses appropriately
+     - Example implementation:
+       ```typescript
+       const submitEndpoint = '...'; // Get from user input if provided
+       const handleSubmit = async (data: FormData) => {
+         if (!submitEndpoint) {
+           // No endpoint provided - form is presentational only
+           return;
+         }
+         try {
+           const response = await fetch(submitEndpoint, {
+             method: 'POST',
+             headers: { 'Content-Type': 'application/json' },
+             body: JSON.stringify(data),
+           });
+           if (!response.ok) throw new Error('Submission failed');
+           // Handle success
+         } catch (error) {
+           // Handle error
+         }
+       };
+       ```
+     - Do NOT use placeholder endpoints or mock APIs — only implement submission if endpoint is provided in user input
 
 5. **Theme Enforcement (MANDATORY):**
    - If `branding.theme` is "light": use light backgrounds, dark text, light surfaces
@@ -182,6 +213,40 @@ Structure the app according to Next.js best practices: compose pages in `src/app
 - Prioritize reliability and visibility over animation complexity.
 
 Use lucide-react or approved icon sets; react-hook-form + zod for forms; TanStack Query for async data; zustand/jotai for state where needed. Keep background treatments simple: single-layer gradients or solid colors preferred over multi-layer compositions.
+
+**Form Submission API Endpoint:**
+- All CTA forms (contact forms, newsletter signups, lead capture forms) MUST submit to an API endpoint if one is provided
+- **Look for the API endpoint in the user input/payload** — it will be specified in the initialization request (check for fields like `advanced.submitEndpoint`, `conversion.submitEndpoint`, or similar)
+- If an endpoint is provided in the user input, use that exact endpoint URL and implement form submission
+- If no endpoint is provided, do NOT implement any form submission logic — forms should be presentational only (no fetch/API calls)
+- Hardcode the endpoint URL directly in the form submission handler (only if endpoint is provided) — do NOT use environment variables or config files
+- Use POST requests with `Content-Type: application/json`
+- Send form data as JSON in the request body
+- Implement proper error handling, loading states, and success feedback
+- Example with react-hook-form:
+  ```typescript
+  const submitEndpoint = '...'; // Get from user input if provided
+  const onSubmit = async (data: FormValues) => {
+    if (!submitEndpoint) {
+      // No endpoint provided - form is presentational only
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const response = await fetch(submitEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Submission failed');
+      // Show success message
+    } catch (error) {
+      // Show error message
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  ```
 
 **PERFORMANCE & OPTIMIZATION (BALANCE WITH CREATIVITY):**
 - Page load speed is important, but balance with creative visual effects
@@ -549,7 +614,17 @@ And always read globals.css and tailwind.config.ts for global styles and configu
 - If you encounter issues where a section or element does not appear due to animation triggers, REMOVE the fade/slide and set `amount` to 0.01 for reliability.
 - Prioritize reliability and visibility over animation complexity.
 
-And lastly, make sure all sections are responsive and mobile-friendly. 
+And lastly, make sure all sections are responsive and mobile-friendly.
+
+**Form Submission API Endpoint:**
+- All CTA forms (contact forms, newsletter signups, lead capture forms) MUST submit to an API endpoint if one is provided
+- **Look for the API endpoint in the user input/payload** — it will be specified in the initialization request (check for fields like `advanced.submitEndpoint`, `conversion.submitEndpoint`, or similar)
+- If an endpoint is provided in the user input, use that exact endpoint URL and implement form submission
+- If no endpoint is provided, do NOT implement any form submission logic — forms should be presentational only (no fetch/API calls)
+- Hardcode the endpoint URL directly in the form submission handler (only if endpoint is provided) — do NOT use environment variables or config files
+- Use POST requests with `Content-Type: application/json`
+- Send form data as JSON in the request body
+- Implement proper error handling, loading states, and success feedback
 
 Format summary output in Markdown with:
 - Bold for key achievements
