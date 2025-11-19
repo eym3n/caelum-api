@@ -16,7 +16,7 @@ from app.utils.jobs import log_job_event, update_job_status
 
 
 DEFAULT_NODE_MESSAGES = {
-    "router": "Planning next steps...",
+    "router": "Planning next steps..",
     "design_planner": "Generated design system",
     "designer": "Created design system",
     "coder": "Implemented landing page",
@@ -38,7 +38,7 @@ def _count_list_items(value: Any) -> int:
 def _summarize_tool_event(
     tool_name: str, tool_calls: list[dict[str, Any]]
 ) -> Tuple[str, dict[str, Any]]:
-    """Return (message, extra_meta) for a tool execution..."""
+    """Return (message, extra_meta) for a tool execution.."""
 
     total_files = 0
     total_edits = 0
@@ -57,15 +57,15 @@ def _summarize_tool_event(
     normalized = tool_name.replace("designer_", "")
 
     if normalized.endswith("batch_create_files"):
-        message = f"Created {total_files} file(s)." if total_files else "Created files."
+        message = f"Created {total_files} file(s)" if total_files else "Created files"
         return message, {"file_count": total_files} if total_files else {}
 
     if normalized.endswith("batch_update_files"):
-        message = f"Updated {total_files} file(s)." if total_files else "Updated files."
+        message = f"Updated {total_files} file(s)" if total_files else "Updated files"
         return message, {"file_count": total_files} if total_files else {}
 
     if normalized.endswith("batch_delete_files"):
-        message = f"Deleted {total_files} file(s)." if total_files else "Deleted files."
+        message = f"Deleted {total_files} file(s)" if total_files else "Deleted files"
         return message, {"file_count": total_files} if total_files else {}
 
     if normalized.endswith("batch_update_lines"):
@@ -75,33 +75,33 @@ def _summarize_tool_event(
         if total_edits:
             meta["edit_count"] = total_edits
         if total_files and total_edits:
-            message = f"Updated {total_files} file(s) with {total_edits} edit(s)."
+            message = f"Updated {total_files} file(s) with {total_edits} edit(s)"
         elif total_files:
-            message = f"Updated {total_files} file(s)."
+            message = f"Updated {total_files} file(s)"
         elif total_edits:
-            message = f"Applied {total_edits} edit(s)."
+            message = f"Applied {total_edits} edit(s)"
         else:
-            message = "Updated file lines."
+            message = "Updated file lines"
         return message, meta
 
     if normalized.endswith("batch_read_files"):
-        message = f"Read {total_files} file(s)." if total_files else "Read files."
+        message = f"Read {total_files} file(s)" if total_files else "Read files"
         return message, {"file_count": total_files} if total_files else {}
 
     if normalized == "read_file":
-        return "Read 1 file.", {"file_count": 1}
+        return "Read 1 file", {"file_count": 1}
 
     if normalized == "read_lines":
-        return "Read file segment.", {}
+        return "Read file segment", {}
 
     if normalized == "list_files":
-        return "Listed workspace files.", {}
+        return "Listed workspace files", {}
 
     if normalized == "lint_project":
-        return "Lint and type checks completed.", {}
+        return "Lint and type checks completed", {}
 
     # Default fallback for other tools
-    return f"Ran tool {tool_name}.", {}
+    return f"Ran tool {tool_name}", {}
 
 
 def _extract_message_from_update(
@@ -228,7 +228,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     log_job_event(
                         job_id,
                         node="__end__",
-                        message="Graph execution completed.",
+                        message="Graph execution completed",
                         event_type="job_completed",
                         data={"session_id": session_id},
                     )
@@ -269,7 +269,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                         msg = default_msg
 
                 if not msg:
-                    msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded.")
+                    msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded")
 
                 # NOTE: we deliberately avoid storing the raw `update` object in MongoDB,
                 # because it may contain non-serializable LangChain message objects.
@@ -285,7 +285,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
             log_job_event(
                 job_id,
                 node="__end__",
-                message="Graph execution completed.",
+                message="Changes applied to landing page",
                 event_type="job_completed",
                 data={"session_id": session_id},
             )
@@ -332,7 +332,7 @@ def run_init_job(
                     log_job_event(
                         job_id,
                         node="__end__",
-                        message="Init graph execution completed.",
+                        message="Landing page creation completed",
                         event_type="job_completed",
                         data={"session_id": session_id},
                     )
@@ -372,7 +372,7 @@ def run_init_job(
                         msg = default_msg
 
                 if not msg:
-                    msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded.")
+                    msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded")
 
                 log_job_event(
                     job_id,
@@ -385,7 +385,7 @@ def run_init_job(
             log_job_event(
                 job_id,
                 node="__end__",
-                message="Init graph execution completed.",
+                message="Landing page creation completed",
                 event_type="job_completed",
                 data={"session_id": session_id},
             )
