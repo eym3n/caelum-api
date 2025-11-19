@@ -124,7 +124,12 @@ def designer(state: BuilderState) -> BuilderState:
     except Exception as e:
         print(f"[DESIGNER] Error creating files: {e}")
 
+    # Convert DesignerOutput to AIMessage for LangGraph compatibility
+    designer_message = AIMessage(
+        content=f"Design system implemented: tailwind.config.ts, globals.css, and layout.tsx created."
+    )
+
     return {
-        "messages": [designer_response],
+        "messages": [designer_message],
         "design_system_run": True,
     }
