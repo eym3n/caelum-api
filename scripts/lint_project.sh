@@ -32,7 +32,7 @@ if ! command -v npx >/dev/null 2>&1; then
     echo "❌ npx not found (Node toolchain missing)."; exit 1; fi
 
 echo "📋 Running oxlint..."
-OX_OUTPUT=$(npx oxlint  --threads 12 . 2>&1)
+OX_OUTPUT=$(npx oxlint --type-aware --threads 12 . 2>&1)
     OX_EXIT=$?
 echo "$OX_OUTPUT"
 
