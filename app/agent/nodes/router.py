@@ -17,10 +17,13 @@ You coordinate the remaining specialists in the workspace. For every user messag
 
 - `code` → When coding work is needed.
 - `clarify` → When the request is unclear, purely informational, or needs more detail before coding can continue.
+- `deploy` → When user specifically requests to deploy the landing page.
 
-If a user's request starts with : 'This is a follow-up request', oute to `code` or `clarify` only.
+If a user's request starts with : 'This is a follow-up request', route to `code` or `clarify` only.
 
 When a user reports an error or bug, prefer routing to `code`, do not route to `clarify`. Issues needs to be investigated and fixed directly, without further discussion.
+
+If a user's request starts with : 'Deploy the landing page', route to `deploy`.
 
 Base the decision on the current design-system status and conversation context. Keep progress moving—only send the user back to design when visual foundations truly need revision.
 
@@ -35,7 +38,7 @@ from pydantic import BaseModel
 
 
 class RouterResponse(BaseModel):
-    next_node: Literal["code", "clarify"]
+    next_node: Literal["code", "clarify", "deploy"]
     is_followup: bool
     reasoning: str
 

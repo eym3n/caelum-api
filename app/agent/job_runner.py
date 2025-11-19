@@ -205,6 +205,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
     """
     try:
         saw_graph_end = False
+        last_meaningful_message = ""
         for event in agent.stream(
             {
                 "messages": [HumanMessage(content=message)],
@@ -225,10 +226,11 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
 
                 # When the graph signals __end__, mark the job as completed and record a final event.
                 if node == "__end__":
+                    final_msg = last_meaningful_message or "Graph execution completed"
                     log_job_event(
                         job_id,
                         node="__end__",
-                        message="Graph execution completed",
+                        message=final_msg,
                         event_type="job_completed",
                         data={"session_id": session_id},
                     )
@@ -271,6 +273,10 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                 if not msg:
                     msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded")
 
+                # Track last message from coder or deployment_fixer for final event
+                if node in ("coder", "deployment_fixer"):
+                    last_meaningful_message = msg
+
                 # NOTE: we deliberately avoid storing the raw `update` object in MongoDB,
                 # because it may contain non-serializable LangChain message objects.
                 # Instead, we capture only JSON-friendly tool metadata and a summary message.
@@ -282,10 +288,11 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     data=tool_meta,
                 )
         if not saw_graph_end:
+            final_msg = last_meaningful_message or "Changes applied to landing page"
             log_job_event(
                 job_id,
                 node="__end__",
-                message="Changes applied to landing page",
+                message=final_msg,
                 event_type="job_completed",
                 data={"session_id": session_id},
             )
@@ -309,6 +316,7 @@ def run_init_job(
     """
     try:
         saw_graph_end = False
+        last_meaningful_message = ""
         combined = "INITIAL CREATION PAYLOAD\n" + init_payload_text
 
         for event in agent.stream(
@@ -329,10 +337,13 @@ def run_init_job(
                     continue
 
                 if node == "__end__":
+                    final_msg = (
+                        last_meaningful_message or "Landing page creation completed"
+                    )
                     log_job_event(
                         job_id,
                         node="__end__",
-                        message="Landing page creation completed",
+                        message=final_msg,
                         event_type="job_completed",
                         data={"session_id": session_id},
                     )
@@ -374,6 +385,10 @@ def run_init_job(
                 if not msg:
                     msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded")
 
+                # Track last message from coder or deployment_fixer for final event
+                if node in ("coder", "deployment_fixer"):
+                    last_meaningful_message = msg
+
                 log_job_event(
                     job_id,
                     node=node,
@@ -382,10 +397,11 @@ def run_init_job(
                     data=tool_meta,
                 )
         if not saw_graph_end:
+            final_msg = last_meaningful_message or "Landing page creation completed"
             log_job_event(
                 job_id,
                 node="__end__",
-                message="Landing page creation completed",
+                message=final_msg,
                 event_type="job_completed",
                 data={"session_id": session_id},
             )
