@@ -2,6 +2,7 @@ import json
 import random
 from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.state import BuilderState
 from app.agent.models.design_guidelines import DesignGuidelines
 from app.utils.jobs import log_job_event
@@ -10,14 +11,11 @@ from app.agent.prompts.design_planner import (
     HERO_CONCEPTS,
     FEATURES_LAYOUT_OPTIONS,
     NAV_STYLE_INSPIRATION,
-    PRICING_PLANS_OPTIONS,
-    CTA_SECTION_GUIDELINES,
-    TESTIMONIALS_SOCIAL_PROOF_OPTIONS,
 )
 from toon import encode
 
 
-_design_planner_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="minimal")
+_design_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
 
 
 def design_planner(state: BuilderState) -> BuilderState:
@@ -36,37 +34,16 @@ def design_planner(state: BuilderState) -> BuilderState:
     # Build context from init payload
     init_payload_text = state.init_payload_text or "No initialization payload provided."
 
-    # Inject inspiration lists into prompt (randomize order for variety)
-    prompt = DESIGN_PLANNER_PROMPT_TEMPLATE
-    prompt = prompt.replace(
-        "**_hero_inspiration_**",
-        "\n".join(random.sample(HERO_CONCEPTS, len(HERO_CONCEPTS))),
+    # Inject inspiration into prompt
+    hero_insp_str = "\n".join([f"- {item}" for item in HERO_CONCEPTS])
+    features_insp_str = "\n".join([f"- {item}" for item in FEATURES_LAYOUT_OPTIONS])
+    nav_insp_str = "\n".join([f"- {item}" for item in NAV_STYLE_INSPIRATION])
+
+    prompt = DESIGN_PLANNER_PROMPT_TEMPLATE.replace(
+        "**_hero_inspiration_**", hero_insp_str
     )
-    prompt = prompt.replace(
-        "**_features_inspiration_**",
-        "\n".join(random.sample(FEATURES_LAYOUT_OPTIONS, len(FEATURES_LAYOUT_OPTIONS))),
-    )
-    prompt = prompt.replace(
-        "**_nav_inspiration_**",
-        "\n".join(random.sample(NAV_STYLE_INSPIRATION, len(NAV_STYLE_INSPIRATION))),
-    )
-    prompt = prompt.replace(
-        "**_pricing_inspiration_**",
-        "\n".join(random.sample(PRICING_PLANS_OPTIONS, len(PRICING_PLANS_OPTIONS))),
-    )
-    prompt = prompt.replace(
-        "**_cta_inspiration_**",
-        "\n".join(random.sample(CTA_SECTION_GUIDELINES, len(CTA_SECTION_GUIDELINES))),
-    )
-    prompt = prompt.replace(
-        "**_testimonials_inspiration_**",
-        "\n".join(
-            random.sample(
-                TESTIMONIALS_SOCIAL_PROOF_OPTIONS,
-                len(TESTIMONIALS_SOCIAL_PROOF_OPTIONS),
-            )
-        ),
-    )
+    prompt = prompt.replace("**_features_inspiration_**", features_insp_str)
+    prompt = prompt.replace("**_nav_inspiration_**", nav_insp_str)
 
     system_message = SystemMessage(content=prompt + init_payload_text)
     messages = [system_message, *state.messages]
@@ -88,13 +65,7 @@ def design_planner(state: BuilderState) -> BuilderState:
             node="design_planner",
             message="Design planner generated comprehensive design guidelines.",
             event_type="node_completed",
-            data={
-                "theme": design_guidelines.theme,
-                "color_count": len(design_guidelines.colors),
-                "typography_count": len(design_guidelines.typography),
-                "section_count": len(design_guidelines.sections),
-                "animation_count": len(design_guidelines.animations),
-            },
+            data=design_guidelines.model_dump(),
         )
 
         # Store structured guidelines in state
