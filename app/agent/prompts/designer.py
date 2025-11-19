@@ -94,7 +94,334 @@ YOU DO NOT:
    1- Use `designer_batch_create_files` to create src/app/globals.css, src/app/layout.tsx and tailwind.config.ts
    2- Run `lint_project` to validate
    3- Fix any errors with `batch_read_files`, `batch_update_files`
+   
+   
+═══════════════════════════════════════════════════════════════════════════════
+📋 USEFUL EXAMPLES 📋
+═══════════════════════════════════════════════════════════════════════════════
+Follow the examples below to implement the design guidelines.
 
+**tailwind.config.ts**
+```
+import type { Config } from "tailwindcss";
+
+const config: Config = {
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./src/app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
+  ],
+  darkMode: ["class", '[data-theme="dark"]'],
+  theme: {
+    container: { center: true, padding: "16px" },
+    extend: {
+      colors: {
+        background: "rgb(var(--color-background) / <alpha-value>)",
+        surface: "rgb(var(--color-surface) / <alpha-value>)",
+        foreground: "rgb(var(--color-foreground) / <alpha-value>)",
+        muted: "rgb(var(--color-muted) / <alpha-value>)",
+        brand: "rgb(var(--color-brand) / <alpha-value>)",
+        accent: "rgb(var(--color-accent) / <alpha-value>)",
+        border: "rgb(var(--color-border) / <alpha-value>)",
+        success: "rgb(var(--color-success) / <alpha-value>)",
+        warning: "rgb(var(--color-warning) / <alpha-value>)",
+        danger: "rgb(var(--color-danger) / <alpha-value>)",
+        ring: "rgb(var(--color-brand) / <alpha-value>)",
+      },
+      borderRadius: {
+        xs: "var(--radius-xs, 0.125rem)",
+        sm: "var(--radius-sm, 0.25rem)",
+        md: "var(--radius-md, 0.5rem)",
+        lg: "var(--radius-lg, 0.75rem)",
+        xl: "var(--radius-xl, 1.25rem)",
+        DEFAULT: "var(--radius, 0.5rem)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        bold: "var(--shadow-bold)",
+      },
+    },
+  },
+  plugins: [],
+};
+
+export default config;
+```
+
+**globals.css**
+```
+@import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+@plugin "@tailwindcss/forms" { strategy: "class" };
+
+:root {
+  /* Color tokens (RGB for alpha support) */
+  --color-background: 15 15 26; /* #0F0F1A */
+  --color-surface: 26 26 44; /* #1A1A2C */
+  --color-foreground: 240 240 255; /* #F0F0FF */
+  --color-muted: 160 160 192; /* #A0A0C0 */
+  --color-brand: 139 92 246; /* #8B5CF6 */
+  --color-accent: 249 115 22; /* #F97316 */
+  --color-border: 44 44 64; /* #2C2C40 */
+  --color-success: 16 185 129; /* #10B981 */
+  --color-warning: 245 158 11; /* #F59E0B */
+  --color-danger: 239 68 68; /* #EF4444 */
+  --color-ring: 139 92 246; /* brand as ring */
+
+  /* Semantic shortcuts (computed colors) */
+  --background: rgb(var(--color-background));
+  --surface: rgb(var(--color-surface));
+  --foreground: rgb(var(--color-foreground));
+  --muted: rgb(var(--color-muted));
+  --brand: rgb(var(--color-brand));
+  --accent: rgb(var(--color-accent));
+  --border: rgb(var(--color-border));
+  --success: rgb(var(--color-success));
+  --warning: rgb(var(--color-warning));
+  --danger: rgb(var(--color-danger));
+  --ring: rgb(var(--color-ring));
+
+  /* Radius tokens */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius: var(--radius-md);
+
+  /* Shadow tokens */
+  --shadow-soft: 0 8px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.02);
+  --shadow-bold: 0 16px 40px rgba(0,0,0,0.45), 0 0 0 1px rgba(255,255,255,0.02);
+
+  /* Spacing additions */
+  --space-18: 4.5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
+}
+
+@theme inline {
+  /* Map token names to CSS custom properties for Tailwind usage */
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-brand: var(--brand);
+  --color-accent: var(--accent);
+  --color-border: var(--border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+
+  --radius-xs: var(--radius-xs);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius: var(--radius);
+}
+
+/* Base resets and global styles */
+html, body { height: 100%; }
+
+* { border-color: var(--border); }
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Inter, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol");
+  @apply antialiased;
+}
+
+.font-heading { font-family: var(--font-heading, Poppins, ui-sans-serif, system-ui); }
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Reduced motion respect */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Utilities (top-level @utility) */
+@utility btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.75rem;
+  padding-inline: 1rem;
+  border-radius: var(--radius-lg);
+  border-width: 1px;
+  border-style: solid;
+  border-color: color-mix(in oklab, var(--brand) 14%, transparent);
+  background-color: color-mix(in oklab, var(--surface) 100%, transparent);
+  color: var(--foreground);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 150ms ease, background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+
+@utility chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background-color: color-mix(in oklab, var(--surface) 85%, transparent);
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+@utility section-y {
+  padding-block: var(--space-24);
+}
+
+@utility container-8xl {
+  max-width: 1440px;
+  margin-inline: auto;
+}
+
+@utility container-max {
+  max-width: 72rem; /* 1152px approx 7xl */
+  margin-inline: auto;
+}
+
+@utility layout-gutter {
+  padding-inline: 1rem;
+}
+
+@utility glass {
+  background-color: color-mix(in oklab, var(--surface) 75%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+}
+
+@utility shadow-soft { box-shadow: var(--shadow-soft); }
+@utility shadow-bold { box-shadow: var(--shadow-bold); }
+
+@utility halo { position: relative; }
+
+/* Base components and helpers */
+@layer base {
+  .card {
+    background-color: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .input-base {
+    width: 100%;
+    border: 1px solid var(--border);
+    background-color: color-mix(in oklab, var(--surface) 95%, transparent);
+    color: var(--foreground);
+    border-radius: var(--radius-md);
+    padding: 0.625rem 0.875rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+  }
+  .input-base::placeholder { color: color-mix(in oklab, var(--muted) 72%, transparent); }
+  .input-base:focus { outline: 2px solid var(--ring); outline-offset: 2px; }
+
+  .btn-primary {
+    background-color: var(--brand);
+    color: #0b0b13;
+    border-color: color-mix(in oklab, var(--brand) 40%, transparent);
+  }
+  .btn-primary:hover { background-color: color-mix(in oklab, var(--brand) 92%, black 8%); transform: translateY(-1px) scale(1.01); }
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-accent {
+    background-color: var(--accent);
+    color: #0b0b13;
+    border-color: color-mix(in oklab, var(--accent) 40%, transparent);
+  }
+  .btn-accent:hover { background-color: color-mix(in oklab, var(--accent) 92%, black 8%); transform: translateY(-1px) scale(1.01); }
+  .btn-accent:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--foreground);
+    border-color: var(--border);
+  }
+  .btn-ghost:hover {
+    background-color: color-mix(in oklab, var(--brand) 12%, transparent);
+    border-color: color-mix(in oklab, var(--brand) 35%, var(--border));
+  }
+
+  .halo::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(60% 60% at 50% 50%, color-mix(in oklab, var(--brand) 25%, transparent), transparent 70%),
+                radial-gradient(40% 40% at 50% 50%, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%);
+    opacity: 0.6;
+    filter: blur(12px);
+    z-index: -1;
+  }
+}
+
+@layer utilities {
+  /* Typography helpers */
+  .heading-1 { font-family: var(--font-heading); font-weight: 800; letter-spacing: -0.02em; font-size: clamp(2rem, 6vw, 4rem); line-height: 1.05; }
+  .heading-2 { font-family: var(--font-heading); font-weight: 800; letter-spacing: -0.015em; font-size: clamp(1.5rem, 4vw, 2.75rem); line-height: 1.1; }
+  .heading-3 { font-family: var(--font-heading); font-weight: 700; letter-spacing: -0.01em; font-size: clamp(1.25rem, 3vw, 2rem); line-height: 1.15; }
+
+  .text-muted { color: var(--muted); }
+  .border-default { border-color: var(--border); }
+  .bg-surface { background-color: var(--surface); }
+  .bg-background { background-color: var(--background); }
+  .ring-brand { --tw-ring-color: var(--brand); }
+
+  /* Responsive adjustments for custom utilities */
+  @media (min-width: 1024px) {
+    .section-y { padding-block: var(--space-32); }
+    .layout-gutter { padding-inline: 2rem; }
+  }
+  @media (min-width: 640px) {
+    .layout-gutter { padding-inline: 1.5rem; }
+  }
+}
+```
+
+**layout.tsx**
+```
+import type { Metadata } from "next";
+import { Inter, Poppins } from "next/font/google";
+import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-sans" });
+const poppins = Poppins({ subsets: ["latin"], weight: ["700", "800", "900"], variable: "--font-heading" });
+
+export const metadata: Metadata = {
+  title: "EventVirtua | Host Engaging Virtual Events with Interactive Features",
+  description: "Host engaging virtual events with EventVirtua, featuring interactive tools, unlimited scalability, and detailed analytics. Start your free event now.",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" data-theme="dark">
+      <body className={`${inter.variable} ${poppins.variable} bg-[color:var(--color-background)] text-[color:var(--color-foreground)] antialiased font-sans`}>
+        {children}
+      </body>
+    </html>
+  );
+}
+```
 """
 
 FOLLOWUP_DESIGNER_SYSTEM_PROMPT = """
