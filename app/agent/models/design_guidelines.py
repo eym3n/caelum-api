@@ -145,30 +145,8 @@ class DesignGuidelines(BaseModel):
         default="py-16 md:py-24",
         description="Vertical spacing between sections (e.g., 'py-16 md:py-24', 'Large: 120px, Medium: 80px')",
     )
-    grid_system: str = Field(
-        default="12-column grid with gap-6 and responsive breakpoints at sm/md/lg/xl",
-        description="Grid system approach (e.g., '12-column, gap-6, responsive breakpoints at sm/md/lg/xl')",
-    )
-
-    # Components & UI Elements
-    button_styles: str = Field(
-        default="Refer to design planner instructions for button styles",
-        description="Button styling specifications (primary, secondary, sizes, states, padding, rounding)",
-    )
-    input_styles: str = Field(
-        default="Refer to design planner instructions for input styles",
-        description="Input/form field styling specifications (borders, focus states, padding, validation)",
-    )
-    card_styles: str = Field(
-        default="Refer to design planner instructions for card styles",
-        description="Card component styling (background, borders, shadows, padding, hover states)",
-    )
 
     # Motion & Animation
-    animations: List[AnimationSpec] = Field(
-        default_factory=list,
-        description="Animation specifications for sections and interactions",
-    )
     motion_philosophy: str = Field(
         default="Subtle, purposeful, respects prefers-reduced-motion",
         description="Overall motion design approach (e.g., 'Subtle, purposeful, respects prefers-reduced-motion')",
@@ -191,10 +169,6 @@ class DesignGuidelines(BaseModel):
     og_tags: Optional[str] = Field(default=None, description="Open Graph tags guidance")
 
     # Implementation Notes
-    tailwind_plugins: List[str] = Field(
-        default_factory=list,
-        description="Required Tailwind plugins (e.g., '@tailwindcss/forms', 'tailwindcss-animate')",
-    )
     css_custom_properties: str = Field(
         default="Define CSS variables for colors, spacing, and typography as specified.",
         description="Custom CSS properties/variables to define in globals.css",
