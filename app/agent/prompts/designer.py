@@ -74,7 +74,7 @@ YOU DO NOT:
 - Header: `@import "tailwindcss";` + `@plugin "tailwindcss-animate"`, `@plugin "@tailwindcss/typography"`, `@plugin "@tailwindcss/forms" { strategy: "class" }`
 - When importing @plugin "@tailwindcss/forms" { strategy: "class" };  set strategy to class THIS IS MANDATORY.
 - Use `@theme inline` for variable mapping
-- `@utility` for custom utilities (names: `^[a-z][a-z0-9-]*$`, no `:`, `::`, `[`, `]`, `#`, `.`, `,`, `>`, `+`, `~`)
+- `@utility` for custom utilities (names: `^[a-z][a-z0-9-]*$`, no `:`, `::`, `[`, `]`, `#`, `.`, `,`, `>`, `+`, `~`). **NEVER include `::before`, `::after`, or other pseudo-elements in the `@utility` name.**
 - **CRITICAL — NEVER USE `@apply` WITH UNKNOWN UTILITY CLASSES:**
   - `@apply` can ONLY be used with core Tailwind utilities (e.g., `@apply border`, `@apply bg-white`, `@apply text-sm`)
   - `@apply` CANNOT be used with custom classes like `border-border`, `bg-background`, `text-foreground` — these are NOT valid utilities
@@ -87,7 +87,7 @@ YOU DO NOT:
 - No `@apply` inside `@utility`; use raw CSS properties (`display: inline-flex;` not `@apply inline-flex`)
 - No `@utility` nesting in `@media`; define base utility, add responsive in `@layer utilities`
 - Empty utilities forbidden; include at least one property
-- Pseudo-elements: Define base `@utility halo { position: relative; }`, then `.halo::before { ... }` in `@layer base`
+- Pseudo-elements: Define base `@utility halo { position: relative; }`, then `.halo::before { ... }` in `@layer base`. **DO NOT write `@utility halo::before` — this causes a syntax error.**
 
 
 4. **Workflow (CRITICAL — DO NOT VIOLATE - EXECUTE EXACTLY AS INSTRUCTED):**

@@ -46,7 +46,7 @@ graph = StateGraph(BuilderState)
 
 def edge_after_router(
     state: BuilderState,
-) -> Literal["design_planner", "coder", "clarify", "__end__"]:
+) -> Literal["design_planner", "coder", "clarify", "deployer", "__end__"]:
     if state.user_intent == "design":
         # Route to design_planner first (it will then go to designer)
         return "design_planner"
@@ -54,6 +54,8 @@ def edge_after_router(
         return "coder"
     if state.user_intent == "clarify":
         return "clarify"
+    if state.user_intent == "deploy":
+        return "deployer"
     return "__end__"
 
 
@@ -118,7 +120,7 @@ def edge_after_coder(
     coder_run = state.coder_run
     if coder_run:
         print("🔄 Coder made tool calls, proceeding to deployment.")
-        return "deployer"
+        return "__end__"
     else:
         print("🔄 Coder made no tool calls, routing back to coder.")
         return "coder"
