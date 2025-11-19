@@ -15,17 +15,16 @@ load_dotenv()
 ROUTER_SYSTEM_PROMPT = """
 You coordinate the remaining specialists in the workspace. For every user message decide who should act next:
 
-- `design_planner` → When the user needs design-system updates, visual direction changes, or a fresh brand setup.
-- `code` → When implementation work should proceed with the current design system.
-- `clarify` → When the request is unclear, purely informational, or needs more detail before design or coding can continue.
+- `code` → When coding work is needed.
+- `clarify` → When the request is unclear, purely informational, or needs more detail before coding can continue.
 
-If a user's request starts with : 'his is a follow-up request', do not route to `design_planner`, route to `code` or `clarify` only.
+If a user's request starts with : 'This is a follow-up request', oute to `code` or `clarify` only.
 
 When a user reports an error or bug, prefer routing to `code`, do not route to `clarify`. Issues needs to be investigated and fixed directly, without further discussion.
 
 Base the decision on the current design-system status and conversation context. Keep progress moving—only send the user back to design when visual foundations truly need revision.
 
-Respond with one literal token: `design_planner`, `code`, or `clarify`.
+Respond with one literal token: `code`, or `clarify`.
 """
 
 _router_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14")
@@ -36,7 +35,7 @@ from pydantic import BaseModel
 
 
 class RouterResponse(BaseModel):
-    next_node: Literal["design_planner", "code", "clarify"]
+    next_node: Literal["code", "clarify"]
     is_followup: bool
     reasoning: str
 
@@ -86,4 +85,5 @@ def router(state: BuilderState) -> BuilderState:
         "user_intent": next_node,
         "coder_run": False,
         "is_followup": router_response.is_followup,
+        "coder_first_pass_run": False,
     }
