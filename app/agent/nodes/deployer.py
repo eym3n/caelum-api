@@ -105,11 +105,12 @@ def deployer(state: BuilderState) -> BuilderState:
             }
         else:
             error_msg = (
-                f"Deployment failed with exit code {result.returncode}\n\n{output}"
+                f"Deployment failed with exit code {result.returncode}\n\n{output if output.strip() else '[No logs captured]'}"
             )
             print(
                 f"❌ [DEPLOYER] Deployment failed for session: {session_id} (exit code: {result.returncode})"
             )
+            print(f"[DEPLOYER] Captured error log length: {len(error_msg)} chars")
             print(f"[DEPLOYER] Output:\n{output}")
 
             # Update landing page status to failed

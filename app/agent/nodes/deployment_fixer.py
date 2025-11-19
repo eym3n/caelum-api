@@ -70,7 +70,6 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         ).bind_tools(
             tools,
             parallel_tool_calls=True,
-            tool_choice="any" if not state.deployment_fixer_run else None,
         )
 
         SYS = SystemMessage(content=prompt_with_context)
