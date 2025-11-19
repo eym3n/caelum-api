@@ -79,7 +79,6 @@ file_tools = [
     batch_delete_files,
     batch_update_lines,
     # Utility
-    list_files,
     read_file,
     read_lines,
     update_file,

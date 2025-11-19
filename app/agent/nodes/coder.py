@@ -22,7 +22,6 @@ from app.agent.tools.files import (
     batch_delete_files,
     batch_update_lines,
     # Utility
-    list_files,
     list_files_internal,
 )
 
@@ -40,8 +39,6 @@ tools = [
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
-    # Utility
-    list_files,
     # Command tools
     lint_project,
 ]
@@ -90,8 +87,7 @@ def coder(state: BuilderState) -> BuilderState:
         content=_coder_prompt
         + project_spec
         + design_context_section
-        + f"\n\nThe following files exist in the session: {files}"
-        + "\n\nSTART WORKING, YOU CANNOT CIRCLE BACK TO THE USER UNTIL YOU HAVE COMPLETED THE TASK. DO NOT ASK THE USER FOR ANYTHING UNTIL YOU HAVE COMPLETED THE TASK. DO NOT ASK FOR CONFIRMATION OR ANYTHING, JUST ACT."
+        + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
     )
     messages = [SYS, *state.messages]
 

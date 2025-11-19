@@ -262,7 +262,7 @@ async def chat(
     # Check if this is the first message - clear session directory
     try:
         state_snapshot = agent.get_state(
-            config={"configurable": {"thread_id": session_id, "recursion_limit": 50}}
+            config={"configurable": {"thread_id": session_id, "recursion_limit": 100}}
         )
         is_first_message = not state_snapshot.values.get("messages", [])
     except Exception:
@@ -409,7 +409,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         "thread_id": session_id,
                         "session_id": session_id,  # Pass session_id to tools
                     },
-                    "recursion_limit": 35,
+                    "recursion_limit": 100,
                 },
             ):
                 for node, update in event.items():

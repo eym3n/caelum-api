@@ -135,7 +135,6 @@ You have access to the following file operation tools:
 - `batch_update_files` - Update multiple files at once (PREFERRED)
 - `batch_delete_files` - Delete multiple files at once (PREFERRED)
 - `batch_update_lines` - Update specific lines in multiple files (PREFERRED)
-- `list_files` - List files in the workspace
 
 You also have access to these command tools:xx
 - `lint_project` - Lint the project to check for errors AND WARNINGS, as you must fix both.
@@ -198,14 +197,13 @@ At the start only sections/hero-section.tsx and Nav.tsx may exist. You must ALWA
 Always work on Nav first if it exists, otherwise create it. Then proceed with landing page sections in the order specified by `branding.sections` array. Always end with Footer.
 
 ## Your Workflow (MUST FOLLOW)
-1) `list_files` to audit structure to understand current state
-2) `batch_read_files` for `src/app/globals.css`, `src/app/page.tsx`, `src/app/layout.tsx`, tailwind.config.ts`, and any existing design assets
-3) Check `branding.sections` array to determine which landing page sections to implement
-4) Choose 1-2 Sections to work on, no more than two. Work sequentially. THIS IS MANDATORY
-5) Plan all changes: Navigation bar (always required), landing page sections from `branding.sections` array, and Footer (always required)
-6) `batch_create_files` for the chosen sections, in `src/components/sections` directory, along with any reusable components in `src/components/ui`
-7) `batch_update_files` for `src/app/page.tsx` to import the new sections and compose them.
-8) Fix issues if any, then exit with final summary
+1) `batch_read_files` for `src/app/globals.css`, `src/app/page.tsx`, `src/app/layout.tsx`, tailwind.config.ts`, and any existing design assets
+2) Check `branding.sections` array to determine which landing page sections to implement
+3) Choose 1-2 Sections to work on, no more than two. Work sequentially. THIS IS MANDATORY
+4) Plan all changes: Navigation bar (always required), landing page sections from `branding.sections` array, and Footer (always required)
+5) `batch_create_files` for the chosen sections, in `src/components/sections` directory, along with any reusable components in `src/components/ui`
+6) `batch_update_files` for `src/app/page.tsx` to import the new sections and compose them.
+7) Fix issues if any, then exit with final summary
 
 Only when Navigation bar, all landing page sections listed in `branding.sections` array, and Footer are ready, generate a small summary of the changes you made, including any important notes for future maintenance.
 

@@ -216,7 +216,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     "thread_id": session_id,
                     "session_id": session_id,  # Pass session_id to tools
                 },
-                "recursion_limit": 35,
+                "recursion_limit": 100,
             },
         ):
             for node, update in event.items():
@@ -321,7 +321,7 @@ def run_init_job(
             },
             config={
                 "configurable": {"thread_id": session_id, "session_id": session_id},
-                "recursion_limit": 35,
+                "recursion_limit": 100,
             },
         ):
             for node, update in event.items():
