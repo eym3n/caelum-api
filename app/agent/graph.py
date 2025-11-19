@@ -158,7 +158,7 @@ def noop(state: BuilderState) -> BuilderState:
 graph.add_node("router", router)
 graph.add_node("design_planner", design_planner)
 graph.add_node("designer", designer)
-graph.add_node("designer_tools", designer_tools_node)
+# graph.add_node("designer_tools", designer_tools_node)
 graph.add_node("clarify", clarify)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
@@ -174,12 +174,8 @@ graph.add_conditional_edges("router", edge_after_router)
 # Design planner → designer (no tools, just structured output)
 graph.add_edge("design_planner", "designer")
 
-graph.add_conditional_edges(
-    "designer",
-    tools_condition,
-    {"tools": "designer_tools", "__end__": "coder"},
-)
-graph.add_edge("designer_tools", "designer")
+graph.add_edge("designer", "coder")
+# graph.add_edge("designer_tools", "designer")
 
 
 graph.add_conditional_edges(

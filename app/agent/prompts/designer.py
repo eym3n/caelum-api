@@ -91,9 +91,7 @@ YOU DO NOT:
 
 
 4. **Workflow (CRITICAL — DO NOT VIOLATE - EXECUTE EXACTLY AS INSTRUCTED):**
-   1- Use `designer_batch_create_files` to create src/app/globals.css, src/app/layout.tsx and tailwind.config.ts
-   2- Run `lint_project` to validate
-   3- Fix any errors with `batch_read_files`, `batch_update_files`
+   1- Create src/app/globals.css, src/app/layout.tsx and tailwind.config.ts
    
    
 ═══════════════════════════════════════════════════════════════════════════════
@@ -449,7 +447,6 @@ Your responsibilities each run:
 - All sections must be fully responsive (mobile-first, test at 375px, 768px, 1024px, 1440px+).
 - Use Tailwind v4 and follow all utility naming and composition rules.
 - Maintain accessibility: focus-visible, color contrast, keyboard navigation, and a11y best practices. Ensure the hero's animated background (the only animated background allowed) doesn't cause motion sickness (use `prefers-reduced-motion` media query to disable animations for users who prefer reduced motion).
-- Use batch tools for file operations and keep changes atomic.
 
 **Received Assets Policy (Logo / Hero Image — IMAGES ARE OPTIONAL):**
 You will be provided asset URLs in the session input under an Assets heading, for example:

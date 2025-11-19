@@ -15,7 +15,7 @@ from app.agent.prompts.design_planner import (
 from toon import encode
 
 
-_design_planner_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low")
+_design_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
 
 
 def design_planner(state: BuilderState) -> BuilderState:

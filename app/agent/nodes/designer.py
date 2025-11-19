@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
 from app.agent.prompts.designer import (
     DESIGNER_SYSTEM_PROMPT,
     FOLLOWUP_DESIGNER_SYSTEM_PROMPT,
@@ -16,6 +17,7 @@ from toon import encode
 from app.utils.jobs import log_job_event
 from app.agent.tools.files import (
     # Batch operations
+    batch_create_files_internal,
     batch_read_files,
     designer_batch_create_files,
     designer_batch_update_files,
@@ -43,7 +45,19 @@ tools = [
 ]
 
 
-_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(tools)
+class DesignerOutput(BaseModel):
+    tailwind_config_ts_content: str = Field(
+        ..., description="The content of the tailwind.config.ts file."
+    )
+    globals_css_content: str = Field(
+        ..., description="The content of the globals.css file."
+    )
+    layout_tsx_content: str = Field(
+        ..., description="The content of the layout.tsx file."
+    )
+
+
+_designer_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low")
 
 
 def designer(state: BuilderState) -> BuilderState:
@@ -78,37 +92,37 @@ def designer(state: BuilderState) -> BuilderState:
     print(f"[DESIGNER] Prompt: {SYS.content}")
 
     messages = [SYS, *state.messages]
-    designer_response = _designer_llm_.invoke(messages)
-
-    # Check for malformed function call
-    finish_reason = getattr(designer_response, "response_metadata", {}).get(
-        "finish_reason"
+    designer_response = _designer_llm_.with_structured_output(DesignerOutput).invoke(
+        messages
     )
-    if finish_reason == "MALFORMED_FUNCTION_CALL":
-        print(
-            "[DESIGNER] ⚠️  Malformed function call detected. Retrying with a simpler prompt..."
-        )
-        recovery_msg = HumanMessage(
-            content="The previous request had an error. Please respond with a clear text explanation of the design system without making tool calls."
-        )
-        messages.append(designer_response)
-        messages.append(recovery_msg)
-        designer_response = _designer_llm_.invoke(messages)
-        print(f"[DESIGNER] Retry response: {designer_response}")
 
-    if getattr(designer_response, "tool_calls", None):
-        print(
-            f"[DESIGNER] Calling {len(designer_response.tool_calls)} tool(s) to establish design system"
+    try:
+        batch_create_files_internal(
+            state.session_id,
+            [
+                {
+                    "name": "tailwind.config.ts",
+                    "content": designer_response.tailwind_config_ts_content,
+                },
+                {
+                    "name": "src/app/globals.css",
+                    "content": designer_response.globals_css_content,
+                },
+                {
+                    "name": "src/app/layout.tsx",
+                    "content": designer_response.layout_tsx_content,
+                },
+            ],
         )
-        return {"messages": [designer_response], "design_system_run": True}
+        log_job_event(
+            state.job_id,
+            node="designer_tools",
+            message="Created files",
+            event_type="node_completed",
+        )
 
-    # Log final designer guidelines as a node-level job event
-    log_job_event(
-        state.job_id,
-        node="designer",
-        message="Designer completed design system pass.",
-        event_type="node_completed",
-    )
+    except Exception as e:
+        print(f"[DESIGNER] Error creating files: {e}")
 
     return {
         "messages": [designer_response],
