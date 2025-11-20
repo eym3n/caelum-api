@@ -55,10 +55,13 @@ class DesignerStructuredOutput(BaseModel):
 
 
 def structurer(state: BuilderState) -> BuilderState:
+    designer_payload = (
+        state.design_guidelines if state.design_guidelines else {"note": "No guidelines"}
+    )
     SYS = SystemMessage(
         content=STRUCTURER_SYSTEM_PROMPT
         + "\n\nDESIGNER_OUTPUT:\n"
-        + state.raw_designer_output
+        + str(designer_payload)
     )
     messages = [SYS, *state.messages]
     structurer_response = _structurer_llm_.with_structured_output(

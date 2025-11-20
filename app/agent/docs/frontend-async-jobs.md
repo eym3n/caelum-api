@@ -181,7 +181,7 @@ Authorization: Bearer <token>
    - Receive `job_id`.
 2. **Poll job timeline**  
    - Repeatedly call `GET /v1/jobs/{job_id}`.  
-   - Update UI as new `events` arrive (`design_planner`, `designer`, `coder`, `deployment_fixer`, etc.).
+   - Update UI as new `events` arrive (`design_planner`, `coder`, `deployment_fixer`, etc.).
 3. **Detect completion**  
    - When `status === "completed"`, mark the session as ready.  
    - If `status === "failed"`, read `error_message` and the last few events to show remediation hints.

@@ -9,6 +9,7 @@ from toon import encode
 
 
 from app.agent.prompts.coder import (
+    CODER_DESIGN_BOOSTER,
     CODER_SYSTEM_PROMPT,
     FOLLOWUP_CODER_SYSTEM_PROMPT,
 )
@@ -58,7 +59,7 @@ def coder(state: BuilderState) -> BuilderState:
         "DEFAULT" if not state.is_followup else "FOLLOW-UP",
     )
 
-    _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="low").bind_tools(
+    _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(
         tools,
         parallel_tool_calls=True,
         tool_choice=None if state.coder_run else "batch_read_files",
@@ -71,13 +72,13 @@ def coder(state: BuilderState) -> BuilderState:
     if design_guidelines and state.design_planner_run:
         design_context_section = encode(design_guidelines)
     else:
-        # Fallback to raw designer output (for follow-ups or if guidelines not available)
         design_context_section = (
-            "\n### Your design system instructions:\n" + state.raw_designer_output
+            "\n### Design blueprint missing:\n"
+            "No structured design guidelines are available yet. Request the Design Planner to run before coding."
         )
 
     project_spec = (
-        "\n### You are tasked with building and coding this project:\n"
+        "\n### Initialization payload (for data/reference only):\n"
         + state.init_payload_text
     )
 
@@ -86,6 +87,8 @@ def coder(state: BuilderState) -> BuilderState:
     SYS = SystemMessage(
         content=_coder_prompt
         + design_context_section
+        + project_spec
+        + CODER_DESIGN_BOOSTER
         + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
     )
     messages = [SYS, *state.messages]
@@ -114,7 +117,7 @@ def coder(state: BuilderState) -> BuilderState:
     # Check if there are tool calls - if so, return message without output
     if getattr(coder_response, "tool_calls", None):
         print(
-            f"[CODER] Calling {len(coder_response.tool_calls)} tool(s) to establish design system"
+            f"[CODER] Calling {len(coder_response.tool_calls)} tool(s) to build/adjust sections"
         )
         return {
             "messages": [coder_response],

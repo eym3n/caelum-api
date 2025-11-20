@@ -447,7 +447,6 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                                 "coder_tools",
                                 "clarify_tools",
                                 "planner_tools",
-                                "designer_tools",
                                 "architect_tools",
                             )
                             or msg_type == "tool"
@@ -562,7 +561,6 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                             "coder_tools",
                             "clarify_tools",
                             "planner_tools",
-                            "designer_tools",
                             "architect_tools",
                         ):
                             display_node = "tools"

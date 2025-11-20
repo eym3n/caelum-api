@@ -47,14 +47,6 @@ class BuilderState(BaseModel):
         default=False,
         description="Indicates whether the design planner has generated guidelines for the session.",
     )
-    raw_designer_output: Annotated[str, replace] = Field(
-        default="",
-        description="Raw unstructured output from Designer Agent.",
-    )
-    design_system_run: Annotated[bool, replace] = Field(
-        default=False,
-        description="Indicates whether the design system pass has completed for the session.",
-    )
 
     # 💻 Coder Agent
     coder_output: Annotated[str, replace] = Field(

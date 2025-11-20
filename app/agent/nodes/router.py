@@ -15,19 +15,20 @@ load_dotenv()
 ROUTER_SYSTEM_PROMPT = """
 You coordinate the remaining specialists in the workspace. For every user message decide who should act next:
 
-- `code` → When coding work is needed.
-- `clarify` → When the request is unclear, purely informational, or needs more detail before coding can continue.
-- `deploy` → When user specifically requests to deploy the landing page.
+- `design` → When a new or revised design blueprint is required from the Design Planner.
+- `code` → When coding work is needed (implementing sections, fixing bugs, wiring CTAs, etc.).
+- `clarify` → When the request is unclear, purely informational, or needs more detail before work can continue.
+- `deploy` → When the user specifically requests to deploy the landing page.
 
 If a user's request starts with : 'This is a follow-up request', route to `code` or `clarify` only.
 
-When a user reports an error or bug, prefer routing to `code`, do not route to `clarify`. Issues needs to be investigated and fixed directly, without further discussion.
+When a user reports an error or bug, prefer routing to `code`, do not route to `clarify`. Issues need to be investigated and fixed directly, without further discussion.
 
 If a user's request starts with : 'Deploy the landing page', route to `deploy`.
 
-Base the decision on the current design-system status and conversation context. Keep progress moving—only send the user back to design when visual foundations truly need revision.
+Base the decision on the current design-blueprint status and conversation context. Keep progress moving—only send the user back to `design` when the visual foundations truly need a redesign.
 
-Respond with one literal token: `code`, or `clarify`.
+Respond with one literal token: `design`, `code`, `clarify`, or `deploy`.
 """
 
 _router_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14")
@@ -38,7 +39,7 @@ from pydantic import BaseModel
 
 
 class RouterResponse(BaseModel):
-    next_node: Literal["code", "clarify", "deploy"]
+    next_node: Literal["design", "code", "clarify", "deploy"]
     is_followup: bool
     reasoning: str
 
@@ -46,15 +47,15 @@ class RouterResponse(BaseModel):
 def router(state: BuilderState) -> BuilderState:
 
     status_lines = [
-        f"Design system established: {'yes' if state.design_system_run else 'no'}",
+        f"Design blueprint ready: {'yes' if state.design_planner_run else 'no'}",
     ]
 
     context_section = "\n".join(
         ["CURRENT BUILD CONTEXT:", *("- " + line for line in status_lines)]
     )
 
-    # No LLM call if no design system yet, go to design
-    if not state.design_system_run:
+    # No LLM call if no design blueprint yet, go to design planner
+    if not state.design_planner_run:
         # Update landing page status to generating (starting design work)
         session_id = state.session_id
         if session_id:

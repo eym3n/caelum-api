@@ -1,7 +1,4 @@
-import json
-import random
 from langchain_core.messages import SystemMessage
-from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.state import BuilderState
 from app.agent.models.design_guidelines import DesignGuidelines
@@ -20,11 +17,11 @@ _design_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09
 
 def design_planner(state: BuilderState) -> BuilderState:
     """
-    Design Planner Node - Generates structured design guidelines.
+    Design Planner Node - Generates the full creative blueprint consumed directly by the coder.
 
-    This node runs BEFORE the designer and makes ALL creative design decisions.
-    It outputs a structured DesignGuidelines object that will be stored in state
-    and used by the designer node to implement the actual files.
+    This node runs before any coding happens and produces a structured DesignGuidelines object
+    that contains page-level directives plus per-section blueprints. The coder will rely on this
+    blueprint to build fully self-contained section components (no global design system layer).
 
     NO TOOLS - This node only analyzes the init payload and generates structured output.
     """

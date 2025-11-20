@@ -3,7 +3,6 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from dotenv import load_dotenv
 from app.agent.nodes.design_planner import design_planner
-from app.agent.nodes.designer import designer
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
@@ -16,9 +15,6 @@ from app.agent.tools.files import (
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
-    designer_batch_create_files,
-    designer_batch_update_files,
-    designer_batch_update_lines,
     # Utility
     list_files,
     read_file,
@@ -48,7 +44,6 @@ def edge_after_router(
     state: BuilderState,
 ) -> Literal["design_planner", "coder", "clarify", "deployer", "__end__"]:
     if state.user_intent == "design":
-        # Route to design_planner first (it will then go to designer)
         return "design_planner"
     if state.user_intent == "code":
         return "coder"
@@ -59,13 +54,9 @@ def edge_after_router(
     return "__end__"
 
 
-def edge_after_design_planner(state: BuilderState) -> Literal["designer"]:
-    """After design_planner generates guidelines, always proceed to designer."""
-    return "designer"
-
-
-def edge_after_designer(state: BuilderState) -> Literal["router"]:
-    return "router"
+def edge_after_design_planner(state: BuilderState) -> Literal["coder"]:
+    """After design_planner generates the blueprint, immediately proceed to coder."""
+    return "coder"
 
 
 def edge_after_architect(state: BuilderState) -> Literal["planner"]:
@@ -99,17 +90,6 @@ command_tools = [
 coder_tools_node = ToolNode(file_tools + command_tools)
 # Clarify only needs file reading (batch reads)
 clarify_tools_node = ToolNode([batch_read_files, list_files])
-designer_file_tools = [
-    # Read any files (needed to understand context)
-    batch_read_files,
-    read_file,
-    read_lines,
-    # Design-only create/update operations: restricted to globals.css, tailwind.config.ts, layout.tsx
-    designer_batch_create_files,
-    designer_batch_update_files,
-    designer_batch_update_lines,
-]
-designer_tools_node = ToolNode(designer_file_tools + command_tools)
 # Deployment fixer has access to both file and command tools (batch operations only)
 deployment_fixer_tools_node = ToolNode(file_tools + command_tools)
 
@@ -157,8 +137,6 @@ def noop(state: BuilderState) -> BuilderState:
 
 graph.add_node("router", router)
 graph.add_node("design_planner", design_planner)
-graph.add_node("designer", designer)
-# graph.add_node("designer_tools", designer_tools_node)
 graph.add_node("clarify", clarify)
 graph.add_node("coder", coder)
 graph.add_node("coder_tools", coder_tools_node)
@@ -171,11 +149,8 @@ graph.add_node("clarify_tools", clarify_tools_node)
 graph.add_edge(START, "router")
 graph.add_conditional_edges("router", edge_after_router)
 
-# Design planner → designer (no tools, just structured output)
-graph.add_edge("design_planner", "designer")
-
-graph.add_edge("designer", "coder")
-# graph.add_edge("designer_tools", "designer")
+# Design planner hands off directly to coder
+graph.add_edge("design_planner", "coder")
 
 
 graph.add_conditional_edges(

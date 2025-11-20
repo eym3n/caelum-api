@@ -17,8 +17,7 @@ from app.utils.jobs import log_job_event, update_job_status
 
 DEFAULT_NODE_MESSAGES = {
     "router": "Planning next steps..",
-    "design_planner": "Generated design system",
-    "designer": "Created design system",
+    "design_planner": "Generated design blueprint",
     "coder": "Implemented landing page",
     "deployer": "Deployed landing page",
     "deployment_fixer": "Fixed deployment errors",
