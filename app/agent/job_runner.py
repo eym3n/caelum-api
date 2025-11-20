@@ -297,8 +297,26 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
             )
             update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
-        print(f"[JOB_RUNNER] Chat job failed: {e}")
-        update_job_status(job_id, status=JobStatus.FAILED, error_message=str(e))
+        if str(e) == "__end__":
+            final_msg = last_meaningful_message or "Graph execution completed"
+            log_job_event(
+                job_id,
+                node="__end__",
+                message=final_msg,
+                event_type="job_completed",
+                data={"session_id": session_id},
+            )
+            update_job_status(job_id, status=JobStatus.COMPLETED)
+        else:
+            print(f"[JOB_RUNNER] Chat job failed: {e}")
+            log_job_event(
+                job_id,
+                node="chat_job_runner",
+                message="Chat job crashed before completion.",
+                event_type="error",
+                data={"error": str(e)},
+            )
+            update_job_status(job_id, status=JobStatus.FAILED, error_message=str(e))
 
 
 def run_init_job(
@@ -406,5 +424,23 @@ def run_init_job(
             )
             update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
-        print(f"[JOB_RUNNER] Init job failed: {e}")
-        update_job_status(job_id, status=JobStatus.FAILED, error_message=str(e))
+        if str(e) == "__end__":
+            final_msg = last_meaningful_message or "Landing page creation completed"
+            log_job_event(
+                job_id,
+                node="__end__",
+                message=final_msg,
+                event_type="job_completed",
+                data={"session_id": session_id},
+            )
+            update_job_status(job_id, status=JobStatus.COMPLETED)
+        else:
+            print(f"[JOB_RUNNER] Init job failed: {e}")
+            log_job_event(
+                job_id,
+                node="init_job_runner",
+                message="Init job crashed before completion.",
+                event_type="error",
+                data={"error": str(e)},
+            )
+            update_job_status(job_id, status=JobStatus.FAILED, error_message=str(e))
