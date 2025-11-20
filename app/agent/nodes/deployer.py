@@ -4,6 +4,7 @@ import subprocess
 from pathlib import Path
 from app.agent.state import BuilderState
 from app.models.landing_page import LandingPageStatus
+from app.utils.jobs import log_job_event
 from app.utils.landing_pages import update_landing_page_status
 
 # Resolve repository root (three levels up: /repo/app/agent/nodes/deployer.py → /repo)
@@ -63,10 +64,18 @@ def deployer(state: BuilderState) -> BuilderState:
     If deployment fails, sets deployment_failed flag and returns error
     message so the coder can fix the issues.
     """
+
+    log_job_event(
+        state.job_id,
+        node="deployer",
+        message="Deploying landing page...",
+        event_type="node_started",
+    )
+
     session_id = state.session_id
 
     print(f"🚀 [DEPLOYER] Starting deployment for session: {session_id}")
-    
+
     # Reset deployment_fixer_run flag before attempting deployment
     state.deployment_fixer_run = False
 
@@ -104,9 +113,7 @@ def deployer(state: BuilderState) -> BuilderState:
                 "deployment_fixer_run": False,
             }
         else:
-            error_msg = (
-                f"Deployment failed with exit code {result.returncode}\n\n{output if output.strip() else '[No logs captured]'}"
-            )
+            error_msg = f"Deployment failed with exit code {result.returncode}\n\n{output if output.strip() else '[No logs captured]'}"
             print(
                 f"❌ [DEPLOYER] Deployment failed for session: {session_id} (exit code: {result.returncode})"
             )
