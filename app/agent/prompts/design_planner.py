@@ -115,6 +115,15 @@ Use these inspiration libraries as mix-and-match seeds (do not copy verbatim):
 **_nav_inspiration_**
 
 ═══════════════════════════════════════════════════════════════════════════════
+🔘 BUTTON SYSTEM (CRITICAL)
+═══════════════════════════════════════════════════════════════════════════════
+- Output dedicated guidance for **primary**, **secondary**, and **ghost** buttons using the provided schema fields.
+- Each tier must include: appearance (colors, gradients, borders, radii, typography, icon rules), interaction states (hover, focus-visible, active/pressed, easing/timing), and usage hierarchy (which sections/surfaces should use it).
+- Keep button palettes aligned with the page’s theme while guaranteeing WCAG AA contrast wherever they appear (spell out how to maintain readability on light vs dark bands).
+- Clarify dual-CTA pairings (e.g., “Hero uses primary + ghost”), how secondary supports tabs/forms, and where ghost buttons provide low-emphasis actions.
+- Mention special behaviors (glass borders, subtle glows, icon micro-interactions) so the coder can reproduce them inside each section component.
+
+═══════════════════════════════════════════════════════════════════════════════
 🧩 SECTION BLUEPRINT CONTRACT
 ═══════════════════════════════════════════════════════════════════════════════
 For EVERY section (Nav → ... → Footer) provide:
@@ -140,6 +149,7 @@ Populate every field:
 - `layout_strategy` – page-level pacing, gutters, min-heights.
 - `motion_strategy` – animation philosophy (durations, easing, sections using scroll FX).
 - `cta_strategy` – CTA hierarchy & placement rules.
+- `primary_button` / `secondary_button` / `ghost_button` – button styling specs (appearance, states, usage) that inherit from the page’s theme and enforce contrast.
 - `component_principles` – reiterate “single component, self-contained styling, no globals.” Mention how to treat `globals.css` (basic reset only).
 - `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/app/components/sections/<PascalCase>Section.tsx`)
 - `page_title` / `page_description` – metadata.
