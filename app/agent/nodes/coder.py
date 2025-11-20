@@ -50,6 +50,7 @@ def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
 
     if not state.coder_run and not state.is_followup:
+        print("[CODER] Using first-hit non-followup prompt")
         log_job_event(
             state.job_id,
             node="coder",
@@ -58,6 +59,7 @@ def coder(state: BuilderState) -> BuilderState:
         )
 
     elif state.is_followup and not state.coder_run:
+        print("[CODER] Using first-hit follow-up prompt")
         log_job_event(
             state.job_id,
             node="coder",

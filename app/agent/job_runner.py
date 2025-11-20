@@ -304,7 +304,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     continue
 
                 # Track last message from coder or deployment_fixer for final event
-                if node in ("coder", "deployment_fixer"):
+                if node in ("coder", "deployment_fixer", "deployer", "clarify"):
                     last_meaningful_message = msg
 
                 # NOTE: we deliberately avoid storing the raw `update` object in MongoDB,
