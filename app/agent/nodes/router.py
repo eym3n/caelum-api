@@ -15,7 +15,6 @@ load_dotenv()
 ROUTER_SYSTEM_PROMPT = """
 You coordinate the remaining specialists in the workspace. For every user message decide who should act next:
 
-- `design` → When a new or revised design blueprint is required from the Design Planner.
 - `code` → When coding work is needed (implementing sections, fixing bugs, wiring CTAs, etc.).
 - `clarify` → When the request is unclear, purely informational, or needs more detail before work can continue.
 - `deploy` → When the user specifically requests to deploy the landing page.
@@ -26,9 +25,7 @@ When a user reports an error or bug, prefer routing to `code`, do not route to `
 
 If a user's request starts with : 'Deploy the landing page', route to `deploy`.
 
-Base the decision on the current design-blueprint status and conversation context. Keep progress moving—only send the user back to `design` when the visual foundations truly need a redesign.
-
-Respond with one literal token: `design`, `code`, `clarify`, or `deploy`.
+Respond with one literal token: `code`, `clarify`, or `deploy`.
 """
 
 _router_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14")
