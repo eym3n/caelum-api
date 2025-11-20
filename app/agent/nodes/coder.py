@@ -49,18 +49,19 @@ tools = [
 def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
 
-    if state.is_followup:
-        log_job_event(
-            state.job_id,
-            node="coder",
-            message="Updating landing page...",
-            event_type="node_started",
-        )
-    elif not state.coder_run:
+    if not state.coder_run and not state.is_followup:
         log_job_event(
             state.job_id,
             node="coder",
             message="Creating landing page...",
+            event_type="node_started",
+        )
+
+    elif state.is_followup and not state.coder_run:
+        log_job_event(
+            state.job_id,
+            node="coder",
+            message="Updating landing page...",
             event_type="node_started",
         )
 
