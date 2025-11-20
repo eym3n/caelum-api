@@ -25,6 +25,12 @@ def design_planner(state: BuilderState) -> BuilderState:
 
     NO TOOLS - This node only analyzes the init payload and generates structured output.
     """
+    log_job_event(
+        state.job_id,
+        node="design_planner",
+        message="Generating global design blueprint...",
+        event_type="node_started",
+    )
     session_id = state.session_id
     print(f"🎨 [DESIGN_PLANNER] Generating design guidelines for session: {session_id}")
 
