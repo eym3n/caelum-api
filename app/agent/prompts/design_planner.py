@@ -141,7 +141,7 @@ Populate every field:
 - `motion_strategy` – animation philosophy (durations, easing, sections using scroll FX).
 - `cta_strategy` – CTA hierarchy & placement rules.
 - `component_principles` – reiterate “single component, self-contained styling, no globals.” Mention how to treat `globals.css` (basic reset only).
-- `sections` – ordered list of SectionBlueprint objects.
+- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/app/components/sections/<PascalCase>Section.tsx`)
 - `page_title` / `page_description` – metadata.
 - `accessibility_notes` – contrast, focus, reduced motion instructions.
 - `coder_instructions` – final marching orders (remind coder to follow per-section notes, avoid shared tokens/modules, rely on Tailwind + inline styles inside each component).

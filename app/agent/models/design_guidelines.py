@@ -49,6 +49,10 @@ class SectionBlueprint(BaseModel):
         default="Implementation notes for the coder building this section as a single component.",
         description="Explicit developer-focused instructions (component structure, Tailwind strategies, data handling).",
     )
+    section_file_name_tsx: str = Field(
+        default="src/app/components/sections/<PascalCase>Section.tsx",
+        description="The name of the file to create for this section.",
+    )
 
 
 class DesignGuidelines(BaseModel):
