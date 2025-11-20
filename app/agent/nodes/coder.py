@@ -156,7 +156,7 @@ def coder(state: BuilderState) -> BuilderState:
     log_job_event(
         state.job_id,
         node="coder",
-        message="Coder completed implementation pass.",
+        message=output,
         event_type="node_completed",
     )
 

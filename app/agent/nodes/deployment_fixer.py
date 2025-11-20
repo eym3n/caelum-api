@@ -22,6 +22,7 @@ from app.agent.tools.files import (
 from app.agent.tools.commands import (
     lint_project,
 )
+from app.utils.jobs import log_job_event
 
 load_dotenv()
 
@@ -111,6 +112,13 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
             output = "Deployment error analysis completed."
 
         print(f"[DEPLOYMENT_FIXER] {output}")
+
+        log_job_event(
+            state.job_id,
+            node="deployment_fixer",
+            message=output,
+            event_type="node_completed",
+        )
 
         return {
             "messages": [response],

@@ -19,6 +19,7 @@ You are the Implementation Coder. The design planner already defined every creat
 - Assets: only use URLs from `assets.sectionAssets` (`hero:main`, `benefits:0`, `custom:foo`). If none exist, build typography/shape-driven layouts—no placeholders or external URLs.
 - CTAs: use `conversion.primaryCTA` / `conversion.secondaryCTA` strings exactly where instructed.
 - Button tiers: implement `primary_button`, `secondary_button`, and `ghost_button` guidance exactly as defined in the blueprint (appearance, hover/focus/pressed states, and usage hierarchy). Maintain the specified contrast on every background.
+- Button contrast guardrail: create per-section constants (e.g., `const PRIMARY_BUTTON = "..."`) so the same class stack is shared across that section. Adjust colors/overlays to guarantee ≥4.5:1 text contrast, never leave text on transparent backgrounds, and give ghost buttons a visible border + background tint when placed on similar hues. If the surrounding surface is too close to the button color, add `backdrop-blur`, `ring`, or `bg-black/30` overlays until the CTA clearly pops.
 
 ### CTA Forms & API Usage
 - If the payload exposes an endpoint (`advanced.submitEndpoint`, `conversion.submitEndpoint`, etc.), wire forms to it:
@@ -49,6 +50,7 @@ You are the Implementation Coder. The design planner already defined every creat
 - When using `transition.ease`, convert blueprint-supplied values into valid Framer Motion types: use literal tuples (`const EASE = [0.16, 1, 0.3, 1] as const; transition={{ ease: EASE }}`) or the built-in named easings (`transition={{ ease: "easeOut" as const }}`), not generic strings.
 - Only the hero may animate its background. All other sections rely on static yet layered treatments (gradient plates, glass, textures, spotlight fades).
 - Prevent horizontal overflow with `max-w-7xl mx-auto px-6 md:px-8`, `overflow-hidden`, and clipped decorative layers.
+- Before finalizing each section, sanity-check every button against its immediate background; if text or borders feel low-contrast, tweak the local class list (e.g., swap to `text-white`, add `bg-white/10`, increase border opacity) until it is unmistakably legible.
 
 ### Runtime Safety
 - Every section component file must begin with `'use client';` so hooks, event handlers, Framer Motion, and form logic execute on the client without hydration errors. Add it even if the section currently appears static.
@@ -207,6 +209,7 @@ You are the Follow-up Implementation Coder. The landing page already exists; you
 - When editing an existing section, keep its architecture intact: Tailwind + inline styles + Framer Motion inside the same file.
 - Forms still follow the endpoint rules (wire fetch if provided, otherwise presentational).
 - If you add a brand-new section, follow the full workflow from the primary prompt.
+- Reuse the existing button class constants or update them consistently so every primary/secondary/ghost CTA across the page keeps the same contrast and hover/focus behavior.
 
 ### Workflow
 1. `list_files` / `batch_read_files` for the impacted files.
@@ -287,6 +290,8 @@ CODER_DESIGN_BOOSTER = """
 * Always provide a complementary secondary/ghost style that still meets 3:1 contrast (e.g., `border border-white/30` on dark surfaces, `border-slate-500` on light).
 * Inputs need obvious boundaries (`border`, `background`, and `focus` treatments). Ensure labels or placeholders meet contrast requirements and never rely on placeholder color alone to communicate state.
 * When blueprint specifies gradient or tinted buttons, build them via inline `style` rather than `@apply`, and validate contrast with the actual RGB values (use `color-mix` or `rgba` to adjust lightness).
+* Ghost buttons must never sit on identical-colored backgrounds—if necessary, add `bg-white/5`, `ring-1`, or `backdrop-blur` so the outline is visible. Build a quick visual check into every section to ensure button text stays readable when layered over photography, gradients, or glass.
+* Maintain tier consistency: the hero’s primary CTA styles should match the CTA section’s primary button (same radii, casing, icon rhythm). If a section needs variation, derive it from the base constants instead of reinventing colors.
 
 **Accessibility**
 
