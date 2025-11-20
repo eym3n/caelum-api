@@ -53,6 +53,10 @@ class SectionBlueprint(BaseModel):
         default="src/app/components/sections/<PascalCase>Section.tsx",
         description="The name of the file to create for this section.",
     )
+    ordering_index: str = Field(
+        default="0",
+        description="The order in which, the sections appear on the page. This is used to determine the order in which the sections are created.",
+    )
 
 
 class ButtonStyleGuidance(BaseModel):
@@ -153,4 +157,8 @@ class DesignGuidelines(BaseModel):
     coder_instructions: str = Field(
         default="Implement every section as a single, self-contained component using only local styling techniques.",
         description="Explicit marching orders for the coder (component sequencing, architectural warnings).",
+    )
+    mobile_nav_strategy: str = Field(
+        default="Implement a fully functional mobile menu (hamburger) for the Nav section on small screens.",
+        description="Specific instructions for the mobile navigation behavior (hamburger menu, slide-over, animation).",
     )
