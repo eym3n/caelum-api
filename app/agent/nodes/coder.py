@@ -1,4 +1,5 @@
 from __future__ import annotations
+from errno import EL2HLT
 from langchain_core.messages import SystemMessage, HumanMessage
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -48,12 +49,20 @@ tools = [
 def coder(state: BuilderState) -> BuilderState:
     # Gather all design fields from state for coder prompt context
 
-    log_job_event(
-        state.job_id,
-        node="coder",
-        message="Creating your landing page...",
-        event_type="node_started",
-    )
+    if state.is_followup:
+        log_job_event(
+            state.job_id,
+            node="coder",
+            message="Updating landing page...",
+            event_type="node_started",
+        )
+    elif not state.coder_run:
+        log_job_event(
+            state.job_id,
+            node="coder",
+            message="Creating landing page...",
+            event_type="node_started",
+        )
 
     print("\n\n[CODER] Follow-up condition met:", state.is_followup)
 
