@@ -25,6 +25,18 @@ DEFAULT_NODE_MESSAGES = {
 }
 
 
+def _is_graph_end_exception(exc: Exception) -> bool:
+    if not exc:
+        return False
+    if getattr(exc, "args", None):
+        if exc.args[0] == "__end__":
+            return True
+    text = str(exc).strip()
+    if text.startswith(("'", '"')) and text.endswith(("'", '"')) and len(text) >= 2:
+        text = text[1:-1]
+    return text == "__end__"
+
+
 def _count_list_items(value: Any) -> int:
     if isinstance(value, list):
         return len(value)
@@ -297,7 +309,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
             )
             update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
-        if str(e) == "__end__":
+        if _is_graph_end_exception(e):
             final_msg = last_meaningful_message or "Graph execution completed"
             log_job_event(
                 job_id,
@@ -424,7 +436,7 @@ def run_init_job(
             )
             update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
-        if str(e) == "__end__":
+        if _is_graph_end_exception(e):
             final_msg = last_meaningful_message or "Landing page creation completed"
             log_job_event(
                 job_id,
