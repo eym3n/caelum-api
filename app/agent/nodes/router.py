@@ -86,5 +86,4 @@ def router(state: BuilderState) -> BuilderState:
         "user_intent": next_node,
         "coder_run": False,
         "is_followup": router_response.is_followup,
-        "coder_first_pass_run": False,
     }
