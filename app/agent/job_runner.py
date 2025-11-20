@@ -25,6 +25,15 @@ DEFAULT_NODE_MESSAGES = {
 }
 
 
+SUPPRESS_DEFAULT_NODE_LOGS = {
+    "design_planner",
+    "designer",
+    "coder",
+    "deployment_fixer",
+    "clarify",
+}
+
+
 def _is_graph_end_exception(exc: Exception) -> bool:
     if not exc:
         return False
@@ -284,6 +293,16 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                 if not msg:
                     msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded")
 
+                default_msg = DEFAULT_NODE_MESSAGES.get(node)
+                should_skip_default = (
+                    default_msg
+                    and msg == default_msg
+                    and node in SUPPRESS_DEFAULT_NODE_LOGS
+                    and not tool_meta
+                )
+                if should_skip_default:
+                    continue
+
                 # Track last message from coder or deployment_fixer for final event
                 if node in ("coder", "deployment_fixer"):
                     last_meaningful_message = msg
@@ -413,6 +432,16 @@ def run_init_job(
 
                 if not msg:
                     msg = DEFAULT_NODE_MESSAGES.get(node, "Node activity recorded")
+
+                default_msg = DEFAULT_NODE_MESSAGES.get(node)
+                should_skip_default = (
+                    default_msg
+                    and msg == default_msg
+                    and node in SUPPRESS_DEFAULT_NODE_LOGS
+                    and not tool_meta
+                )
+                if should_skip_default:
+                    continue
 
                 # Track last message from coder or deployment_fixer for final event
                 if node in ("coder", "deployment_fixer"):
