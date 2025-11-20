@@ -73,7 +73,7 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         )
 
         SYS = SystemMessage(content=prompt_with_context)
-        messages = [SYS]
+        messages = [SYS, *state.messages]
 
         print("[DEPLOYMENT_FIXER] Analyzing deployment error and determining fixes...")
         response = _deployment_fixer_llm_.invoke(messages)
