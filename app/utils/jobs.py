@@ -9,6 +9,26 @@ import uuid
 from app.db import get_jobs_collection
 from app.models.job import Job, JobInDB, JobCreate, JobEvent, JobStatus, JobType
 
+_LAST_AGENT_MESSAGES: dict[str, str] = {}
+
+
+def _track_last_agent_message(
+    job_id: str | None, *, node: str, message: str, event_type: Optional[str]
+) -> None:
+    if not job_id:
+        return
+    if not message:
+        return
+    if event_type not in {"node_completed", "node"}:
+        return
+    if node not in {"coder", "deployment_fixer", "clarify"}:
+        return
+    _LAST_AGENT_MESSAGES[job_id] = message
+
+
+def pop_last_agent_message(job_id: str) -> Optional[str]:
+    return _LAST_AGENT_MESSAGES.pop(job_id, None)
+
 
 def create_job(job_data: JobCreate) -> Optional[Job]:
     """
@@ -26,7 +46,9 @@ def create_job(job_data: JobCreate) -> Optional[Job]:
 
     doc = {
         "_id": job_id,
-        "type": job_data.type.value if isinstance(job_data.type, JobType) else job_data.type,
+        "type": (
+            job_data.type.value if isinstance(job_data.type, JobType) else job_data.type
+        ),
         "status": JobStatus.RUNNING.value,
         "session_id": job_data.session_id,
         "user_id": job_data.user_id,
@@ -129,6 +151,9 @@ def log_job_event(
             message=message,
             event_type=event_type,
             data=data or {},
+        )
+        _track_last_agent_message(
+            job_id, node=node, message=message or "", event_type=event_type
         )
     except Exception as e:
         # Never let logging failures break the graph.
@@ -237,12 +262,7 @@ def list_jobs_for_user(
     query = {"user_id": user_id}
 
     total = collection.count_documents(query)
-    cursor = (
-        collection.find(query)
-        .sort("created_at", -1)
-        .skip(skip)
-        .limit(page_size)
-    )
+    cursor = collection.find(query).sort("created_at", -1).skip(skip).limit(page_size)
 
     items: List[JobInDB] = []
     for doc in cursor:
@@ -276,5 +296,3 @@ def list_jobs_for_user(
         )
 
     return items, total
-
-

@@ -12,7 +12,7 @@ from langchain_core.messages import HumanMessage
 
 from app.agent.graph import agent
 from app.models.job import JobStatus
-from app.utils.jobs import log_job_event, update_job_status
+from app.utils.jobs import log_job_event, update_job_status, pop_last_agent_message
 
 
 DEFAULT_NODE_MESSAGES = {
@@ -53,6 +53,15 @@ def _count_list_items(value: Any) -> int:
         return 0
     # Treat single objects as one item
     return 1
+
+
+def _final_message(job_id: str, last_message: str, default: str) -> str:
+    if last_message:
+        return last_message
+    cached = pop_last_agent_message(job_id)
+    if cached:
+        return cached
+    return default
 
 
 def _summarize_tool_event(
@@ -246,7 +255,9 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
 
                 # When the graph signals __end__, mark the job as completed and record a final event.
                 if node == "__end__":
-                    final_msg = last_meaningful_message or "Graph execution completed"
+                    final_msg = _final_message(
+                        job_id, last_meaningful_message, "Graph execution completed"
+                    )
                     log_job_event(
                         job_id,
                         node="__end__",
@@ -318,7 +329,9 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                     data=tool_meta,
                 )
         if not saw_graph_end:
-            final_msg = last_meaningful_message or "Changes applied to landing page"
+            final_msg = _final_message(
+                job_id, last_meaningful_message, "Changes applied to landing page"
+            )
             log_job_event(
                 job_id,
                 node="__end__",
@@ -329,7 +342,9 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
             update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
         if _is_graph_end_exception(e):
-            final_msg = last_meaningful_message or "Graph execution completed"
+            final_msg = _final_message(
+                job_id, last_meaningful_message, "Graph execution completed"
+            )
             log_job_event(
                 job_id,
                 node="__end__",
@@ -385,8 +400,10 @@ def run_init_job(
                     continue
 
                 if node == "__end__":
-                    final_msg = (
-                        last_meaningful_message or "Landing page creation completed"
+                    final_msg = _final_message(
+                        job_id,
+                        last_meaningful_message,
+                        "Landing page creation completed",
                     )
                     log_job_event(
                         job_id,
@@ -455,7 +472,11 @@ def run_init_job(
                     data=tool_meta,
                 )
         if not saw_graph_end:
-            final_msg = last_meaningful_message or "Landing page creation completed"
+            final_msg = _final_message(
+                job_id,
+                last_meaningful_message,
+                "Landing page creation completed",
+            )
             log_job_event(
                 job_id,
                 node="__end__",
@@ -466,7 +487,11 @@ def run_init_job(
             update_job_status(job_id, status=JobStatus.COMPLETED)
     except Exception as e:
         if _is_graph_end_exception(e):
-            final_msg = last_meaningful_message or "Landing page creation completed"
+            final_msg = _final_message(
+                job_id,
+                last_meaningful_message,
+                "Landing page creation completed",
+            )
             log_job_event(
                 job_id,
                 node="__end__",
