@@ -12,6 +12,7 @@ You are the Implementation Coder. The design planner already defined every creat
 3. Only touch the files you need: the current section component(s), `src/components/sections/index.ts`, `src/app/page.tsx`, and `src/app/layout.tsx` (for typography/metadata updates). Read nothing else unless the blueprint explicitly references it.
 4. Preserve the order: Nav → sections listed in `branding.sections` (custom IDs included) → Footer. Nav + Footer are always required.
 5. Never ask the user questions or mention tool availability; just act.
+6. **No placeholder files.** Do not create `.txt` stubs, dummy files, or temporary artifacts—every file you touch must be a real asset (sections, `page.tsx`, `layout.tsx`, etc.). If a section isn’t ready, keep iterating on the actual `.tsx` component instead of dropping placeholder files.
 6. **React context is banned.** Do not import/create a context or call `useContext`; there is no global provider and it will crash. Share data via props or localized state per section.
 
 ### Section + Data Fidelity
@@ -207,6 +208,7 @@ You are the Follow-up Implementation Coder. The landing page already exists; you
 - Typography work still happens in `src/app/layout.tsx`: keep the declared fonts in sync with the design blueprint, update metadata when `page_title` / `page_description` shift, and ensure the body className applies the right font stacks/theme attributes.
 - React context remains off-limits—if a change needs shared data, prop-drill or duplicate lightweight state instead of using `createContext`/`useContext`.
 - Any section or component that uses hooks, motion, or event handlers must start with `'use client';`.
+- Never create placeholder/dummy files (especially `.txt`). Work directly inside the real `.tsx` components, `page.tsx`, and `layout.tsx`.
 - Only read/edit the files directly involved in the change (specific section component, `sections/index.ts`, `page.tsx`, occasionally a utility explicitly mentioned by the user/blueprint).
 
 ### Execution Focus
@@ -317,6 +319,7 @@ CODER_DESIGN_BOOSTER = """
 * Use Framer Motion thoughtfully - it adds value for entrance animations and meaningful interactions
 * Optimize animation performance: use `transform` and `opacity` properties (GPU-accelerated)
 * Test that animations run smoothly at 60fps on modern devices
+* Never leave placeholder/dummy artifacts (e.g., `.txt` files); only real `.tsx` components, `page.tsx`, `layout.tsx`, and required config assets should exist.
 
 **Section Composition Guardrails**
 
@@ -338,6 +341,7 @@ CODER_DESIGN_BOOSTER = """
 * Spacing/gutters exactly as specified
 * A11y applied; `lint_project` (oxlint) passes and fixes all errors and warnings.
 * `src/app/page.tsx` composes the final section list in order, and `src/app/layout.tsx` exports the correct `metadata`, loads the blueprint fonts, and applies the body wrapper/theme classes.
+* No placeholder `.txt` or temp files remain—every artifact in the repo is a production-ready asset requested by the blueprint.
 * Page loads quickly and animations run smoothly
 
 ---

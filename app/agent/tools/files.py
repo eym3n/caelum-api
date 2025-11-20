@@ -474,6 +474,12 @@ def batch_create_files(
     for file_create in files:
         file_path = session_dir / file_create.name
 
+        if file_path.suffix.lower() in PROHIBITED_PLACEHOLDER_EXTENSIONS:
+            errors.append(
+                f"{file_create.name}: creation blocked. Placeholder files with extension {file_path.suffix} are not allowed."
+            )
+            continue
+
         if file_path.exists():
             errors.append(
                 f"{file_create.name}: already exists (use batch_update_files to modify)"
@@ -497,6 +503,10 @@ def batch_create_files_internal(session_id: str, files: list[FileCreate]) -> lis
     created = []
     for file in files:
         file_path = session_dir / file.name
+        if file_path.suffix.lower() in PROHIBITED_PLACEHOLDER_EXTENSIONS:
+            raise ValueError(
+                f"Creation blocked for {file.name}: placeholder file extensions are not allowed."
+            )
         file_path.write_text(file.content)
         created.append(file.name)
     return created
@@ -543,6 +553,9 @@ def batch_update_files(
 # cannot create or modify section/Nav/Footer components. This enforces the
 # "designer only touches globals/tailwind/layout" contract at the tool layer.
 # ============================================================================
+
+PROHIBITED_PLACEHOLDER_EXTENSIONS = {".txt"}
+
 
 ALLOWED_DESIGN_FILES = {
     "src/app/globals.css",
