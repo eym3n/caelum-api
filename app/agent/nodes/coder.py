@@ -62,7 +62,7 @@ def coder(state: BuilderState) -> BuilderState:
     _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(
         tools,
         parallel_tool_calls=True,
-        tool_choice=None if state.coder_run else "batch_read_files",
+        tool_choice=None if state.coder_run else "batch_create_files",
     )
 
     # Build design context from structured guidelines if available
