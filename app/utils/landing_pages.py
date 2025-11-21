@@ -41,6 +41,7 @@ def create_landing_page(
         "preview_url": None,
         "deployment_url": None,
         "business_data": landing_page_data.business_data,
+        "design_blueprint_pdf_url": landing_page_data.design_blueprint_pdf_url,
         "created_at": now,
         "updated_at": now,
     }
@@ -55,6 +56,7 @@ def create_landing_page(
         preview_url=None,
         deployment_url=None,
         business_data=landing_page_data.business_data,
+        design_blueprint_pdf_url=landing_page_data.design_blueprint_pdf_url,
         created_at=now,
         updated_at=now,
     )
@@ -167,6 +169,8 @@ def update_landing_page(
         update_doc["deployment_url"] = update_data.deployment_url
     if update_data.business_data is not None:
         update_doc["business_data"] = update_data.business_data
+    if update_data.design_blueprint_pdf_url is not None:
+        update_doc["design_blueprint_pdf_url"] = update_data.design_blueprint_pdf_url
 
     # Update the document
     result = collection.find_one_and_update(
@@ -200,9 +204,10 @@ def delete_landing_page(landing_page_id: str, user_id: str) -> bool:
 
 def update_landing_page_status(
     session_id: str,
-    status: LandingPageStatus,
+    status: Optional[LandingPageStatus] = None,
     preview_url: Optional[str] = None,
     deployment_url: Optional[str] = None,
+    design_blueprint_pdf_url: Optional[str] = None,
 ) -> Optional[LandingPageInDB]:
     """
     Update landing page status by session ID.
@@ -210,9 +215,10 @@ def update_landing_page_status(
 
     Args:
         session_id: The session ID
-        status: New status
+        status: Optional new status override
         preview_url: Optional preview URL
         deployment_url: Optional deployment URL
+        design_blueprint_pdf_url: Optional design blueprint PDF URL
 
     Returns:
         The updated landing page or None if not found
@@ -221,12 +227,16 @@ def update_landing_page_status(
     if collection is None:
         return None
 
-    update_doc = {"status": status.value, "updated_at": datetime.utcnow()}
+    update_doc = {"updated_at": datetime.utcnow()}
 
+    if status is not None:
+        update_doc["status"] = status.value
     if preview_url is not None:
         update_doc["preview_url"] = preview_url
     if deployment_url is not None:
         update_doc["deployment_url"] = deployment_url
+    if design_blueprint_pdf_url is not None:
+        update_doc["design_blueprint_pdf_url"] = design_blueprint_pdf_url
 
     result = collection.find_one_and_update(
         {"session_id": session_id}, {"$set": update_doc}, return_document=True

@@ -16,25 +16,31 @@ class LandingPageStatus(str, Enum):
 
 class LandingPageBase(BaseModel):
     """Base landing page schema with common fields."""
+
     session_id: str
     status: LandingPageStatus = LandingPageStatus.PENDING
     preview_url: Optional[str] = None
     deployment_url: Optional[str] = None
     business_data: Optional[dict] = None
+    design_blueprint_pdf_url: Optional[str] = None
 
 
 class LandingPageCreate(BaseModel):
     """Schema for creating a new landing page."""
+
     session_id: str
     business_data: Optional[dict] = None
+    design_blueprint_pdf_url: Optional[str] = None
 
 
 class LandingPageUpdate(BaseModel):
     """Schema for updating a landing page."""
+
     status: Optional[LandingPageStatus] = None
     preview_url: Optional[str] = None
     deployment_url: Optional[str] = None
     business_data: Optional[dict] = None
+    design_blueprint_pdf_url: Optional[str] = None
 
 
 class LandingPageInDB(LandingPageBase):

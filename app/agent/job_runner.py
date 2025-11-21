@@ -18,6 +18,7 @@ from app.utils.jobs import log_job_event, update_job_status, pop_last_agent_mess
 DEFAULT_NODE_MESSAGES = {
     "router": "Planning next steps..",
     "design_planner": "Generated design blueprint",
+    "design_blueprint_pdf": "Documented design blueprint into PDF",
     "coder": "Implemented landing page",
     "deployer": "Deployed landing page",
     "deployment_fixer": "Fixed deployment errors",
@@ -28,6 +29,7 @@ DEFAULT_NODE_MESSAGES = {
 SUPPRESS_DEFAULT_NODE_LOGS = {
     "design_planner",
     "designer",
+    "design_blueprint_pdf",
     "coder",
     "deployment_fixer",
     "clarify",

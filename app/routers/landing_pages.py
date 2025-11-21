@@ -65,6 +65,8 @@ async def list_landing_pages(
             status=lp.status,
             preview_url=lp.preview_url,
             deployment_url=lp.deployment_url,
+            business_data=lp.business_data,
+            design_blueprint_pdf_url=lp.design_blueprint_pdf_url,
             created_at=lp.created_at,
             updated_at=lp.updated_at,
         )
@@ -120,6 +122,8 @@ async def get_landing_page(
         status=landing_page.status,
         preview_url=landing_page.preview_url,
         deployment_url=landing_page.deployment_url,
+        business_data=landing_page.business_data,
+        design_blueprint_pdf_url=landing_page.design_blueprint_pdf_url,
         created_at=landing_page.created_at,
         updated_at=landing_page.updated_at,
     )
@@ -165,6 +169,8 @@ async def get_landing_page_by_session(
         status=landing_page.status,
         preview_url=landing_page.preview_url,
         deployment_url=landing_page.deployment_url,
+        business_data=landing_page.business_data,
+        design_blueprint_pdf_url=landing_page.design_blueprint_pdf_url,
         created_at=landing_page.created_at,
         updated_at=landing_page.updated_at,
     )
@@ -221,6 +227,8 @@ async def update_landing_page_endpoint(
         status=updated.status,
         preview_url=updated.preview_url,
         deployment_url=updated.deployment_url,
+        business_data=updated.business_data,
+        design_blueprint_pdf_url=updated.design_blueprint_pdf_url,
         created_at=updated.created_at,
         updated_at=updated.updated_at,
     )

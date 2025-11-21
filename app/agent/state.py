@@ -47,6 +47,18 @@ class BuilderState(BaseModel):
         default=False,
         description="Indicates whether the design planner has generated guidelines for the session.",
     )
+    design_blueprint_markdown: Annotated[str, replace] = Field(
+        default="",
+        description="Markdown file contents summarizing the design blueprint decisions.",
+    )
+    design_blueprint_pdf_url: Annotated[str, replace] = Field(
+        default="",
+        description="Public URL to the uploaded design blueprint PDF in cloud storage.",
+    )
+    design_blueprint_pdf_run: Annotated[bool, replace] = Field(
+        default=False,
+        description="Indicates whether the design blueprint PDF generator has completed for the session.",
+    )
 
     # 💻 Coder Agent
     coder_output: Annotated[str, replace] = Field(

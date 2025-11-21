@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode, tools_condition
 from dotenv import load_dotenv
 from app.agent.nodes.design_planner import design_planner
+from app.agent.nodes.design_blueprint_pdf import design_blueprint_pdf
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
@@ -139,6 +140,7 @@ graph.add_node("router", router)
 graph.add_node("design_planner", design_planner)
 graph.add_node("clarify", clarify)
 graph.add_node("coder", coder)
+graph.add_node("design_blueprint_pdf", design_blueprint_pdf)
 graph.add_node("coder_tools", coder_tools_node)
 graph.add_node("check", noop)
 graph.add_node("deployer", deployer)
@@ -149,8 +151,10 @@ graph.add_node("clarify_tools", clarify_tools_node)
 graph.add_edge(START, "router")
 graph.add_conditional_edges("router", edge_after_router)
 
-# Design planner hands off directly to coder
+# Design planner hands off to coder and documentation
 graph.add_edge("design_planner", "coder")
+graph.add_edge("design_planner", "design_blueprint_pdf")
+graph.add_edge("design_blueprint_pdf", END)
 
 
 graph.add_conditional_edges(
