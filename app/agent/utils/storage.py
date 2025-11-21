@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import timedelta
 from pathlib import Path
 from typing import Optional
+from urllib.parse import quote
 
 from app.config import Config
 
@@ -30,9 +31,11 @@ def upload_file_to_gcs(
 
     try:
         blob.make_public()
-        return blob.public_url
+        encoded_path = quote(destination_blob, safe="/")
+        return f"https://{Config.GS_BUCKET_NAME}.storage.googleapis.com/{encoded_path}"
     except Exception:
         try:
             return blob.generate_signed_url(expiration=timedelta(hours=24))
         except Exception:
-            return f"gs://{Config.GS_BUCKET_NAME}/{destination_blob}"
+            encoded_path = quote(destination_blob, safe="/")
+            return f"https://{Config.GS_BUCKET_NAME}.storage.googleapis.com/{encoded_path}"
