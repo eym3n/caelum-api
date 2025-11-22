@@ -6,6 +6,7 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from app.agent.prompts.design_blueprint_pdf import DESIGN_BLUEPRINT_PDF_PROMPT
 from app.agent.state import BuilderState
@@ -17,9 +18,7 @@ from app.utils.jobs import log_job_event
 from toon import encode
 
 
-_documentation_llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash-preview-09-2025", temperature=0.2
-)
+_documentation_llm = ChatOpenAI(model="gpt-4.1")
 
 
 def _serialize_payload(data: dict[str, Any] | None) -> str:
