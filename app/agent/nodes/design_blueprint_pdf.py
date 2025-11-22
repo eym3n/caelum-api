@@ -53,10 +53,21 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
 
     system = SystemMessage(content=DESIGN_BLUEPRINT_PDF_PROMPT)
     company_payload = encode(state.init_payload)
-    filtered_guidelines = {}
+    filtered_guidelines: dict[str, Any] = {}
     design_guidelines = state.design_guidelines or {}
     for key, value in design_guidelines.items():
-        if key == "coder_instructions":
+        if key in {"coder_instructions", "component_principles"}:
+            continue
+        if key == "sections" and isinstance(value, list):
+            cleaned_sections: list[Any] = []
+            for section in value:
+                if isinstance(section, dict):
+                    cleaned_sections.append(
+                        {k: v for k, v in section.items() if k != "developer_notes"}
+                    )
+                else:
+                    cleaned_sections.append(section)
+            filtered_guidelines[key] = cleaned_sections
             continue
         filtered_guidelines[key] = value
 
