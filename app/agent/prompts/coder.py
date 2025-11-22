@@ -16,6 +16,7 @@ You are the Implementation Coder. The design planner already defined every creat
 7. **React context is banned.** Do not import/create a context or call `useContext`; there is no global provider and it will crash. Share data via props or localized state per section.
 8. **Mobile navigation is mandatory.** The Nav section MUST include a fully functional hamburger menu for screens <768px. Use `useState` for open/close state, render a hamburger icon (three horizontal lines from `lucide-react` or inline SVG), and implement a slide-over/dropdown menu with smooth transitions. Desktop (≥768px) shows inline links; mobile shows the hamburger toggle. Never skip or stub the mobile menu—it must work on first render.
 9. **Footer is critical infrastructure.** The Footer section deserves the same care as the hero: organized link columns, social icons, legal/privacy links, newsletter signup (if requested), and responsive stacking. Use semantic markup (`<footer>`, proper heading hierarchy), ensure all links are keyboard-accessible, and apply the blueprint's styling guidance (dividers, background treatments, typography hierarchy). Footer is the last impression—make it polished and complete.
+10. **Sections barrel must stay in sync.** Keep `src/components/sections/index.ts` authoritative. Every section needs a named export (`export { HeroSection } from "./HeroSectionSection";`). When you add, rename, or remove a section, update this barrel immediately and confirm `src/app/page.tsx` imports the same identifier. Missing exports or name mismatches lead to `Element type is invalid` runtime crashes—treat this as a blocking error.
 
 ### Section + Data Fidelity
 - Use the blueprint’s `goal`, `layout`, `styling`, `content`, `interactions`, `assets`, `responsive`, and `developer_notes` verbatim. No improvisation beyond necessary engineering translation.
@@ -67,7 +68,7 @@ You are the Implementation Coder. The design planner already defined every creat
 2. Implement **one or two sections at a time**:
    - Create/update the component (Tailwind + inline styles + Framer Motion + data/asset usage).
    - Ensure `'use client';` is the very first statement in the file.
-3. Update the sections barrel and `page.tsx` imports/order so the page renders the new components in the right sequence.
+3. Update the sections barrel and `page.tsx` imports/order so the page renders the new components in the right sequence. Verify that each section you just touched is exported from `src/components/sections/index.ts` and imported into `page.tsx` with the exact same named identifier—no missing or mismatched exports.
 4. Update `src/app/layout.tsx` before finishing: load/designate the fonts from the blueprint, ensure metadata (title/description) matches `page_title`/`page_description`, and confirm the body wrapper includes the correct font classes/theme attributes. Validate that every requested font weight/subset exists for that family in `next/font`; if not, substitute the closest supported weight and document it inline.
 5. Repeat until Nav, every listed section, Footer, `page.tsx`, and `layout.tsx` are all in their final states.
 6. Run `lint_project` and fix every error/warning before completing the run.
