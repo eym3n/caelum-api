@@ -87,7 +87,9 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
             or ""
         )
     if not product_name:
-        page_title = filtered_guidelines.get("page_title") if filtered_guidelines else ""
+        page_title = (
+            filtered_guidelines.get("page_title") if filtered_guidelines else ""
+        )
         if isinstance(page_title, str):
             product_name = page_title
     header_title = product_name or "Design Blueprint"
