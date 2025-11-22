@@ -18,7 +18,7 @@ from app.utils.jobs import log_job_event
 from toon import encode
 
 
-_documentation_llm = ChatOpenAI(model="gpt-4.1")
+_documentation_llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
 
 
 def _serialize_payload(data: dict[str, Any] | None) -> str:
@@ -51,7 +51,8 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
         return {"design_blueprint_pdf_run": False}
 
     system = SystemMessage(content=DESIGN_BLUEPRINT_PDF_PROMPT)
-    company_payload = encode(state.init_payload)
+    init_payload = state.init_payload or {}
+    company_payload = encode(init_payload)
     filtered_guidelines: dict[str, Any] = {}
     design_guidelines = state.design_guidelines or {}
     for key, value in design_guidelines.items():
@@ -75,6 +76,21 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
         encode(filtered_guidelines),
     )
     guidelines_payload = encode(filtered_guidelines)
+
+    product_name = ""
+    campaign = init_payload.get("campaign") if isinstance(init_payload, dict) else None
+    if isinstance(campaign, dict):
+        product_name = (
+            campaign.get("productName")
+            or campaign.get("primaryOffer")
+            or campaign.get("objective")
+            or ""
+        )
+    if not product_name:
+        page_title = filtered_guidelines.get("page_title") if filtered_guidelines else ""
+        if isinstance(page_title, str):
+            product_name = page_title
+    header_title = product_name or "Design Blueprint"
 
     context_block = (
         "### Company / Intake Payload\n"
@@ -101,7 +117,7 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
         pdf_path = output_dir / f"{base_name}.pdf"
 
         _write_markdown(markdown_text, markdown_path)
-        markdown_to_pdf(markdown_text, pdf_path)
+        markdown_to_pdf(markdown_text, pdf_path, header_title=header_title)
 
         destination_blob = f"design_blueprints/{state.session_id}/{base_name}.pdf"
         pdf_url = upload_file_to_gcs(pdf_path, destination_blob=destination_blob)

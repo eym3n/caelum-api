@@ -7,6 +7,7 @@ from markdown_it.token import Token
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
 from reportlab.platypus import (
     ListFlowable,
     ListItem,
@@ -15,6 +16,8 @@ from reportlab.platypus import (
     Spacer,
 )
 
+
+HEADER_HEIGHT = 1.6 * inch
 
 _md = MarkdownIt()
 
@@ -87,7 +90,71 @@ def _list_flowable(
     )
 
 
-def markdown_to_pdf(markdown_text: str, output_path: Path) -> None:
+def _interpolate_color(start, end, factor: float):
+    """Return a Color linearly interpolated between start and end."""
+    return colors.Color(
+        red=start.red + (end.red - start.red) * factor,
+        green=start.green + (end.green - start.green) * factor,
+        blue=start.blue + (end.blue - start.blue) * factor,
+    )
+
+
+def _draw_first_page_header(canvas, doc, title: str, subtitle: str) -> None:
+    """Render a gradient header band with centered title/subtitle."""
+    canvas.saveState()
+    width, height = doc.pagesize
+    header_height = HEADER_HEIGHT
+
+    top = height
+    start_color = colors.HexColor("#1d4ed8")
+    end_color = colors.HexColor("#14b8a6")
+    steps = 160
+    step_height = header_height / steps
+    for step in range(steps):
+        factor = step / max(steps - 1, 1)
+        fill = _interpolate_color(start_color, end_color, factor)
+        y = top - header_height + step * step_height
+        rect_height = (
+            step_height if step < steps - 1 else header_height - step * step_height
+        )
+        canvas.setFillColor(fill)
+        canvas.rect(
+            0,
+            y,
+            width,
+            rect_height,
+            stroke=0,
+            fill=1,
+        )
+
+    canvas.setFillColor(colors.white)
+    title_font = "Times-Bold"
+    title_size = 26
+    usable_width = width - (doc.leftMargin + doc.rightMargin)
+    while (
+        canvas.stringWidth(title, title_font, title_size) > usable_width
+        and title_size > 16
+    ):
+        title_size -= 1
+    title_y = top - (header_height / 2) + 12
+    title_x = (width - canvas.stringWidth(title, title_font, title_size)) / 2
+    canvas.setFont(title_font, title_size)
+    canvas.drawString(title_x, title_y, title)
+
+    subtitle_font = "Times-Roman"
+    subtitle_size = 12
+    subtitle_width = canvas.stringWidth(subtitle, subtitle_font, subtitle_size)
+    subtitle_x = (width - subtitle_width) / 2
+    subtitle_y = title_y - 24
+    canvas.setFont(subtitle_font, subtitle_size)
+    canvas.drawString(subtitle_x, subtitle_y, subtitle)
+
+    canvas.restoreState()
+
+
+def markdown_to_pdf(
+    markdown_text: str, output_path: Path, *, header_title: str | None = None
+) -> None:
     """
     Convert Markdown content into a styled PDF document.
 
@@ -102,6 +169,7 @@ def markdown_to_pdf(markdown_text: str, output_path: Path) -> None:
         1: ParagraphStyle(
             "Heading1",
             parent=styles["Heading1"],
+            fontName="Times-Bold",
             fontSize=20,
             leading=26,
             spaceAfter=12,
@@ -110,6 +178,7 @@ def markdown_to_pdf(markdown_text: str, output_path: Path) -> None:
         2: ParagraphStyle(
             "Heading2",
             parent=styles["Heading2"],
+            fontName="Times-Bold",
             fontSize=16,
             leading=22,
             spaceBefore=6,
@@ -119,6 +188,7 @@ def markdown_to_pdf(markdown_text: str, output_path: Path) -> None:
         3: ParagraphStyle(
             "Heading3",
             parent=styles["Heading3"],
+            fontName="Times-Bold",
             fontSize=14,
             leading=20,
             spaceBefore=4,
@@ -130,6 +200,7 @@ def markdown_to_pdf(markdown_text: str, output_path: Path) -> None:
     body_style = ParagraphStyle(
         "BodyText",
         parent=styles["BodyText"],
+        fontName="Times-Roman",
         fontSize=11,
         leading=15,
         spaceAfter=6,
@@ -235,14 +306,29 @@ def markdown_to_pdf(markdown_text: str, output_path: Path) -> None:
     if not story:
         story.append(Paragraph("No documentation generated.", body_style))
 
+    # Reserve space beneath the header band on the first page
+    story.insert(0, Spacer(1, HEADER_HEIGHT))
+
+    header_text = (
+        header_title.strip()
+        if header_title and header_title.strip()
+        else "Design Blueprint"
+    )
+    header_subtitle = "Designed by Ayor"
+
     doc = SimpleDocTemplate(
         str(output_path),
         pagesize=LETTER,
         leftMargin=54,
         rightMargin=54,
-        topMargin=54,
+        topMargin=72,
         bottomMargin=54,
         title="Design Blueprint Documentation",
         author="LangGraph App Builder",
     )
-    doc.build(story)
+    doc.build(
+        story,
+        onFirstPage=lambda canvas, document: _draw_first_page_header(
+            canvas, document, header_text, header_subtitle
+        ),
+    )
