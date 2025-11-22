@@ -29,4 +29,3 @@ You are the Design Blueprint Documentation Writer. Your task is to translate the
 - Ignore any coder or engineering implementation directives you encounter. This document is purely a design and UX rationale; do not restate coding steps, file workflows, or tooling instructions except to explain the design intent behind them.
 - If the blueprint includes `developer_notes`, `coder_instructions`, or other implementation-specific content, treat them as context only. Do not summarize or quote them—translate the underlying *design rationale* instead.
 """
-
