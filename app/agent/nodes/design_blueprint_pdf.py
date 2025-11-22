@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -15,6 +14,7 @@ from app.agent.utils.storage import upload_file_to_gcs
 from app.config import Config
 from app.utils.landing_pages import update_landing_page_status
 from app.utils.jobs import log_job_event
+from toon import encode
 
 
 _documentation_llm = ChatGoogleGenerativeAI(
@@ -22,10 +22,10 @@ _documentation_llm = ChatGoogleGenerativeAI(
 )
 
 
-def _serialize_payload(data: dict[str, Any]) -> str:
+def _serialize_payload(data: dict[str, Any] | None) -> str:
     if not data:
         return "Not provided."
-    return json.dumps(data, indent=2, sort_keys=True, ensure_ascii=False)
+    return encode(data)
 
 
 def _write_markdown(markdown_text: str, destination: Path) -> None:
@@ -52,8 +52,19 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
         return {"design_blueprint_pdf_run": False}
 
     system = SystemMessage(content=DESIGN_BLUEPRINT_PDF_PROMPT)
-    company_payload = _serialize_payload(state.init_payload)
-    guidelines_payload = _serialize_payload(state.design_guidelines)
+    company_payload = encode(state.init_payload)
+    filtered_guidelines = {}
+    design_guidelines = state.design_guidelines or {}
+    for key, value in design_guidelines.items():
+        if key == "coder_instructions":
+            continue
+        filtered_guidelines[key] = value
+
+    print(
+        "[DESIGN_BLUEPRINT_PDF] Filtered design guidelines (encoded):",
+        encode(filtered_guidelines),
+    )
+    guidelines_payload = encode(filtered_guidelines)
 
     context_block = (
         "### Company / Intake Payload\n"
