@@ -1,13 +1,19 @@
 from __future__ import annotations
 from pathlib import Path
 from typing import List
+import re
 
+import arabic_reshaper
+from bidi.algorithm import get_display
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
 from reportlab.lib import colors
+from reportlab.lib.enums import TA_RIGHT
 from reportlab.lib.pagesizes import LETTER
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
     ListFlowable,
     ListItem,
@@ -18,6 +24,63 @@ from reportlab.platypus import (
 
 
 HEADER_HEIGHT = 1.6 * inch
+FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
+MONTSERRAT_REGULAR_PATH = FONTS_DIR / "Montserrat-Regular.ttf"
+MONTSERRAT_BOLD_PATH = FONTS_DIR / "Montserrat-Bold.ttf"
+ARABIC_REGULAR_PATH = FONTS_DIR / "Amiri-Regular.ttf"
+ARABIC_BOLD_PATH = FONTS_DIR / "Amiri-Bold.ttf"
+
+MONTSERRAT_REGULAR_FONT_NAME = "Montserrat-Regular"
+MONTSERRAT_BOLD_FONT_NAME = "Montserrat-Bold"
+ARABIC_REGULAR_FONT_NAME = "Amiri-Regular"
+ARABIC_BOLD_FONT_NAME = "Amiri-Bold"
+
+_FONTS_REGISTERED = False
+
+
+def _ensure_fonts() -> None:
+    global _FONTS_REGISTERED
+    if _FONTS_REGISTERED:
+        return
+
+    if not MONTSERRAT_REGULAR_PATH.exists():
+        raise FileNotFoundError(
+            f"Montserrat regular font not found at {MONTSERRAT_REGULAR_PATH}"
+        )
+    if not MONTSERRAT_BOLD_PATH.exists():
+        raise FileNotFoundError(
+            f"Montserrat bold font not found at {MONTSERRAT_BOLD_PATH}"
+        )
+
+    if not ARABIC_REGULAR_PATH.exists():
+        raise FileNotFoundError(
+            f"Arabic regular font not found at {ARABIC_REGULAR_PATH}"
+        )
+    if not ARABIC_BOLD_PATH.exists():
+        raise FileNotFoundError(f"Arabic bold font not found at {ARABIC_BOLD_PATH}")
+
+    pdfmetrics.registerFont(
+        TTFont(MONTSERRAT_REGULAR_FONT_NAME, str(MONTSERRAT_REGULAR_PATH))
+    )
+    pdfmetrics.registerFont(
+        TTFont(MONTSERRAT_BOLD_FONT_NAME, str(MONTSERRAT_BOLD_PATH))
+    )
+    pdfmetrics.registerFont(TTFont(ARABIC_REGULAR_FONT_NAME, str(ARABIC_REGULAR_PATH)))
+    pdfmetrics.registerFont(TTFont(ARABIC_BOLD_FONT_NAME, str(ARABIC_BOLD_PATH)))
+    _FONTS_REGISTERED = True
+
+
+ARABIC_CHAR_PATTERN = re.compile(r"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]")
+
+
+def _contains_arabic(text: str) -> bool:
+    return bool(ARABIC_CHAR_PATTERN.search(text))
+
+
+def _shape_arabic_text(text: str) -> str:
+    reshaped = arabic_reshaper.reshape(text)
+    return get_display(reshaped)
+
 
 _md = MarkdownIt()
 
@@ -32,15 +95,24 @@ def _escape_text(value: str) -> str:
     )
 
 
-def _render_inline(inline_token: Token) -> str:
+def _render_inline(inline_token: Token) -> tuple[str, bool]:
     """Render inline markdown token stream into minimal HTML supported by ReportLab."""
     if inline_token.children is None:
-        return _escape_text(inline_token.content)
+        raw_text = inline_token.content or ""
+        contains_arabic = _contains_arabic(raw_text)
+        if contains_arabic:
+            raw_text = _shape_arabic_text(raw_text)
+        return _escape_text(raw_text), contains_arabic
 
     chunks: List[str] = []
+    contains_arabic = False
     for child in inline_token.children:
         if child.type == "text":
-            chunks.append(_escape_text(child.content))
+            segment = child.content or ""
+            if _contains_arabic(segment):
+                segment = _shape_arabic_text(segment)
+                contains_arabic = True
+            chunks.append(_escape_text(segment))
         elif child.type == "softbreak":
             chunks.append("<br/>")
         elif child.type == "hardbreak":
@@ -66,25 +138,48 @@ def _render_inline(inline_token: Token) -> str:
             continue
         else:
             # Fallback to raw content
-            chunks.append(_escape_text(child.content))
+            fallback = child.content or ""
+            if _contains_arabic(fallback):
+                fallback = _shape_arabic_text(fallback)
+                contains_arabic = True
+            chunks.append(_escape_text(fallback))
     text = "".join(chunks).strip()
-    return text if text else _escape_text(inline_token.content)
+    if not text:
+        raw = inline_token.content or ""
+        if _contains_arabic(raw):
+            raw = _shape_arabic_text(raw)
+            contains_arabic = True
+        text = _escape_text(raw)
+    return text, contains_arabic
 
 
 def _list_flowable(
-    items: List[str],
+    items: List[dict[str, str | bool]],
     *,
     bullet_type: str,
     start: int = 1,
     body_style: ParagraphStyle,
+    body_style_ar: ParagraphStyle,
 ) -> ListFlowable:
-    list_items = [ListItem(Paragraph(item, body_style), leftIndent=0) for item in items]
+    list_contains_arabic = any(item.get("contains_arabic") for item in items)
+    list_items: List[ListItem] = []
+    for item in items:
+        text = item.get("text", "")
+        style = body_style_ar if item.get("contains_arabic") else body_style
+        list_items.append(ListItem(Paragraph(text, style), leftIndent=0))
+
+    bullet_font_name = (
+        body_style_ar.fontName if list_contains_arabic else body_style.fontName
+    )
+    bullet_font_size = (
+        body_style_ar.fontSize if list_contains_arabic else body_style.fontSize
+    )
     return ListFlowable(
         list_items,
         bulletType=bullet_type,
         start=start if bullet_type == "1" else None,
-        bulletFontName=body_style.fontName,
-        bulletFontSize=body_style.fontSize,
+        bulletFontName=bullet_font_name,
+        bulletFontSize=bullet_font_size,
         bulletColor=colors.HexColor("#444444"),
         leftIndent=18,
     )
@@ -128,26 +223,40 @@ def _draw_first_page_header(canvas, doc, title: str, subtitle: str) -> None:
         )
 
     canvas.setFillColor(colors.white)
-    title_font = "Times-Bold"
+    title_text = title
+    title_has_arabic = _contains_arabic(title_text)
+    title_font = (
+        ARABIC_BOLD_FONT_NAME if title_has_arabic else MONTSERRAT_BOLD_FONT_NAME
+    )
+    if title_has_arabic:
+        title_text = _shape_arabic_text(title_text)
     title_size = 26
     usable_width = width - (doc.leftMargin + doc.rightMargin)
     while (
-        canvas.stringWidth(title, title_font, title_size) > usable_width
+        canvas.stringWidth(title_text, title_font, title_size) > usable_width
         and title_size > 16
     ):
         title_size -= 1
     title_y = top - (header_height / 2) + 12
-    title_x = (width - canvas.stringWidth(title, title_font, title_size)) / 2
+    title_x = (width - canvas.stringWidth(title_text, title_font, title_size)) / 2
     canvas.setFont(title_font, title_size)
-    canvas.drawString(title_x, title_y, title)
+    canvas.drawString(title_x, title_y, title_text)
 
-    subtitle_font = "Times-Roman"
+    subtitle_text = subtitle
+    subtitle_has_arabic = _contains_arabic(subtitle_text)
+    subtitle_font = (
+        ARABIC_REGULAR_FONT_NAME
+        if subtitle_has_arabic
+        else MONTSERRAT_REGULAR_FONT_NAME
+    )
+    if subtitle_has_arabic:
+        subtitle_text = _shape_arabic_text(subtitle_text)
     subtitle_size = 12
-    subtitle_width = canvas.stringWidth(subtitle, subtitle_font, subtitle_size)
+    subtitle_width = canvas.stringWidth(subtitle_text, subtitle_font, subtitle_size)
     subtitle_x = (width - subtitle_width) / 2
     subtitle_y = title_y - 24
     canvas.setFont(subtitle_font, subtitle_size)
-    canvas.drawString(subtitle_x, subtitle_y, subtitle)
+    canvas.drawString(subtitle_x, subtitle_y, subtitle_text)
 
     canvas.restoreState()
 
@@ -161,6 +270,7 @@ def markdown_to_pdf(
     Supports headings, paragraphs, bullet lists, numbered lists, emphasis, and inline code.
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
+    _ensure_fonts()
 
     story = []
     styles = getSampleStyleSheet()
@@ -169,7 +279,7 @@ def markdown_to_pdf(
         1: ParagraphStyle(
             "Heading1",
             parent=styles["Heading1"],
-            fontName="Times-Bold",
+            fontName=MONTSERRAT_BOLD_FONT_NAME,
             fontSize=20,
             leading=26,
             spaceAfter=12,
@@ -178,7 +288,7 @@ def markdown_to_pdf(
         2: ParagraphStyle(
             "Heading2",
             parent=styles["Heading2"],
-            fontName="Times-Bold",
+            fontName=MONTSERRAT_BOLD_FONT_NAME,
             fontSize=16,
             leading=22,
             spaceBefore=6,
@@ -188,7 +298,7 @@ def markdown_to_pdf(
         3: ParagraphStyle(
             "Heading3",
             parent=styles["Heading3"],
-            fontName="Times-Bold",
+            fontName=MONTSERRAT_BOLD_FONT_NAME,
             fontSize=14,
             leading=20,
             spaceBefore=4,
@@ -197,18 +307,68 @@ def markdown_to_pdf(
         ),
     }
 
+    heading_styles_ar = {
+        1: ParagraphStyle(
+            "Heading1Arabic",
+            parent=styles["Heading1"],
+            fontName=ARABIC_BOLD_FONT_NAME,
+            fontSize=20,
+            leading=26,
+            spaceAfter=12,
+            textColor=colors.HexColor("#111111"),
+            alignment=TA_RIGHT,
+            wordWrap="RTL",
+        ),
+        2: ParagraphStyle(
+            "Heading2Arabic",
+            parent=styles["Heading2"],
+            fontName=ARABIC_BOLD_FONT_NAME,
+            fontSize=16,
+            leading=22,
+            spaceBefore=6,
+            spaceAfter=10,
+            textColor=colors.HexColor("#222222"),
+            alignment=TA_RIGHT,
+            wordWrap="RTL",
+        ),
+        3: ParagraphStyle(
+            "Heading3Arabic",
+            parent=styles["Heading3"],
+            fontName=ARABIC_BOLD_FONT_NAME,
+            fontSize=14,
+            leading=20,
+            spaceBefore=4,
+            spaceAfter=8,
+            textColor=colors.HexColor("#333333"),
+            alignment=TA_RIGHT,
+            wordWrap="RTL",
+        ),
+    }
+
     body_style = ParagraphStyle(
         "BodyText",
         parent=styles["BodyText"],
-        fontName="Times-Roman",
+        fontName=MONTSERRAT_REGULAR_FONT_NAME,
         fontSize=11,
         leading=15,
         spaceAfter=6,
         textColor=colors.HexColor("#2f2f2f"),
     )
 
+    body_style_ar = ParagraphStyle(
+        "BodyTextArabic",
+        parent=styles["BodyText"],
+        fontName=ARABIC_REGULAR_FONT_NAME,
+        fontSize=11,
+        leading=15,
+        spaceAfter=6,
+        textColor=colors.HexColor("#2f2f2f"),
+        alignment=TA_RIGHT,
+        wordWrap="RTL",
+    )
+
     tokens = _md.parse(markdown_text)
-    list_stack: List[dict[str, str | int | List[str]]] = []
+    list_stack: List[dict[str, object]] = []
 
     def flush_list():
         if not list_stack:
@@ -225,6 +385,7 @@ def markdown_to_pdf(
                 bullet_type="1" if bullet_type == "ordered" else "bullet",
                 start=start,
                 body_style=body_style,
+                body_style_ar=body_style_ar,
             )
         )
         story.append(Spacer(1, 10))
@@ -236,8 +397,11 @@ def markdown_to_pdf(
             flush_list()
             level = int(token.tag[1])
             inline_token = tokens[i + 1]
-            text = _render_inline(inline_token)
-            style = heading_styles.get(level, heading_styles[3])
+            text, has_arabic = _render_inline(inline_token)
+            style_source = heading_styles_ar if has_arabic else heading_styles
+            style = style_source.get(level)
+            if style is None:
+                style = style_source[3]
             story.append(Paragraph(text, style))
             story.append(Spacer(1, 6 if level >= 3 else 12))
             i += 3  # skip inline + close
@@ -245,9 +409,10 @@ def markdown_to_pdf(
 
         if token.type == "paragraph_open":
             inline_token = tokens[i + 1]
-            text = _render_inline(inline_token)
+            text, has_arabic = _render_inline(inline_token)
             if text:
-                story.append(Paragraph(text, body_style))
+                style = body_style_ar if has_arabic else body_style
+                story.append(Paragraph(text, style))
                 story.append(Spacer(1, 6))
             i += 3
             continue
@@ -275,16 +440,23 @@ def markdown_to_pdf(
         if token.type == "list_item_open":
             # collect text until list_item_close
             inline_fragments: List[str] = []
+            item_contains_arabic = False
             j = i + 1
             while j < len(tokens) and tokens[j].type != "list_item_close":
                 if tokens[j].type == "inline":
-                    inline_fragments.append(_render_inline(tokens[j]))
+                    fragment_text, fragment_has_arabic = _render_inline(tokens[j])
+                    if fragment_text:
+                        inline_fragments.append(fragment_text.strip())
+                    if fragment_has_arabic:
+                        item_contains_arabic = True
                 j += 1
             sentence = " ".join(
                 fragment.strip() for fragment in inline_fragments if fragment.strip()
             )
             if list_stack and sentence:
-                list_stack[-1]["items"].append(sentence)
+                list_stack[-1]["items"].append(
+                    {"text": sentence, "contains_arabic": item_contains_arabic}
+                )
             i = j + 1
             continue
 
