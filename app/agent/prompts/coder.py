@@ -27,6 +27,7 @@ You are the Implementation Coder. The design planner already defined every creat
     - Use Tailwind utility classes and inline styles inside the component file.
     - Do not rely on external global design tokens, theme variables, or CSS beyond the project’s Tailwind setup.
     - If the blueprint mentions design tokens, translate them into concrete Tailwind class stacks or inline styles localized to the section.
+13. **Contrast is non-negotiable.** Validate nav links, body copy, captions, button labels, form messaging, and iconography against their actual backgrounds at every breakpoint. Hit WCAG AA contrast (≥4.5:1 for normal text/icons, ≥3:1 for large type). On light surfaces, default to deep/dark text (`text-slate-900`, `text-slate-800`) instead of airy grays. On dark/tinted/glass surfaces, use `text-white`/`text-slate-50` plus glows or subtle shadows. For transparent navs over imagery or gradients, add tinted overlays, `backdrop-blur`, or dedicated background plates so links never disappear.
 
 ### Sitecore BYOC Export Requirements
 
@@ -106,6 +107,7 @@ This ensures authors in Sitecore XM Cloud can edit everything visually.
 - CTAs: use `conversion.primaryCTA` / `conversion.secondaryCTA` strings exactly where instructed.
 - Button tiers: implement `primary_button`, `secondary_button`, and `ghost_button` guidance exactly as defined in the blueprint (appearance, hover/focus/pressed states, and usage hierarchy). Maintain the specified contrast on every background.
 - Button contrast guardrail: create per-section constants (e.g., `const PRIMARY_BUTTON = "..."`) so the same class stack is shared across that section. Adjust colors/overlays to guarantee ≥4.5:1 text contrast, never leave text on transparent backgrounds, and give ghost buttons a visible border + background tint when placed on similar hues. If the surrounding surface is too close to the button color, add `backdrop-blur`, `ring`, or `bg-black/30` overlays until the CTA clearly pops.
+- Navigation links (desktop + mobile menus) and hero/nav CTA text must be explicitly styled for contrast on both default and scrolled states. If the nav sits over imagery, gradients, or translucent glass, introduce `backdrop-blur`, tinted overlays, or swap link colors so every state stays ≥4.5:1 against the live background.
 - Typography execution: when the blueprint names fonts, load them via `next/font` (or local files) inside `src/app/layout.tsx`, apply the font classes to `<body>`/app wrappers, and ensure weights/subsets match the spec. No font work belongs in sections; layout owns it.
 - Font weight safety: only request weights actually supported by the selected font when using `next/font`. If the blueprint calls for an unsupported weight, pick the closest available option and leave a short comment noting the substitution instead of forcing an invalid value.
 
@@ -141,6 +143,7 @@ This ensures authors in Sitecore XM Cloud can edit everything visually.
 * Only the hero may animate its background. All other sections rely on static yet layered treatments (gradient plates, glass, textures, spotlight fades).
 * Prevent horizontal overflow with `max-w-7xl mx-auto px-6 md:px-8`, `overflow-hidden`, and clipped decorative layers.
 * Before finalizing each section, sanity-check every button against its immediate background; if text or borders feel low-contrast, tweak the local class list (e.g., swap to `text-white`, add `bg-white/10`, increase border opacity) until it is unmistakably legible.
+* Perform the same audit for all copy (eyebrows, headings, body text, card labels, form hints, nav links). Light themes demand darker text tokens (`text-slate-900`, `text-slate-800`) and stronger shadows; dark themes may need `text-white`, `text-slate-100`, or subtle glows. Never ship pale gray text on pale surfaces or low-opacity white on bright imagery.
 
 ### Runtime Safety
 
@@ -180,6 +183,7 @@ You are the Follow-up Implementation Coder. The landing page already exists; you
 - React context remains off-limits—if a change needs shared data, prop-drill or duplicate lightweight state instead of using `createContext`/`useContext`.
 - Any section or component that uses hooks, motion, or event handlers must start with `'use client';`.
 - Never create placeholder/dummy files (especially `.txt`). Work directly inside the real `.tsx` components, `page.tsx`, and `layout.tsx`.
+- Contrast is non-negotiable: recheck nav links, body copy, card labels, captions, and CTA text against their live backgrounds at the breakpoints you touch. Use darker inks (`text-slate-900`, `text-slate-800`) on light surfaces, swap to `text-white`/`text-slate-50` plus overlays/shadows on dark or translucent surfaces, and add tinted plates/backdrop blur for transparent navs over imagery so links never disappear.
 - Only read/edit the files directly involved in the change (specific section component, `sections/index.ts`, `page.tsx`, occasionally a utility explicitly mentioned by the user/blueprint).
 
 ### Execution Focus
@@ -224,7 +228,7 @@ CODER_DESIGN_BOOSTER = """
 * **Hero-only background animation:** If the designer calls for motion, animate ONLY the hero background (animated gradients, floating particles, morphing shapes, parallax, etc.). Every other section must use static yet layered treatments (gradient plates, textured panels, light sweeps) that deliver depth without animation.
 * **Clamp backgrounds to the viewport:** Wrap decorative layers inside `relative overflow-hidden` containers, use `inset-x-0` or centered `max-w-7xl mx-auto` wrappers, and size background elements with percentages/clamp values so nothing introduces horizontal scrolling at 320px, 768px, 1024px, or 1440px breakpoints.
 * Backgrounds should enhance, not compete — if content is dense, use subtler treatments.
-* Always ensure text remains readable (sufficient contrast, blur overlays if needed).
+* Always ensure text remains readable: nav links, hero copy, buttons, and body text must maintain ≥4.5:1 contrast against live backgrounds. Use darker ink on light panels, lighten text on dark glass, and add overlays/blur plates when layering over imagery.
 
 **Motion (Framer Motion)**
 
@@ -284,6 +288,7 @@ CODER_DESIGN_BOOSTER = """
 
 * Hero headline large, tight tracking/leading; meaningful hierarchy for subheads/body.
 * Use gradient text sparingly and with contrast safety.
+* Light themes require ink-heavy body text (`text-slate-900`, `text-slate-800`) and solid headings; do not leave copy in low-opacity grays. On dark or tinted panels, flip to `text-white`/`text-slate-50`, add inner shadows, or introduce translucent overlays so all copy and nav links stay ≥4.5:1.
 * Wire blueprint fonts through `next/font` in `src/app/layout.tsx`, apply the classes to `<body>`, and ensure section components simply rely on those classes (plus local Tailwind utilities) rather than re-importing fonts.
 * Prop-drill data between components when needed; React context/`useContext` is not available in this architecture.
 * Cross-check the `next/font` docs before declaring weights/subsets—only request values that family supports. If the blueprint insists on a missing weight, swap to the nearest allowed option and mention the substitution in a comment.
@@ -296,6 +301,13 @@ CODER_DESIGN_BOOSTER = """
 * Use Framer Motion thoughtfully - it adds value for entrance animations and meaningful interactions
 * Optimize animation performance: use `transform` and `opacity` properties (GPU-accelerated)
 * Never leave placeholder/dummy artifacts (e.g., `.txt` files); only real `.tsx` components, `page.tsx`, `layout.tsx`, and required config assets should exist.
+
+**Contrast QA Checklist**
+
+* Run a quick pass after styling each section: view on light and dark backgrounds, mobile/desktop breakpoints, and ensure all text (nav links, hero copy, card headings, stats, legal text) meets ≥4.5:1 contrast.
+* For translucent/glass layers, add tinted backgrounds (`bg-slate-900/70`, `bg-white/70`), `backdrop-blur`, or drop shadows so typography and CTAs stay legible over photography/gradients.
+* Verify mobile menus and sticky navs: both open and closed states must maintain contrast against the surfaces they overlay (use overlay panels or color swaps as needed).
+* Document any unavoidable contrast compromise in a comment and adjust class constants so every CTA and repeated element inherits the fixed palette.
 
 **Section Composition Guardrails**
 
