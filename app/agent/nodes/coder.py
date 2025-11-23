@@ -78,7 +78,9 @@ def coder(state: BuilderState) -> BuilderState:
         "DEFAULT" if not state.is_followup else "FOLLOW-UP",
     )
 
-    _coder_llm_ = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(
+    _coder_llm_ = ChatGoogleGenerativeAI(
+        model="models/gemini-3-pro-preview", thinking_budget=512
+    ).bind_tools(
         tools,
         parallel_tool_calls=True,
     )
