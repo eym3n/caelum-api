@@ -76,6 +76,29 @@ For every section file in `src/components/sections`:
     - For local Next.js usage in `page.tsx`, the component should be used with no props or a simple props object; internal defaults handle the blueprint content.
     - For Sitecore BYOC usage, Sitecore will pass props according to the `properties` schema; the component must handle either full or partial prop sets gracefully via defaults.
 
+
+================== SITECORE BYOC REQUIREMENTS ==================
+Every single variable—text, color, gradient, URL, image, spacing, background, borders, shadows, badges, CTA styling—must be adjustable via props + Sitecore BYOC properties. Never hardcode anything unless the blueprint forces a default value.**
+
+You must:
+
+Turn EVERY user-facing string into props
+
+Turn EVERY color / class string / gradient / border into props
+
+Turn EVERY image source into props
+
+Turn CTAs into props
+
+Turn arrays (steps, benefits, logos, stats) into props
+
+Provide fallback defaults (from blueprint)
+
+Register all props in FEAAS.registerComponent.properties
+
+---
+
+This ensures authors in Sitecore XM Cloud can edit everything visually.
 ### Section + Data Fidelity
 - Use the blueprint’s `goal`, `layout`, `styling`, `content`, `interactions`, `assets`, `responsive`, and `developer_notes` verbatim. No improvisation beyond necessary engineering translation.
 - Pull real data from the payload: `branding.sectionData.*`, `benefits`, `stats`, `pricing`, `faq`, `testimonials`, etc. Never invent or reorder content.
@@ -264,7 +287,7 @@ CODER_DESIGN_BOOSTER = """
 * Page loads quickly and animations run smoothly
 
 
-================== SECTION EXAMPLE 
+================== SECTION EXAMPLE ==================
 "use client";
 
 import * as FEAAS from "@sitecore-feaas/clientside/react";
@@ -667,5 +690,4 @@ FEAAS.registerComponent(HeroSection, {
     panelStatusLabel: { "ui:widget": "textarea" },
   },
 });
-
 """
