@@ -25,7 +25,8 @@ from reportlab.platypus import (
 
 HEADER_HEIGHT = 1.6 * inch
 FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
-MONTSERRAT_FONT_PATH = FONTS_DIR / "Montserrat.ttf"
+MONTSERRAT_REGULAR_PATH = FONTS_DIR / "Montserrat-Regular.ttf"
+MONTSERRAT_BOLD_PATH = FONTS_DIR / "Montserrat-Bold.ttf"
 ARABIC_REGULAR_PATH = FONTS_DIR / "Amiri-Regular.ttf"
 ARABIC_BOLD_PATH = FONTS_DIR / "Amiri-Bold.ttf"
 
@@ -42,8 +43,14 @@ def _ensure_fonts() -> None:
     if _FONTS_REGISTERED:
         return
 
-    if not MONTSERRAT_FONT_PATH.exists():
-        raise FileNotFoundError(f"Montserrat font not found at {MONTSERRAT_FONT_PATH}")
+    if not MONTSERRAT_REGULAR_PATH.exists():
+        raise FileNotFoundError(
+            f"Montserrat regular font not found at {MONTSERRAT_REGULAR_PATH}"
+        )
+    if not MONTSERRAT_BOLD_PATH.exists():
+        raise FileNotFoundError(
+            f"Montserrat bold font not found at {MONTSERRAT_BOLD_PATH}"
+        )
 
     if not ARABIC_REGULAR_PATH.exists():
         raise FileNotFoundError(
@@ -53,10 +60,10 @@ def _ensure_fonts() -> None:
         raise FileNotFoundError(f"Arabic bold font not found at {ARABIC_BOLD_PATH}")
 
     pdfmetrics.registerFont(
-        TTFont(MONTSERRAT_REGULAR_FONT_NAME, str(MONTSERRAT_FONT_PATH))
+        TTFont(MONTSERRAT_REGULAR_FONT_NAME, str(MONTSERRAT_REGULAR_PATH))
     )
     pdfmetrics.registerFont(
-        TTFont(MONTSERRAT_BOLD_FONT_NAME, str(MONTSERRAT_FONT_PATH))
+        TTFont(MONTSERRAT_BOLD_FONT_NAME, str(MONTSERRAT_BOLD_PATH))
     )
     pdfmetrics.registerFont(TTFont(ARABIC_REGULAR_FONT_NAME, str(ARABIC_REGULAR_PATH)))
     pdfmetrics.registerFont(TTFont(ARABIC_BOLD_FONT_NAME, str(ARABIC_BOLD_PATH)))
