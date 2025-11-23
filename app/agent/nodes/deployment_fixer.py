@@ -3,6 +3,7 @@
 from __future__ import annotations
 from langchain_core.messages import SystemMessage
 from dotenv import load_dotenv
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from app.agent.prompts.deployment_fixer import DEPLOYMENT_FIXER_PROMPT
 from app.agent.state import BuilderState
@@ -66,8 +67,8 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         )
 
         # Use GPT-5 with minimal reasoning for fast, focused fixes
-        _deployment_fixer_llm_ = ChatOpenAI(
-            model="gpt-5", reasoning_effort="low"
+        _deployment_fixer_llm_ = ChatGoogleGenerativeAI(
+            model="models/gemini-3-pro-preview", thinking_budget=512
         ).bind_tools(
             tools,
             parallel_tool_calls=True,

@@ -12,7 +12,9 @@ load_dotenv()
 
 tools = [list_files, read_file, read_lines]
 
-_clarify_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(tools)
+_clarify_llm_ = ChatGoogleGenerativeAI(
+    model="models/gemini-3-pro-preview", thinking_budget=64
+)
 
 
 def clarify(state: BuilderState) -> BuilderState:

@@ -28,8 +28,7 @@ If a user's request starts with : 'Deploy the landing page', route to `deploy`.
 Respond with one literal token: `code`, `clarify`, or `deploy`.
 """
 
-_router_llm_ = ChatOpenAI(model="gpt-4.1-mini-2025-04-14")
-
+_router_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
 
 # Structured Output
 from pydantic import BaseModel
