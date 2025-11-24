@@ -217,10 +217,16 @@ async def _generate_page_code(
     structured_llm = model.with_structured_output(PageCodeOutput)
 
     last_exc: Exception | None = None
-    for attempt in range(1, 4):
+    for attempt in range(1, 10):
         try:
             result = await structured_llm.ainvoke(messages)
             print(f"[CODEGEN] Page worker completed attempt {attempt}")
+            if result is None:
+                print(
+                    f"[CODEGEN] Page worker result is None for {attempt}, retrying..."
+                )
+                continue
+
             return result
         except Exception as exc:  # pragma: no cover - logging
             last_exc = exc
@@ -240,11 +246,18 @@ async def _generate_layout_code(
     structured_llm = model.with_structured_output(LayoutCodeOutput)
 
     last_exc: Exception | None = None
-    for attempt in range(1, 4):
+    for attempt in range(1, 10):
         try:
             result = await structured_llm.ainvoke(messages)
             print(f"[CODEGEN] Layout worker completed attempt {attempt}")
+            if result is None:
+                print(
+                    f"[CODEGEN] Layout worker result is None for {attempt}, retrying..."
+                )
+                continue
+
             return result
+
         except Exception as exc:  # pragma: no cover - logging
             last_exc = exc
             print(f"[CODEGEN] Layout worker attempt {attempt} failed: {exc}")

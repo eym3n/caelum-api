@@ -74,16 +74,23 @@ async def _generate_single_section(
         or "Unnamed Section"
     )
     print(f"[GENERATE_SECTION] Launching worker for section: {section_name}")
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="medium")
+    model = ChatGoogleGenerativeAI(
+        model="models/gemini-3-pro-preview", thinking_budget=128
+    )
     structured_llm = model.with_structured_output(SectionGenerationOutput)
     last_exc: Exception | None = None
-    for attempt in range(1, 4):
+    for attempt in range(1, 10):
         try:
             result = await structured_llm.ainvoke(messages)
             print(
                 f"[GENERATE_SECTION] Worker completed for: {section_name} (attempt {attempt})"
             )
             print(f"[GENERATE_SECTION] Result: {result}")
+            if result is None:
+                print(
+                    f"[GENERATE_SECTION] Result is None for {section_name}, retrying..."
+                )
+                continue
             return result
         except Exception as exc:  # pragma: no cover - logging
             last_exc = exc
@@ -183,7 +190,7 @@ def generate_section(state: BuilderState) -> BuilderState:
             if not isinstance(section, dict):
                 continue
             if tasks:
-                await asyncio.sleep(1)
+                await asyncio.sleep(3)
             task = asyncio.create_task(
                 _generate_single_section(section, design_guidelines, init_payload)
             )
