@@ -187,29 +187,62 @@ async def _generate_single_section(
             f"[GENERATE_SECTION] Warning: failed to print prompt for {section_name}: {prompt_exc}"
         )
     print(f"[GENERATE_SECTION] Launching worker for section: {section_name}")
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="low")
-    structured_llm = model.with_structured_output(SectionGenerationOutput)
+
+    primary_model = ChatGoogleGenerativeAI(
+        model="models/gemini-3-pro-preview", thinking_budget=128
+    ).with_structured_output(SectionGenerationOutput)
+    fallback_model = ChatOpenAI(
+        model="gpt-5", reasoning_effort="low"
+    ).with_structured_output(SectionGenerationOutput)
+
     last_exc: Exception | None = None
-    for attempt in range(1, 10):
+
+    # Primary attempts with Gemini
+    for attempt in range(1, 4):
         try:
-            result = await structured_llm.ainvoke(messages)
+            result = await primary_model.ainvoke(messages)
             print(
-                f"[GENERATE_SECTION] Worker completed for: {section_name} (attempt {attempt})"
+                f"[GENERATE_SECTION] (Gemini) Worker completed for: {section_name} (attempt {attempt})"
             )
             print(f"[GENERATE_SECTION] Result: {result}")
             if result is None:
                 print(
-                    f"[GENERATE_SECTION] Result is None for {section_name}, retrying..."
+                    f"[GENERATE_SECTION] Result is None for {section_name} using Gemini, retrying..."
                 )
                 continue
             return result
         except Exception as exc:  # pragma: no cover - logging
             last_exc = exc
             print(
-                f"[GENERATE_SECTION] Attempt {attempt} failed for {section_name}: {exc}"
+                f"[GENERATE_SECTION] (Gemini) Attempt {attempt} failed for {section_name}: {exc}"
             )
+
+    print(
+        f"[GENERATE_SECTION] Switching to GPT-5 fallback for section: {section_name} after 3 Gemini failures."
+    )
+
+    # Fallback attempts with GPT-5
+    for attempt in range(4, 10):
+        try:
+            result = await fallback_model.ainvoke(messages)
+            print(
+                f"[GENERATE_SECTION] (GPT-5) Worker completed for: {section_name} (attempt {attempt - 3})"
+            )
+            print(f"[GENERATE_SECTION] Result: {result}")
+            if result is None:
+                print(
+                    f"[GENERATE_SECTION] Result is None for {section_name} using GPT-5, retrying..."
+                )
+                continue
+            return result
+        except Exception as exc:  # pragma: no cover - logging
+            last_exc = exc
+            print(
+                f"[GENERATE_SECTION] (GPT-5) Attempt {attempt - 3} failed for {section_name}: {exc}"
+            )
+
     raise RuntimeError(
-        f"Section generation failed for {section_name} after 3 attempts."
+        f"Section generation failed for {section_name} after exhausting Gemini and GPT-5 attempts."
     ) from last_exc
 
 
