@@ -34,6 +34,8 @@ class LandingPageBase(BaseModel):
     design_blueprint_pdf_url: Optional[str] = None
     sections: Optional[List[SectionFile]] = None
 
+    model_config = ConfigDict(use_enum_values=True)
+
 
 class LandingPageCreate(BaseModel):
     """Schema for creating a new landing page."""
@@ -60,8 +62,8 @@ class LandingPageInDB(LandingPageBase):
     user_id: str
     created_at: datetime
     updated_at: datetime
-    
-    model_config = ConfigDict(populate_by_name=True)
+
+    model_config = ConfigDict(populate_by_name=True, use_enum_values=True)
 
 
 class LandingPage(LandingPageBase):
@@ -70,8 +72,8 @@ class LandingPage(LandingPageBase):
     user_id: str
     created_at: datetime
     updated_at: datetime
-    
-    model_config = ConfigDict(from_attributes=True)
+
+    model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 
 class LandingPageList(BaseModel):
