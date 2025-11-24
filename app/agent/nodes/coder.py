@@ -120,7 +120,6 @@ def coder(state: BuilderState) -> BuilderState:
             content=_coder_prompt
             + design_context_section
             + project_spec
-            + CODER_DESIGN_BOOSTER
             + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
         )
         messages = [SYS, *state.messages]
