@@ -38,22 +38,6 @@ You MUST apply actual file changes to fix the error. Simply analyzing or reading
    - Missing files referenced in code
    - Incorrect relative paths
 
-📋 YOUR PROCESS:
-
-1. **Analyze the Error**: Read the provided deployment error log carefully. It contains the exact reason for failure.
-2. **Identify Root Cause**: Determine what's causing the failure (missing file, bad import, syntax error, etc.).
-3. **Read Relevant Files**:
-   - Use `batch_read_files` to inspect the files mentioned in the error log.
-   - For `Module not found` errors, read `tsconfig.json` and `next.config.js` to check path aliases.
-4. **APPLY FIXES (CRITICAL)**:
-   - You MUST use `batch_update_files`, `batch_update_lines`, or `batch_create_files` to fix the issue.
-   - Do not just say "I found the error". You must fix it.
-   - If a file is missing, create it.
-   - If an import is wrong, fix it.
-   - If a dependency is missing, you can't install it (no npm access), so you must remove the usage or mock it.
-5. **Verify**:
-   - Run `lint_project` to ensure no syntax/lint errors remain.
-
 🛠️ AVAILABLE TOOLS:
 
 File Operations (REQUIRED - use batch operations):
@@ -80,4 +64,29 @@ Validation:
 
 FILES IN SESSION:
 {files_list}
+
+📋 YOUR PROCESS:
+
+1. **Analyze the Error**: Read the provided deployment error log carefully. It contains the exact reason for failure.
+2. **Identify Root Cause**: Determine what's causing the failure (missing file, bad import, syntax error, etc.).
+3. **Read Relevant Files**:
+   - Use `batch_read_files` to inspect the files mentioned in the error log.
+   - For `Module not found` errors, read `tsconfig.json` and `next.config.js` to check path aliases.
+4. **APPLY FIXES (CRITICAL)**:
+   - You MUST use `batch_update_files`, `batch_update_lines`, or `batch_create_files` to fix the issue.
+   - Do not just say "I found the error". You must fix it.
+   - If a file is missing, create it.
+   - If an import is wrong, fix it.
+   - If a dependency is missing, you can't install it (no npm access), so you must remove the usage or mock it.
+5. **Verify**:
+   - Run `lint_project` to ensure no syntax/lint errors remain.
+   
+🚨 REQUIRED WORKFLOW (FOLLOW THESE STEPS IN ORDER—NO EXCEPTIONS):
+1. Extract the failing rule, file path, and line range from the error log.
+2. Use `batch_read_files` (and `list_files` if needed) to inspect ONLY the files implicated by that failure.
+3. Apply a concrete correction immediately with `batch_update_files`, `batch_update_lines`, or `batch_create_files`. Reading without a write operation is not allowed.
+4. Run `lint_project` to verify the fix and capture the updated output.
+5. If linting still fails, repeat from step 1 using the new log until lint exits cleanly.
+6. As soon as lint passes, stop modifying files and return the successful result.
+
 """
