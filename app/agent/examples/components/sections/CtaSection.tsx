@@ -12,6 +12,7 @@ interface CtaSectionProps {
   consentText: string;
   privacyLinkText: string;
   privacyLinkUrl: string;
+  apiUrl?: string; // Added apiUrl as an optional prop
 }
 
 const DEFAULT_PROPS: CtaSectionProps = {
@@ -20,23 +21,62 @@ const DEFAULT_PROPS: CtaSectionProps = {
   ctaText: "Find Matches",
   consentText: "I agree to receive match notifications.",
   privacyLinkText: "Privacy Policy",
-  privacyLinkUrl: "#"
+  privacyLinkUrl: "#",
+  apiUrl: "http://example.api.com/leads", // Default API URL
 };
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 
 export function CtaSection(props: Partial<CtaSectionProps>) {
-  const { headline, subtext, ctaText, consentText, privacyLinkText, privacyLinkUrl } = { ...DEFAULT_PROPS, ...props };
+  const { headline, subtext, ctaText, consentText, privacyLinkText, privacyLinkUrl, apiUrl } = { ...DEFAULT_PROPS, ...props };
   const [loading, setLoading] = useState(false);
+  const [formState, setFormState] = useState({
+    name: "",
+    email: "",
+    age: "",
+    consent: false,
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormState(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate submission
-    setTimeout(() => {
+
+    try {
+      const payload = {
+        name: formState.name,
+        email: formState.email,
+        age: formState.age,
+        consent: formState.consent,
+      };
+
+      const url = apiUrl ?? DEFAULT_PROPS.apiUrl!;
+      const resp = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        throw new Error(`Submission failed (${resp.status})`);
+      }
+
       setLoading(false);
       alert("Thanks for signing up!");
-    }, 1500);
+      setFormState({ name: "", email: "", age: "", consent: false });
+    } catch (error) {
+      setLoading(false);
+      alert("There was an error processing your request. Please try again.");
+    }
   };
 
   return (
@@ -67,30 +107,47 @@ export function CtaSection(props: Partial<CtaSectionProps>) {
           <div className="flex flex-col gap-4">
             <input 
               type="text" 
+              name="name"
               placeholder="Name" 
               required
+              value={formState.name}
+              onChange={handleChange}
               className="w-full px-6 py-4 rounded-full bg-[#121215] border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent transition-all"
             />
             <input 
               type="email" 
+              name="email"
               placeholder="Email" 
               required
+              value={formState.email}
+              onChange={handleChange}
               className="w-full px-6 py-4 rounded-full bg-[#121215] border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent transition-all"
             />
             <input 
               type="number" 
+              name="age"
               placeholder="Age" 
               min="18"
               required
+              value={formState.age}
+              onChange={handleChange}
               className="w-full px-6 py-4 rounded-full bg-[#121215] border border-zinc-700 text-white placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-[#F97316] focus:border-transparent transition-all"
             />
           </div>
 
           <div className="flex items-center gap-3 justify-center text-sm text-zinc-500">
-             <input type="checkbox" id="consent" required className="accent-[#F97316]" />
-             <label htmlFor="consent">
-               {consentText} <Link href={privacyLinkUrl} className="underline hover:text-[#F97316]">{privacyLinkText}</Link>
-             </label>
+            <input
+              type="checkbox"
+              id="consent"
+              name="consent"
+              required
+              checked={formState.consent}
+              onChange={handleChange}
+              className="accent-[#F97316]" 
+            />
+            <label htmlFor="consent">
+              {consentText} <Link href={privacyLinkUrl} className="underline hover:text-[#F97316]">{privacyLinkText}</Link>
+            </label>
           </div>
 
           <button 
@@ -118,5 +175,6 @@ FEAAS.registerComponent(CtaSection, {
     consentText: { type: "string", title: "Consent Text" },
     privacyLinkText: { type: "string", title: "Privacy Link Text" },
     privacyLinkUrl: { type: "string", title: "Privacy Link URL" },
+    apiUrl: { type: "string", title: "API URL" }, // Added to schema
   },
 });
