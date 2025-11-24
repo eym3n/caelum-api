@@ -103,6 +103,10 @@ class BuilderState(BaseModel):
         default=False,
         description="Indicates whether the fix_errors node has attempted repairs.",
     )
+    fix_errors_read_only_attempts: Annotated[int, replace] = Field(
+        default=0,
+        description="Counts consecutive read-only fix_errors passes to prevent infinite loops.",
+    )
 
     # 💬 Clarifier Agent
     clarify_response: Annotated[str, replace] = Field(

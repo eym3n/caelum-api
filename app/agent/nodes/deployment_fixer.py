@@ -80,8 +80,8 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         )
 
         # Use GPT-5 with minimal reasoning for fast, focused fixes
-        _deployment_fixer_llm_ = ChatGoogleGenerativeAI(
-            model="models/gemini-3-pro-preview", thinking_budget=512
+        _deployment_fixer_llm_ = ChatOpenAI(
+            model="gpt-5", reasoning_effort="medium"
         ).bind_tools(
             tools,
             parallel_tool_calls=True,

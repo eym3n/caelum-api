@@ -135,12 +135,12 @@ def edge_after_deployment_fixer(
         return "deployment_fixer"
 
 
-def edge_after_linting(state: BuilderState) -> Literal["fix_errors", "deployer"]:
+def edge_after_linting(state: BuilderState) -> Literal["fix_errors", "__end__"]:
     if state.lint_failed:
         print("❌ Lint failed, routing to fix_errors.")
         return "fix_errors"
     print("✅ Lint passed, proceeding to deployment.")
-    return "deployer"
+    return "__end__"
 
 
 graph.add_node("router", router)
