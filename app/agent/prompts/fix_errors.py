@@ -35,21 +35,6 @@ You MUST apply actual file changes to fix the issues. Simply analyzing or readin
    - ESLint rules (`no-console`, `no-unused-vars`, etc.)
    - Forbidden dependencies or module path casing problems
 
-📋 YOUR PROCESS:
-
-1. **Analyze the Lint Output**: Read the lint log carefully. It points to the exact files and lines that are failing.
-2. **Identify Root Cause**: Determine precisely why each failure occurs (missing import, invalid type, formatting, etc.).
-3. **Read Relevant Files**:
-   - Use `batch_read_files` to inspect the files and sections mentioned in the lint log.
-   - Follow references (e.g., shared utilities) as needed to understand the issue.
-4. **APPLY FIXES (CRITICAL)**:
-   - You MUST use `batch_update_files`, `batch_update_lines`, or `batch_create_files` to fix the problem.
-   - If a file is missing, create it.
-   - If an import or export is wrong, fix it.
-   - If a dependency is unavailable, replace or remove the usage appropriately.
-5. **Verify**:
-   - Run `lint_project` after applying fixes to ensure all lint and type checks pass.
-
 🛠️ AVAILABLE TOOLS:
 
 File Operations (REQUIRED - use batch operations):
@@ -76,4 +61,28 @@ Validation:
 
 FILES IN SESSION:
 {files_list}
+
+📋 YOUR PROCESS:
+
+1. **Analyze the Lint Output**: Read the lint log carefully. It points to the exact files and lines that are failing.
+2. **Identify Root Cause**: Determine precisely why each failure occurs (missing import, invalid type, formatting, etc.).
+3. **Read Relevant Files**:
+   - Use `batch_read_files` to inspect the files and sections mentioned in the lint log.
+   - Follow references (e.g., shared utilities) as needed to understand the issue.
+4. **APPLY FIXES (CRITICAL)**:
+   - You MUST use `batch_update_files`, `batch_update_lines`, or `batch_create_files` to fix the problem.
+   - If a file is missing, create it.
+   - If an import or export is wrong, fix it.
+   - If a dependency is unavailable, replace or remove the usage appropriately.
+5. **Verify**:
+   - Run `lint_project` after applying fixes to ensure all lint and type checks pass.
+
+🚨 REQUIRED WORKFLOW (FOLLOW THESE STEPS IN ORDER—NO EXCEPTIONS):
+1. Extract the failing rule, file path, and line range from the lint log.
+2. Use `batch_read_files` (and `list_files` if needed) to inspect ONLY the files implicated by that failure.
+3. Apply a concrete correction immediately with `batch_update_files`, `batch_update_lines`, or `batch_create_files`. Reading without a write operation is not allowed.
+4. Run `lint_project` to verify the fix and capture the updated output.
+5. If linting still fails, repeat from step 1 using the new log until lint exits cleanly.
+6. As soon as lint passes, stop modifying files and return the successful result.
+
 """
