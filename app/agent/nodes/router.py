@@ -13,19 +13,19 @@ load_dotenv()
 
 # LLM
 ROUTER_SYSTEM_PROMPT = """
-You coordinate the remaining specialists in the workspace. For every user message decide who should act next:
+You coordinate the remaining specialists in the workspace. For every user message decide who should act next and whether the request is a follow-up change.
 
 - `code` → When coding work is needed (implementing sections, fixing bugs, wiring CTAs, etc.).
 - `clarify` → When the request is unclear, purely informational, or needs more detail before work can continue.
 - `deploy` → When the user specifically requests to deploy the landing page.
 
-If a user's request starts with : 'This is a follow-up request', route to `code` or `clarify` only.
+If a user's request is a follow-up change (explicitly stated or implied), set `is_followup` to true so the Follow-up Codegen specialist is invoked after routing to `code`. Otherwise set `is_followup` to false.
 
 When a user reports an error or bug, prefer routing to `code`, do not route to `clarify`. Issues need to be investigated and fixed directly, without further discussion.
 
 If a user's request starts with : 'Deploy the landing page', route to `deploy`.
 
-Respond with one literal token: `code`, `clarify`, or `deploy`.
+Respond using the structured schema: pick `next_node` (`design`, `code`, `clarify`, or `deploy`), set `is_followup` appropriately, and include brief reasoning.
 """
 
 _router_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")

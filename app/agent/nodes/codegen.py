@@ -213,7 +213,7 @@ async def _generate_page_code(
     init_payload: Dict[str, Any],
 ) -> PageCodeOutput:
     messages = _build_page_messages(design_guidelines, generated_sections, init_payload)
-    model = ChatGoogleGenerativeAI(model="models/gemini-3-pro-preview")
+    model = ChatOpenAI(model="gpt-5", reasoning_effort="minimal")
     structured_llm = model.with_structured_output(PageCodeOutput)
 
     last_exc: Exception | None = None
@@ -236,7 +236,7 @@ async def _generate_layout_code(
     messages = _build_layout_messages(
         design_guidelines, generated_sections, init_payload
     )
-    model = ChatGoogleGenerativeAI(model="models/gemini-3-pro-preview")
+    model = ChatOpenAI(model="gpt-5", reasoning_effort="minimal")
     structured_llm = model.with_structured_output(LayoutCodeOutput)
 
     last_exc: Exception | None = None
