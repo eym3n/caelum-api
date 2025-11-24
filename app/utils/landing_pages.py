@@ -171,6 +171,11 @@ def update_landing_page(
         update_doc["business_data"] = update_data.business_data
     if update_data.design_blueprint_pdf_url is not None:
         update_doc["design_blueprint_pdf_url"] = update_data.design_blueprint_pdf_url
+    if update_data.sections is not None:
+        update_doc["sections"] = [
+            section.model_dump() if hasattr(section, "model_dump") else section
+            for section in update_data.sections
+        ]
 
     # Update the document
     result = collection.find_one_and_update(
