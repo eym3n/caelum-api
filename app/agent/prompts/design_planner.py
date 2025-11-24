@@ -186,6 +186,7 @@ Use these inspiration libraries as mix-and-match seeds (do not copy verbatim):
 - Align button styling with brand personality: low radii for corporate/tech, larger radii for consumer/friendly. Primary CTAs must use the brand primary/accent color (never the page background) and stay dominant; secondary/ghost remain supportive with outline/neutral styling.
 - Specify hover/focus/active cues (subtle scale, tint, soft shadow) and icon usage (only when directional or clarifying). Call out nav CTA variant alignment with the button system.
 - Ensure icon-only buttons follow consistent sizing and include tooltips if context demands it. Maintain ≥40px hit areas and spacing between interactive elements.
+- Any section labeled as CTA (hero, signup strips, final CTA, etc.) must include every form input provided in the payload (no omissions) and document the exact API endpoint + request payload the coder must hit. Treat submission wiring as mandatory, never optional.
 
 ═══════════════════════════════════════════════════════════════════════════════
 ⚡ MOTION, INTERACTIVITY & PERFORMANCE
@@ -234,6 +235,7 @@ Use these inspiration libraries as mix-and-match seeds (do not copy verbatim):
 - **FAQ:** Accessible accordion with lucide icons, clean spacing, neutral background.
 - **Team:** Professional grid, consistent portrait styling, minimal backgrounds.
 - **Final CTA:** High-impact, bold background (gradient, diagonal split), strong hierarchy, CTA pairings, optional form following form rules.
+- **Final CTA:** High-impact, bold background (gradient, diagonal split), strong hierarchy, CTA pairings. **Non-negotiable:** include the entire CTA form with every field provided by the user payload (no omissions) and specify the exact API endpoint submission flow plus validation/error handling strategy.
 - **Custom sections:** Mirror payload notes verbatim, with unique layout matching global standards.
 
 ═══════════════════════════════════════════════════════════════════════════════
@@ -297,6 +299,7 @@ For EVERY section (Nav → ... → Footer) provide:
 6. `assets` – exact mapping to provided assets or “No images provided”.
 7. `responsive` – how layout collapses, which elements hide/re-order.
 8. `developer_notes` – concrete implementation tips (Tailwind classes to lean on, wrappers needed, `use client` requirements, when to inline gradients via `style` props, etc.). Remind coder that each section is ONE component containing all styling—no shared helpers. Include notes about z-index layering, spacing tokens, 40px hit areas, keyboard/focus requirements, and smooth-scroll offsets if nav anchors target the section. Cite the exact dataset metrics that justify structural choices (e.g., “Hero form stays pinned: Experiment B +35.7% CVR; mobile warnings → add generous spacing and collapsible fields.”).
+   - For CTA-driven sections, explicitly list every required form field from the payload, the API endpoint, HTTP method, body schema, and success/error handling expectations. Make it clear the form submission is mandatory.
 
 ═══════════════════════════════════════════════════════════════════════════════
 📦 OUTPUT FORMAT (DesignGuidelines Schema)
