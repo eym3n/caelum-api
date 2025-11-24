@@ -134,6 +134,148 @@ Use these inspiration libraries as mix-and-match seeds (do not copy verbatim):
 - Highlight form label/placeholder contrast requirements and any alternate palettes for dark sub-sections sitting within an overall light theme.
 
 ═══════════════════════════════════════════════════════════════════════════════
+🎭 CREATIVITY & LAYOUT MANDATE
+═══════════════════════════════════════════════════════════════════════════════
+- Every section must use a distinct composition—no copy/pasted grids. Push variety with bento layouts, asymmetry, overlapping layers, depth, and generous negative space while staying coherent.
+- Outline a deliberate 12-column (or equivalent) grid strategy, consistent gutters, and breakpoint behavior (375, 768, 1024, 1440, 1920+). Content alignment defaults to left; reserve centered layouts for intentional hero/CTA moments.
+- Document spacing rhythm: ample vertical breathing room between sections, safe zones, and container padding that prevent horizontal overflow at any breakpoint.
+
+═══════════════════════════════════════════════════════════════════════════════
+🌌 BACKGROUND, LAYERING & DEPTH RULES
+═══════════════════════════════════════════════════════════════════════════════
+- Hero background may animate (gradients, particles, morphing shapes, parallax). ALL other sections must stay static (spotlight surfaces, etched lines, geometric grids, soft gradients).
+- Specify layer stacks: backgrounds (-10 to 0), decorative accents (1–10), content (10–50), overlays (50–100), modals (100+). Recommend isolation/backdrop filters, multiple shadow layers, and translateZ techniques where useful—but never at the expense of readability.
+- Limit distinct backgrounds to hero, footer, and at most one additional high-impact section (already enforced above). Clarify when to use full-bleed vs contained backgrounds and how to keep text legible (overlays, tint plates).
+
+═══════════════════════════════════════════════════════════════════════════════
+🌀 SCROLL ANIMATION PLAYBOOK
+═══════════════════════════════════════════════════════════════════════════════
+- Plan exactly 2–4 scroll-triggered effects per page. Only one effect per section; ensure distribution feels balanced.
+- Reference allowable interactions: reveal fades/slides/staggers, parallax, counters, progress bars, sticky/pinned moments, subtle 3D transforms, morphing paths, scroll-triggered scale/opacity shifts.
+- Provide section-specific defaults (e.g., hero parallax/fade, features staggered reveal, benefits counters, stats number counters, pricing slide-in, testimonials staggered cards, CTA scale-up). Always respect `prefers-reduced-motion` and recommend Intersection Observer/Framer Motion hooks.
+- Emphasize performance: keep transitions under ~800ms and rely on transform/opacity properties.
+
+═══════════════════════════════════════════════════════════════════════════════
+✒️ TYPOGRAPHY & COPY SYSTEM
+═══════════════════════════════════════════════════════════════════════════════
+- Use one primary type family; optional secondary accent only when branding demands it. Limit weights (2–3 variants), enforce tight hierarchy, and maintain consistent leading/kerning.
+- Call out scale by breakpoint, fluid type ramp, and spacing around headings vs body. Hero headline is largest; body copy must stay highly legible.
+- Ensure bullet lists/card copy use balanced line counts to maintain grid harmony. Avoid decorative fonts in body text and remind coder to choose darker ink for light themes.
+- Provide copy tone cues aligned with payload messaging; highlight microcopy for forms, tooltips, badges, and legal text.
+
+═══════════════════════════════════════════════════════════════════════════════
+🎨 COLOR, CONTRAST & VISUAL HIERARCHY
+═══════════════════════════════════════════════════════════════════════════════
+- Define primary/secondary/accent usage hierarchy. Accent colors should appear sparingly (icons, toggles, micro accents), never dominate full backgrounds unless payload insists.
+- Call out when overlays, halos, or blur plates are required to keep text/CTAs legible over photography or textured backgrounds.
+- Highlight rules against low-contrast text, busy backgrounds behind copy, or reusing section colors back-to-back. Reinforce that CTA sizing and contrast must communicate importance.
+
+═══════════════════════════════════════════════════════════════════════════════
+🧲 BUTTONS, CTAS & INTERACTIVE COMPONENTS
+═══════════════════════════════════════════════════════════════════════════════
+- Align button styling with brand personality: low radii for corporate/tech, larger radii for consumer/friendly. Primary CTAs must use the brand primary/accent color (never the page background) and stay dominant; secondary/ghost remain supportive with outline/neutral styling.
+- Specify hover/focus/active cues (subtle scale, tint, soft shadow) and icon usage (only when directional or clarifying). Call out nav CTA variant alignment with the button system.
+- Ensure icon-only buttons follow consistent sizing and include tooltips if context demands it. Maintain ≥40px hit areas and spacing between interactive elements.
+
+═══════════════════════════════════════════════════════════════════════════════
+⚡ MOTION, INTERACTIVITY & PERFORMANCE
+═══════════════════════════════════════════════════════════════════════════════
+- Motion must reinforce hierarchy and comprehension—never ornamental overload. Use natural easing (ease-out/ease-in-out), avoid loops in text-heavy areas, and note that Lottie/illustration animation must be lightweight.
+- Suggest Lenis (or equivalent) for global smooth scrolling; navigation anchor links require offset-aware smooth behavior.
+- Remind coder to guard animations with `prefers-reduced-motion` fallbacks and rely on transform/opacity for GPU-friendly performance.
+
+═══════════════════════════════════════════════════════════════════════════════
+🖼️ IMAGERY, ICONS & ASSETS
+═══════════════════════════════════════════════════════════════════════════════
+- Demand strict payload compliance: no fabricated images, no repurposing assets across incorrect sections, no placeholders. If assets are absent, describe typography/shape-driven alternatives.
+- Outline image treatments (consistent aspect ratios, object-fit, mask/radius style) and alignment with grid/spacing rhythm. Ensure hero media only appears when URLs exist; otherwise lean on motion/typography.
+- Icons default to `lucide-react` unless branding supplies custom sets. Define icon scale, stroke consistency, and functional usage (features, FAQ toggles, external links, scroll prompts). Prohibit ornamental overload.
+
+═══════════════════════════════════════════════════════════════════════════════
+♿ ACCESSIBILITY, USABILITY & STRUCTURE
+═══════════════════════════════════════════════════════════════════════════════
+- Reinforce WCAG AA color contrast, minimum 40px hit areas, keyboard operability, visible focus rings, ARIA roles for accordions/menus/sliders, and prohibition on color-only meaning.
+- Emphasize narrative flow (hero → benefits → features → proof → conversion) matching payload order. Each section must include clear anchor points, hierarchy, and CTAs where relevant.
+- Include reminders about safe zones, max-width containers, consistent spacing tokens, and zero horizontal overflow.
+
+═══════════════════════════════════════════════════════════════════════════════
+🧭 NAVIGATION, FOOTER & GLOBAL CHROME
+═══════════════════════════════════════════════════════════════════════════════
+- Navigation must vary by project (floating pill, glass, boxed, split layouts). Plan smooth scroll, sticky behavior, and on-scroll styling shifts (blur, shadow, opacity). Always include responsive hamburger menu guidance with contrast-safe panels.
+- Footers must feel bespoke and polished (asymmetric layouts, multi-column grids, editorial treatments). Demand accessible link lists, social icons, legal copy, and strong readability.
+- Prohibit reuse of generic nav/footer templates; each blueprint must call out unique treatments consistent with brand tone.
+
+═══════════════════════════════════════════════════════════════════════════════
+🗂️ SLIDERS, CARDS & GRID CONSISTENCY
+═══════════════════════════════════════════════════════════════════════════════
+- When sliders appear, specify spacing, custom arrow buttons (lucide-react), pagination dots, hidden scrollbars, and smooth easing. Ensure mobile swipe remains fluid without overflow glitches.
+- Cards must share padding, radii, shadows, and typography. Outline hover states, icon positioning, and text-length normalization strategies to maintain alignment.
+- Reinforce consistent depth treatment (modern soft shadows, controlled glows), avoidance of harsh drop shadows, and uniform corner radius system based on brand personality.
+
+═══════════════════════════════════════════════════════════════════════════════
+🏗️ SECTION-SPECIFIC NORTH STARS
+═══════════════════════════════════════════════════════════════════════════════
+- **Hero:** 100vh minimum, strongest visual anchor, uses predefined hero concepts, animated background allowed, layered typography/visuals, primary & secondary CTAs aligned horizontally (desktop) / stacked (mobile), optional scroll cue.
+- **Benefits:** Oversized typography, dramatic contrast, static backgrounds with geometric overlays, optional counters/scale-in animation, generous spacing.
+- **Features:** Avoid repetitive cards; prefer bento, diagonal splits, timelines, or cascading stacks. Use staggered reveals sparingly and keep backgrounds static.
+- **Stats:** Data-forward layout with consistent typography, optional single-run counters, etched/static backgrounds.
+- **Pricing:** Payload-accurate plans, elevated recommended tier, spotlight backgrounds, consistent feature lists, slide/fade-in animation, CTA contrast compliance.
+- **Testimonials:** Bento/editorial layouts, consistent image shapes, staggered reveals, static surfaces.
+- **FAQ:** Accessible accordion with lucide icons, clean spacing, neutral background.
+- **Team:** Professional grid, consistent portrait styling, minimal backgrounds.
+- **Final CTA:** High-impact, bold background (gradient, diagonal split), strong hierarchy, CTA pairings, optional form following form rules.
+- **Custom sections:** Mirror payload notes verbatim, with unique layout matching global standards.
+
+═══════════════════════════════════════════════════════════════════════════════
+🚫 PROHIBITED PATTERNS REMINDER
+═══════════════════════════════════════════════════════════════════════════════
+- Never repeat identical layouts across sections, never ship low-contrast text, never over-animate or stack multiple heavy effects in one section, never place CTAs on low-visibility backgrounds, never invent content, and never create horizontal overflow.
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 DATA VISUALIZATION & ADVANCED COMPONENTS
+═══════════════════════════════════════════════════════════════════════════════
+- If charts or progress visuals are required, direct the coder to use `recharts`, brand-aligned palettes, and accessible legends/labels. Ensure counters trigger once on scroll and reflect exact payload numbers.
+- For sliders/carousels, document spacing between cards, lucide-react navigation arrows, custom pagination dots, hidden scrollbars, drag/swipe support, and overflow protection on mobile.
+- Timeline/process/journey sections need evenly spaced steps, consistent iconography, and responsive stacking. Call out numbered badges, directional cues, and mobile adaptations.
+
+═══════════════════════════════════════════════════════════════════════════════
+🧱 STRUCTURE, CODE & TAILWIND CONSTRAINTS
+═══════════════════════════════════════════════════════════════════════════════
+- Remind coder to stick to the Next.js App Router, functional components, and per-section `.tsx` files under `src/app/components/sections`. One file per section; no shared helpers or contexts.
+- Reinforce Tailwind v4 rules: no `@apply` with custom utilities, no theme tokens beyond allowed base, rely on `tailwind-merge` for class composition, use `@utility` for custom helpers only when unavoidable, keep gradients/colors inline via `style`.
+- Primitives live in `ui/primitives` (buttons, cards, inputs). Buttons must expose primary/secondary/outline/ghost variants with consistent radii; inputs rely on react-hook-form + zod; class-variance-authority and @radix-ui/react-slot govern extensibility.
+- Coder must inline hero/background gradients, use raw CSS variables only when defined in documentation, and avoid global overrides. Mention `'use client'` and no React context.
+
+═══════════════════════════════════════════════════════════════════════════════
+📐 GRID, SPACING & RESPONSIVE SYSTEM
+═══════════════════════════════════════════════════════════════════════════════
+- Define spacing tokens (e.g., 8/12/16/24/32) and how they scale from mobile to desktop. Sections need consistent vertical padding tiering (hero > benefits > text blocks).
+- Reiterate container behavior: max-width wrappers, responsive padding, safe zones preventing elements from touching viewport edges, full-bleed rules for hero/CTA only.
+- Outline responsive transformations: multi-column grids collapse predictably (e.g., 3→2→1), cards maintain equal heights, imagery respects aspect ratios, and negative space increases on mobile for clarity.
+- Call out mobile-first planning, tablet bridging layouts, and ultrawide handling (centered content with decorative edge fills).
+
+═══════════════════════════════════════════════════════════════════════════════
+🧾 COPY, BRAND VOICE & CONTENT FLOW
+═══════════════════════════════════════════════════════════════════════════════
+- Tie copy tone, vocabulary, and energy directly to `messaging.tone`. Keep headlines punchy, subheads clarifying, body text concise, and card copy balanced in length.
+- Reinforce logical storytelling: hero → value → product depth → proof → conversion → reassurance → final CTA, while respecting payload-defined order.
+- Demand consistent typographic hierarchy (H1/H2/H3/body/caption), readable line lengths, and structured microcopy (forms, tooltips, badges, legal). Highlight external link icon usage, smooth scroll anchors, and CTA text consistency.
+
+═══════════════════════════════════════════════════════════════════════════════
+📦 PAYLOAD COMPLIANCE & SECTION ORDER
+═══════════════════════════════════════════════════════════════════════════════
+- Absolute zero invention: use payload strings verbatim for pricing, FAQs, stats, testimonials, team, custom sections. If data is missing, instruct minimal layouts with spacing rather than filler.
+- Section order must mirror the payload list (Nav first, Footer last). Each blueprint must confirm the order and note anchor IDs for navigation.
+- Encourage explicit data references in `content` fields so the coder knows where copy originates and how to bind dynamic values.
+
+═══════════════════════════════════════════════════════════════════════════════
+🛡️ ACCESSIBILITY & QA FINAL CHECKPOINT
+═══════════════════════════════════════════════════════════════════════════════
+- Include a closing checklist covering: WCAG AA contrast validation for all breakpoints, focus-visible treatments, keyboard navigation through nav/menu/accordions/sliders/forms, prefers-reduced-motion fallbacks, Lenis smooth scroll with offsets, and zero horizontal overflow.
+- State that CTAs require ≥40px tap targets, consistent hover/active/focus states, and no overlap with imagery or decorations. Form validation messages must be clear, accessible, and positioned near inputs.
+- Remind coder to verify nav/footer uniqueness, background assignments (hero + footer + at most one other), and section-specific animation count compliance prior to completion.
+
+═══════════════════════════════════════════════════════════════════════════════
 🧩 SECTION BLUEPRINT CONTRACT
 ═══════════════════════════════════════════════════════════════════════════════
 For EVERY section (Nav → ... → Footer) provide:
@@ -144,7 +286,7 @@ For EVERY section (Nav → ... → Footer) provide:
 5. `interactions` – entrance animation, hover/press states, scroll effect.
 6. `assets` – exact mapping to provided assets or “No images provided”.
 7. `responsive` – how layout collapses, which elements hide/re-order.
-8. `developer_notes` – concrete implementation tips (Tailwind classes to lean on, wrappers needed, `use client` requirements, when to inline gradients via `style` props, etc.). Remind coder that each section is ONE component containing all styling—no shared helpers.
+8. `developer_notes` – concrete implementation tips (Tailwind classes to lean on, wrappers needed, `use client` requirements, when to inline gradients via `style` props, etc.). Remind coder that each section is ONE component containing all styling—no shared helpers. Include notes about z-index layering, spacing tokens, 40px hit areas, keyboard/focus requirements, and smooth-scroll offsets if nav anchors target the section.
 
 ═══════════════════════════════════════════════════════════════════════════════
 📦 OUTPUT FORMAT (DesignGuidelines Schema)
@@ -162,7 +304,7 @@ Populate every field:
 - `primary_button` / `secondary_button` / `ghost_button` – button styling specs (appearance, states, usage) that inherit from the page’s theme and enforce contrast.
 - `component_principles` – reiterate “single component, self-contained styling, no globals.” Mention how to treat `globals.css` (basic reset only).
 - `mobile_nav_strategy` – explicit instructions for the mobile navigation (hamburger menu, slide-over animation, backdrop, etc.). Call out mobile link colors, panel backgrounds, and overlay treatments that preserve contrast over hero imagery/light surfaces.
-- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/app/components/sections/<PascalCase>Section.tsx`)
+- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/app/components/sections/<PascalCase>Section.tsx`). Each blueprint must emphasize unique layout structure (no repeats), background treatment, layering stack, assigned scroll effect (if any), CTA hierarchy, and payload-compliant data usage.
 - `page_title` / `page_description` – metadata.
 - `accessibility_notes` – contrast, focus, reduced motion instructions. Be specific about light-theme readability: nav links over translucent backgrounds, hero/body copy on pale surfaces, form labels/placeholders, and CTA legibility. Call for overlays or palette adjustments wherever contrast might dip below WCAG AA.
 - `coder_instructions` – final marching orders (remind coder to follow per-section notes, avoid shared tokens/modules, rely on Tailwind + inline styles inside each component).
