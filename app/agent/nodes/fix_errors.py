@@ -71,9 +71,9 @@ def fix_errors(state: BuilderState) -> BuilderState:
                 "or batch_create_files, then run lint_project. Reading again without edits is not allowed."
             )
 
-        fix_errors_llm = ChatOpenAI(
-            model="gpt-5", reasoning_effort="medium"
-        ).bind_tools(tools, parallel_tool_calls=True)
+        fix_errors_llm = ChatOpenAI(model="gpt-4.1").bind_tools(
+            tools, parallel_tool_calls=True
+        )
 
         system_message = SystemMessage(content=prompt_with_context)
         messages = [system_message, *state.messages]
