@@ -21,6 +21,7 @@ DEFAULT_NODE_MESSAGES = {
     "design_blueprint_pdf": "Documented design blueprint into PDF",
     "generate_section": "Generated section components",
     "codegen": "Assembled page and layout",
+    "followup_codegen": "Applied follow-up code updates",
     "linting": "Ran lint checks",
     "deployer": "Deployed landing page",
     "deployment_fixer": "Fixed deployment errors",
@@ -35,6 +36,7 @@ SUPPRESS_DEFAULT_NODE_LOGS = {
     "design_blueprint_pdf",
     "generate_section",
     "codegen",
+    "followup_codegen",
     "deployment_fixer",
     "fix_errors",
     "clarify",
@@ -324,6 +326,7 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                 # Track last message from core implementation nodes for final event
                 if node in (
                     "codegen",
+                    "followup_codegen",
                     "deployment_fixer",
                     "fix_errors",
                     "deployer",
