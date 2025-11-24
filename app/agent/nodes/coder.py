@@ -19,11 +19,10 @@ from app.agent.state import BuilderState
 from app.agent.tools.files import (
     # Batch operations (ONLY USE THESE)
     batch_read_files,
+    batch_create_files,
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
-    # Single-file creation
-    create_file,
     # Utility
     list_files_internal,
 )
@@ -38,10 +37,10 @@ load_dotenv()
 tools = [
     # Batch file operations (ONLY USE THESE FOR FILES)
     batch_read_files,
+    batch_create_files,
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
-    create_file,
     # Command tools
     lint_project,
 ]
@@ -81,7 +80,6 @@ def coder(state: BuilderState) -> BuilderState:
 
     _coder_llm_ = ChatGoogleGenerativeAI(
         model="models/gemini-3-pro-preview",
-        thinking_budget=64,
     ).bind_tools(
         tools,
         parallel_tool_calls=True,
