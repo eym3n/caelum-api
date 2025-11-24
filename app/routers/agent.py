@@ -409,7 +409,7 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         "thread_id": session_id,
                         "session_id": session_id,  # Pass session_id to tools
                     },
-                    "recursion_limit": 100,
+                    "recursion_limit": 30,
                 },
             ):
                 for node, update in event.items():
