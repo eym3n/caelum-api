@@ -1,7 +1,7 @@
 """Landing page models and schemas."""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from enum import Enum
 from pydantic import BaseModel, Field, ConfigDict
 
@@ -14,6 +14,15 @@ class LandingPageStatus(str, Enum):
     FAILED = "failed"
 
 
+class SectionFile(BaseModel):
+    """Represents a generated section component and its source code."""
+
+    id: Optional[str] = None
+    name: Optional[str] = None
+    filename: Optional[str] = None
+    file_content: Optional[str] = None
+
+
 class LandingPageBase(BaseModel):
     """Base landing page schema with common fields."""
 
@@ -23,6 +32,7 @@ class LandingPageBase(BaseModel):
     deployment_url: Optional[str] = None
     business_data: Optional[dict] = None
     design_blueprint_pdf_url: Optional[str] = None
+    sections: Optional[List[SectionFile]] = None
 
 
 class LandingPageCreate(BaseModel):
@@ -41,6 +51,7 @@ class LandingPageUpdate(BaseModel):
     deployment_url: Optional[str] = None
     business_data: Optional[dict] = None
     design_blueprint_pdf_url: Optional[str] = None
+    sections: Optional[List[SectionFile]] = None
 
 
 class LandingPageInDB(LandingPageBase):

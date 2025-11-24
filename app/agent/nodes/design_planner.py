@@ -10,6 +10,11 @@ from app.agent.prompts.design_planner import (
     NAV_STYLE_INSPIRATION,
 )
 from toon import encode
+from app.utils.landing_pages import (
+    get_landing_page_by_session_id,
+    update_landing_page,
+)
+from app.models.landing_page import LandingPageUpdate
 
 
 _design_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
@@ -94,6 +99,21 @@ def design_planner(state: BuilderState) -> BuilderState:
         # We'll add a new field to BuilderState to hold this
         guidelines_dict = design_guidelines.model_dump()
         print(encode(guidelines_dict))
+
+        # Persist design guidelines to the landing page record
+        try:
+            landing_page_doc = get_landing_page_by_session_id(session_id)
+            if landing_page_doc:
+                business_data = landing_page_doc.business_data or {}
+                business_data["design_guidelines"] = guidelines_dict
+                update_landing_page(
+                    landing_page_doc.id,
+                    LandingPageUpdate(business_data=business_data),
+                )
+        except Exception as persist_exc:  # pragma: no cover - log but don't fail
+            print(
+                f"[DESIGN_PLANNER] Warning: failed to persist design guidelines for session {session_id}: {persist_exc}"
+            )
 
         return {
             "design_guidelines": guidelines_dict,

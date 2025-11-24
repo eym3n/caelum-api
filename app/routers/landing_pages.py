@@ -18,9 +18,57 @@ from app.utils.landing_pages import (
     update_landing_page,
     delete_landing_page,
 )
+from app.agent.tools.files import get_session_dir
+from pathlib import Path
 import math
+from typing import Any, List
 
 router = APIRouter(tags=["landing-pages"])
+
+
+def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
+    business_data = landing_page.business_data or {}
+    design_guidelines = business_data.get("design_guidelines") or {}
+    sections = design_guidelines.get("sections") or []
+    if not isinstance(sections, list):
+        return []
+
+    session_dir = get_session_dir(landing_page.session_id)
+    payload: List[dict[str, Any]] = []
+
+    for section in sections:
+        if not isinstance(section, dict):
+            continue
+        section_id = section.get("section_id")
+        section_name = section.get("section_name")
+        filename = (
+            section.get("section_file_name_tsx")
+            or section.get("section_file_name")
+            or ""
+        )
+
+        file_content = None
+        if filename:
+            normalized = filename.lstrip("./")
+            file_path = session_dir / Path(normalized)
+            try:
+                if file_path.exists():
+                    file_content = file_path.read_text(encoding="utf-8")
+            except Exception as exc:  # pragma: no cover - log for debugging
+                print(
+                    f"[LANDING_PAGES] Warning: failed to read section file {file_path}: {exc}"
+                )
+
+        payload.append(
+            {
+                "id": section_id,
+                "name": section_name,
+                "filename": filename,
+                "file_content": file_content,
+            }
+        )
+
+    return payload
 
 
 # Landing pages are created automatically by the agent system at /init
@@ -126,6 +174,7 @@ async def get_landing_page(
         design_blueprint_pdf_url=landing_page.design_blueprint_pdf_url,
         created_at=landing_page.created_at,
         updated_at=landing_page.updated_at,
+        sections=_build_sections_payload(landing_page),
     )
 
 
@@ -173,6 +222,7 @@ async def get_landing_page_by_session(
         design_blueprint_pdf_url=landing_page.design_blueprint_pdf_url,
         created_at=landing_page.created_at,
         updated_at=landing_page.updated_at,
+        sections=_build_sections_payload(landing_page),
     )
 
 
@@ -231,6 +281,7 @@ async def update_landing_page_endpoint(
         design_blueprint_pdf_url=updated.design_blueprint_pdf_url,
         created_at=updated.created_at,
         updated_at=updated.updated_at,
+        sections=_build_sections_payload(updated),
     )
 
 
