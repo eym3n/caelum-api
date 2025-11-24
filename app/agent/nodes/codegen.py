@@ -33,6 +33,19 @@ def _normalize_filename(value: str | None) -> str:
     return value.lstrip("./") if value else ""
 
 
+EXAMPLES_BASE_DIR = Path(__file__).resolve().parent.parent / "examples"
+PAGE_EXAMPLE_PATH = EXAMPLES_BASE_DIR / "app" / "page.tsx"
+LAYOUT_EXAMPLE_PATH = EXAMPLES_BASE_DIR / "app" / "layout.tsx"
+
+
+def _read_example_file(path: Path, label: str) -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except Exception as exc:  # pragma: no cover - logging only
+        print(f"[CODEGEN] Warning: failed to read {label} example {path}: {exc}")
+        return ""
+
+
 def _resolve_component_order(
     design_guidelines: Dict[str, Any],
     generated_sections: List[Dict[str, Any]],
@@ -149,6 +162,7 @@ def _build_page_messages(
 ) -> List:
     guideline_text = encode(design_guidelines)
     payload_text = encode(init_payload)
+    page_example_code = _read_example_file(PAGE_EXAMPLE_PATH, "page")
 
     sections_payload: List[Dict[str, str]] = []
     for section in generated_sections:
@@ -171,9 +185,30 @@ def _build_page_messages(
         "### Generated Section Map (JSON encoded)\n"
         f"{sections_text}\n\n"
         "### Initialization Payload (JSON encoded)\n"
-        f"{payload_text}\n\n"
-        "Return only the JSON object matching the schema."
+        f"{payload_text}\n"
     )
+
+    if page_example_code:
+        example_payload = encode(
+            {
+                "reference_filename": str(
+                    PAGE_EXAMPLE_PATH.relative_to(EXAMPLES_BASE_DIR)
+                ),
+                "reference_code": page_example_code,
+            }
+        )
+        human_content += (
+            "\n### Page Reference Example (JSON encoded)\n"
+            f"{example_payload}\n"
+            "Stay as close as possible to this structure—imports, wrapper order, and JSX formatting—adjusting only the section list and Tailwind classes required by the blueprint."
+        )
+    else:
+        human_content += (
+            "\n### Page Reference Example\n"
+            "No example available. Follow established project conventions for imports, JSX ordering, and wrapper classes.\n"
+        )
+
+    human_content += "\nReturn only the JSON object matching the schema."
 
     return [
         SystemMessage(content=PAGE_CODEGEN_PROMPT.strip()),
@@ -189,6 +224,7 @@ def _build_layout_messages(
     guideline_text = encode(design_guidelines)
     payload_text = encode(init_payload)
     sections_text = encode(generated_sections)
+    layout_example_code = _read_example_file(LAYOUT_EXAMPLE_PATH, "layout")
 
     human_content = (
         "You must implement the RootLayout according to the design guidelines and init payload.\n\n"
@@ -197,7 +233,32 @@ def _build_layout_messages(
         "### Generated Sections (JSON encoded)\n"
         f"{sections_text}\n\n"
         "### Initialization Payload (JSON encoded)\n"
-        f"{payload_text}\n\n"
+        f"{payload_text}\n"
+    )
+
+    if layout_example_code:
+        example_payload = encode(
+            {
+                "reference_filename": str(
+                    LAYOUT_EXAMPLE_PATH.relative_to(EXAMPLES_BASE_DIR)
+                ),
+                "reference_code": layout_example_code,
+            }
+        )
+        human_content += (
+            "\n### Layout Reference Example (JSON encoded)\n"
+            f"{example_payload}\n"
+            "Use this as the structural template: keep the import order, font initialization pattern, metadata export, and RootLayout signature identical unless the blueprint forces a change."
+        )
+    else:
+        human_content += (
+            "\n### Layout Reference Example\n"
+            "No example available. Follow existing project conventions for metadata, font loading, and RootLayout structure.\n"
+        )
+
+    human_content += (
+        "\nDouble-check each `next/font` declaration against the official Google font docs. Request only supported weights/subsets (e.g., `Archivo_Black` supports weight `400` only). "
+        "If the blueprint specifies an unavailable weight, substitute the nearest valid weight and add a concise comment explaining the adjustment. "
         "Return only the JSON object matching the schema."
     )
 
@@ -213,7 +274,7 @@ async def _generate_page_code(
     init_payload: Dict[str, Any],
 ) -> PageCodeOutput:
     messages = _build_page_messages(design_guidelines, generated_sections, init_payload)
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="high")
+    model = ChatOpenAI(model="gpt-5", reasoning_effort="low")
     structured_llm = model.with_structured_output(PageCodeOutput)
 
     last_exc: Exception | None = None
@@ -242,7 +303,7 @@ async def _generate_layout_code(
     messages = _build_layout_messages(
         design_guidelines, generated_sections, init_payload
     )
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="high")
+    model = ChatOpenAI(model="gpt-5", reasoning_effort="low")
     structured_llm = model.with_structured_output(LayoutCodeOutput)
 
     last_exc: Exception | None = None

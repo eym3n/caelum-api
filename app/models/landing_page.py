@@ -19,6 +19,7 @@ class SectionFile(BaseModel):
 
     id: Optional[str] = None
     name: Optional[str] = None
+    component_name: Optional[str] = None
     filename: Optional[str] = None
     file_content: Optional[str] = None
 

@@ -17,6 +17,10 @@ class SectionBlueprint(BaseModel):
         default="Section",
         description="Human-readable section name",
     )
+    component_name: str = Field(
+        default="ComponentSection",
+        description="PascalCase React component export name (e.g., 'HeroSection').",
+    )
     goal: str = Field(
         default="Clarify the objective of this section.",
         description="Business or storytelling goal this section must accomplish.",

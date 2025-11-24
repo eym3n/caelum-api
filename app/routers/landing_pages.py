@@ -54,6 +54,7 @@ def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
     for entry in section_entries:
         section_id = entry.get("id")
         section_name = entry.get("name")
+        component_name = entry.get("component_name")
         filename = entry.get("filename") or ""
 
         file_content = None
@@ -72,6 +73,7 @@ def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
             {
                 "id": section_id,
                 "name": section_name,
+                "component_name": component_name,
                 "filename": filename,
                 "file_content": file_content,
             }

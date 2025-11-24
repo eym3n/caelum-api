@@ -44,6 +44,7 @@ Requirements:
 4. Use only allowed dependencies: React, Next.js primitives, `next/font`, imported globals (e.g., `./globals.css`).
 5. Ensure the file compiles under strict TypeScript and ends with a newline.
 6. Summarize the updates (e.g., “Configured RootLayout with Montserrat/Amiri fonts and dark theme body classes.”).
+7. When importing fonts via `next/font`, request only weights/subsets supported by that family. If the blueprint demands an unavailable weight, choose the closest valid weight, add a brief inline comment noting the substitution, and never ship an invalid weight configuration that would throw a build-time error.
 
 Example:
 

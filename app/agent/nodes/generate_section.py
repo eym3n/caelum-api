@@ -141,7 +141,9 @@ def _build_section_prompt(
             }
         )
         human_content += (
-            "\n### Section Reference Example (JSON encoded)\n" f"{example_payload}\n"
+            "\n### Section Reference Example (JSON encoded)\n"
+            f"{example_payload}\n"
+            "Use this reference as the structural template: mirror its import order, React component shell, props typing patterns, FEAAS registration shape, motion setup, and helper constant organization. Only change names, defaults, and content where the blueprint requires it."
         )
     else:
         human_content += (
@@ -149,7 +151,10 @@ def _build_section_prompt(
             "No direct example available; follow the guardrails and business context precisely.\n"
         )
 
-    human_content += "\nReturn only the JSON object matching the schema."
+    human_content += (
+        "\nAlways stay as close as possible to the reference syntax and structure so the generated component feels like a sibling to the example.\n"
+        "Return only the JSON object matching the schema."
+    )
 
     return [
         SystemMessage(content=SECTION_GENERATOR_PROMPT.strip()),
@@ -182,7 +187,7 @@ async def _generate_single_section(
             f"[GENERATE_SECTION] Warning: failed to print prompt for {section_name}: {prompt_exc}"
         )
     print(f"[GENERATE_SECTION] Launching worker for section: {section_name}")
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="high")
+    model = ChatOpenAI(model="gpt-5", reasoning_effort="low")
     structured_llm = model.with_structured_output(SectionGenerationOutput)
     last_exc: Exception | None = None
     for attempt in range(1, 10):
@@ -353,10 +358,18 @@ def generate_section(state: BuilderState) -> BuilderState:
             None,
         )
         if match:
+            expected_component = blueprint.get("component_name")
+            if isinstance(expected_component, str) and expected_component:
+                if match.component_name != expected_component:
+                    print(
+                        f"[GENERATE_SECTION] Aligning component name from {match.component_name} to blueprint value {expected_component}"
+                    )
+                    match.component_name = expected_component
             section_payload.append(
                 {
                     "id": blueprint.get("section_id"),
                     "name": blueprint.get("section_name"),
+                    "component_name": expected_component or match.component_name,
                     "filename": match.filename,
                     "file_content": match.code,
                 }

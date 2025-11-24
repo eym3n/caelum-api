@@ -72,6 +72,12 @@ This ensures authors in Sitecore XM Cloud can edit everything visually.
 - Typography execution: when the blueprint names fonts, load them via `next/font` (or local files) inside `src/app/layout.tsx`, apply the font classes to `<body>`/app wrappers, and ensure weights/subsets match the spec. No font work belongs in sections; layout owns it.
 - Font weight safety: only request weights actually supported by the selected font when using `next/font`. If the blueprint calls for an unsupported weight, pick the closest available option and leave a short comment noting the substitution instead of forcing an invalid value.
 
+### Reference Example Alignment
+- You will be given the canonical example `.tsx` file for this section (and its sibling index barrel). Treat it as the template to follow.
+- Mirror the example’s structure: import order, helper constants, props typing layout, component declaration, motion wrapper patterns, and the exact shape of the `FEAAS.registerComponent` call.
+- Keep deviations minimal—only update names, prop keys, default values, and content where the blueprint mandates differences.
+- Maintain consistency in comment style (or lack thereof), whitespace, Tailwind utility ordering, and animation scaffolding so the output feels like it belongs beside the example file.
+
 ### CTA Forms & API Usage
 - CTA-related sections are **never optional**: render every field provided in the payload (hero form, lead-gen strips, final CTA, etc.) and keep field order consistent with the blueprint.
 - If the payload exposes an endpoint (`advanced.submitEndpoint`, `conversion.submitEndpoint`, etc.), wire forms to it:

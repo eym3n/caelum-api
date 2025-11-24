@@ -74,6 +74,103 @@ NAV_STYLE_INSPIRATION = [
     "Elevated Nav: subtle shadow/elevation",
 ]
 
+CANONICAL_SECTION_LIBRARY = [
+    {
+        "section_id": "navigation",
+        "section_name": "Navigation Section",
+        "component_name": "NavigationSection",
+        "section_file_name_tsx": "src/components/sections/NavigationSection.tsx",
+    },
+    {
+        "section_id": "hero",
+        "section_name": "Hero Section",
+        "component_name": "HeroSection",
+        "section_file_name_tsx": "src/components/sections/HeroSection.tsx",
+    },
+    {
+        "section_id": "benefits",
+        "section_name": "Benefits Section",
+        "component_name": "BenefitsSection",
+        "section_file_name_tsx": "src/components/sections/BenefitsSection.tsx",
+    },
+    {
+        "section_id": "features",
+        "section_name": "Features Section",
+        "component_name": "FeaturesSection",
+        "section_file_name_tsx": "src/components/sections/FeaturesSection.tsx",
+    },
+    {
+        "section_id": "stats",
+        "section_name": "Stats Section",
+        "component_name": "StatsSection",
+        "section_file_name_tsx": "src/components/sections/StatsSection.tsx",
+    },
+    {
+        "section_id": "testimonials",
+        "section_name": "Testimonials Section",
+        "component_name": "TestimonialsSection",
+        "section_file_name_tsx": "src/components/sections/TestimonialsSection.tsx",
+    },
+    {
+        "section_id": "pricing",
+        "section_name": "Pricing Section",
+        "component_name": "PricingSection",
+        "section_file_name_tsx": "src/components/sections/PricingSection.tsx",
+    },
+    {
+        "section_id": "faq",
+        "section_name": "FAQ Section",
+        "component_name": "FaqSection",
+        "section_file_name_tsx": "src/components/sections/FaqSection.tsx",
+    },
+    {
+        "section_id": "cta",
+        "section_name": "CTA Section",
+        "component_name": "CtaSection",
+        "section_file_name_tsx": "src/components/sections/CtaSection.tsx",
+    },
+    {
+        "section_id": "footer",
+        "section_name": "Footer Section",
+        "component_name": "FooterSection",
+        "section_file_name_tsx": "src/components/sections/FooterSection.tsx",
+    },
+]
+
+CANONICAL_SECTION_ALIASES = {
+    "nav": "navigation",
+    "navigation": "navigation",
+    "navigation section": "navigation",
+    "hero": "hero",
+    "hero section": "hero",
+    "benefit": "benefits",
+    "benefits": "benefits",
+    "benefits section": "benefits",
+    "features": "features",
+    "features section": "features",
+    "feature": "features",
+    "stats": "stats",
+    "statistics": "stats",
+    "metrics": "stats",
+    "stats section": "stats",
+    "testimonials": "testimonials",
+    "social proof": "testimonials",
+    "social-proof": "testimonials",
+    "testimonials section": "testimonials",
+    "pricing": "pricing",
+    "plans": "pricing",
+    "pricing section": "pricing",
+    "faq": "faq",
+    "faqs": "faq",
+    "questions": "faq",
+    "faq section": "faq",
+    "cta": "cta",
+    "call to action": "cta",
+    "call-to-action": "cta",
+    "cta section": "cta",
+    "footer": "footer",
+    "footer section": "footer",
+}
 DESIGN_PLANNER_PROMPT_TEMPLATE = """
 You are the Design Planner for a Next.js landing page builder. You run ONCE per session to establish ALL visual and interaction guidance that the coder will follow directly. There is NO dedicated designer or global token layer—your output is the single source of truth for every section component.
 
@@ -300,6 +397,7 @@ For EVERY section (Nav → ... → Footer) provide:
 7. `responsive` – how layout collapses, which elements hide/re-order.
 8. `developer_notes` – concrete implementation tips (Tailwind classes to lean on, wrappers needed, `use client` requirements, when to inline gradients via `style` props, etc.). Remind coder that each section is ONE component containing all styling—no shared helpers. Include notes about z-index layering, spacing tokens, 40px hit areas, keyboard/focus requirements, and smooth-scroll offsets if nav anchors target the section. Cite the exact dataset metrics that justify structural choices (e.g., “Hero form stays pinned: Experiment B +35.7% CVR; mobile warnings → add generous spacing and collapsible fields.”).
    - For CTA-driven sections, explicitly list every required form field from the payload, the API endpoint, HTTP method, body schema, and success/error handling expectations. Make it clear the form submission is mandatory.
+   - Populate the canonical naming metadata exactly: `section_id`, `section_name`, `component_name`, and `section_file_name_tsx` must align with the canonical library (or the custom-section pattern when necessary).
 
 ═══════════════════════════════════════════════════════════════════════════════
 📦 OUTPUT FORMAT (DesignGuidelines Schema)
@@ -318,7 +416,7 @@ Populate every field:
 - `component_principles` – reiterate “single component, self-contained styling, no globals.” Mention how to treat `globals.css` (basic reset only).
 - `mobile_nav_strategy` – explicit instructions for the mobile navigation (hamburger menu, slide-over animation, backdrop, etc.). Call out mobile link colors, panel backgrounds, and overlay treatments that preserve contrast over hero imagery/light surfaces.
 - `data_signals` – synthesize campaign + experiment analytics into five paragraphs (`performance_overview`, `audience_behavior`, `design_opportunities`, `risks_and_mitigations`, `experiment_directives`) referencing exact metrics and dataset IDs. Highlight how those numbers alter section priorities and form/CTA treatments.
-- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/components/sections/<PascalCase>Section.tsx`). Each blueprint must emphasize unique layout structure (no repeats), background treatment, layering stack, assigned scroll effect (if any), CTA hierarchy, and payload-compliant data usage.
+- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/components/sections/<PascalCase>Section.tsx`). Each blueprint must emphasize unique layout structure (no repeats), background treatment, layering stack, assigned scroll effect (if any), CTA hierarchy, and payload-compliant data usage. Include the canonical `component_name` to ensure the coder exports the correct React component.
 - `page_title` / `page_description` – metadata.
 - `accessibility_notes` – contrast, focus, reduced motion instructions. Be specific about light-theme readability: nav links over translucent backgrounds, hero/body copy on pale surfaces, form labels/placeholders, and CTA legibility. Call for overlays or palette adjustments wherever contrast might dip below WCAG AA.
 - `coder_instructions` – final marching orders (remind coder to follow per-section notes, avoid shared tokens/modules, rely on Tailwind + inline styles inside each component).
@@ -333,4 +431,20 @@ REMINDERS
 - If data is missing, state “No data provided — keep layout minimal” rather than inventing.
 - Reference experiment learnings (e.g., hero form uplift %, mobile complaints) and campaign trends (traffic source shares, creative performance, scroll depth) wherever they influence layout, copy, or CTA placement. Quote the actual numbers so engineering + stakeholders can trace every design choice back to data.
 - *REMINDER: Only Hero and Footer are required to have a custom background. At most, only ONE other section (if appropriate) gets a unique background. All other sections must use a default background color or remain transparent/minimal.*
+
+═══════════════════════════════════════════════════════════════════════════════
+📚 CANONICAL SECTION NAMING (MANDATORY)
+═══════════════════════════════════════════════════════════════════════════════
+- Use the canonical section/component records below for all standard sections. Do **not** invent new variations (e.g., “Navigation Bar Section” is invalid).
+- For each `SectionBlueprint`, set:
+  - `section_id` to the canonical machine name
+  - `section_name` to the canonical human-friendly label (e.g., “Hero Section”)
+  - `component_name` to the canonical PascalCase React export (e.g., `HeroSection`)
+  - `section_file_name_tsx` to the canonical path `src/components/sections/<PascalCase>Section.tsx`
+- Custom payload sections (those not in the table) must still follow the pattern:
+  - Human label: `<Title Case> Section`
+  - Component: `<PascalCase>Section`
+  - File: `src/components/sections/<PascalCase>Section.tsx`
+- Canonical library:
+**_canonical_sections_table_**
 """

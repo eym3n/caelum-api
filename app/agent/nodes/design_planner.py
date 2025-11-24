@@ -1,3 +1,6 @@
+import re
+from typing import Any, Dict, List
+
 from langchain_core.messages import SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.state import BuilderState
@@ -8,6 +11,8 @@ from app.agent.prompts.design_planner import (
     HERO_CONCEPTS,
     FEATURES_LAYOUT_OPTIONS,
     NAV_STYLE_INSPIRATION,
+    CANONICAL_SECTION_LIBRARY,
+    CANONICAL_SECTION_ALIASES,
 )
 from toon import encode
 from app.utils.landing_pages import (
@@ -18,6 +23,107 @@ from app.models.landing_page import LandingPageUpdate
 
 
 _design_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
+
+_CANONICAL_REGISTRY: Dict[str, Dict[str, str]] = {
+    entry["section_id"]: entry for entry in CANONICAL_SECTION_LIBRARY
+}
+
+
+def _normalize_key(value: str | None) -> str:
+    if not value:
+        return ""
+    return re.sub(r"[^a-z0-9]+", "", value.lower())
+
+
+_CANONICAL_ALIAS_MAP: Dict[str, str] = {
+    _normalize_key(alias): canonical for alias, canonical in CANONICAL_SECTION_ALIASES.items()
+}
+for entry in CANONICAL_SECTION_LIBRARY:
+    canonical_id = entry["section_id"]
+    for candidate in (
+        entry["section_id"],
+        entry["section_name"],
+        entry["component_name"],
+        entry["component_name"].removesuffix("Section"),
+    ):
+        key = _normalize_key(candidate)
+        if not key:
+            continue
+        _CANONICAL_ALIAS_MAP[key] = canonical_id
+
+
+def _to_pascal_case(value: str | None) -> str:
+    if not value:
+        return ""
+    parts = re.split(r"[^a-z0-9]+", value.lower())
+    return "".join(part.capitalize() for part in parts if part)
+
+
+def _to_human_label(pascal: str) -> str:
+    if not pascal:
+        return "Custom Section"
+    words = re.findall(r"[A-Z][a-z0-9]*", pascal)
+    return (" ".join(words) or pascal) + " Section"
+
+
+def _canonicalize_section(section: Dict[str, Any], index: int) -> Dict[str, Any]:
+    candidates: List[str] = []
+    for key in ("section_id", "section_name", "component_name"):
+        value = section.get(key)
+        if isinstance(value, str):
+            candidates.append(value)
+    filename = section.get("section_file_name_tsx")
+    if isinstance(filename, str):
+        basename = filename.split("/")[-1]
+        if basename.endswith(".tsx"):
+            basename = basename[:-4]
+        candidates.append(basename)
+
+    canonical_entry: Dict[str, str] | None = None
+    for candidate in candidates:
+        normalized = _normalize_key(candidate)
+        canonical_id = _CANONICAL_ALIAS_MAP.get(normalized)
+        if canonical_id:
+            canonical_entry = _CANONICAL_REGISTRY.get(canonical_id)
+            if canonical_entry:
+                break
+
+    if canonical_entry:
+        section["section_id"] = canonical_entry["section_id"]
+        section["section_name"] = canonical_entry["section_name"]
+        section["component_name"] = canonical_entry["component_name"]
+        section["section_file_name_tsx"] = canonical_entry["section_file_name_tsx"]
+        return section
+
+    # Custom section normalization
+    source_seed = section.get("section_name") or section.get("section_id") or f"Custom {index + 1}"
+    pascal = _to_pascal_case(source_seed) or f"Custom{index + 1}"
+    if not pascal.endswith("Section"):
+        component_name = f"{pascal}Section"
+    else:
+        component_name = pascal
+        pascal = pascal[: -len("Section")] or pascal
+    human_label = section.get("section_name")
+    if not human_label or _normalize_key(human_label) != _normalize_key(pascal):
+        section["section_name"] = _to_human_label(pascal)
+    section["component_name"] = component_name
+    slug = section.get("section_id")
+    desired_slug = re.sub(r"[^a-z0-9]+", "-", section["section_name"].lower()).strip("-")
+    if not desired_slug:
+        desired_slug = f"custom-section-{index + 1:02d}"
+    section["section_id"] = desired_slug
+    section["section_file_name_tsx"] = f"src/components/sections/{component_name}.tsx"
+    return section
+
+
+def _canonicalize_section_blueprints(guidelines: Dict[str, Any]) -> None:
+    sections = guidelines.get("sections")
+    if not isinstance(sections, list):
+        return
+    for idx, section in enumerate(sections):
+        if isinstance(section, dict):
+            _canonicalize_section(section, idx)
+            section["ordering_index"] = section.get("ordering_index") or f"{idx:02d}"
 
 
 def design_planner(state: BuilderState) -> BuilderState:
@@ -66,11 +172,17 @@ def design_planner(state: BuilderState) -> BuilderState:
     features_insp_str = "\n".join([f"- {item}" for item in FEATURES_LAYOUT_OPTIONS])
     nav_insp_str = "\n".join([f"- {item}" for item in NAV_STYLE_INSPIRATION])
 
+    canonical_sections_str = "\n".join(
+        f"- {entry['section_name']} → component `{entry['component_name']}` | id `{entry['section_id']}` | file `{entry['section_file_name_tsx']}`"
+        for entry in CANONICAL_SECTION_LIBRARY
+    )
+
     prompt = DESIGN_PLANNER_PROMPT_TEMPLATE.replace(
         "**_hero_inspiration_**", hero_insp_str
     )
     prompt = prompt.replace("**_features_inspiration_**", features_insp_str)
     prompt = prompt.replace("**_nav_inspiration_**", nav_insp_str)
+    prompt = prompt.replace("**_canonical_sections_table_**", canonical_sections_str)
 
     system_message = SystemMessage(content=prompt + init_payload_text)
     messages = [system_message, *state.messages]
@@ -86,19 +198,19 @@ def design_planner(state: BuilderState) -> BuilderState:
 
         print(f"✅ [DESIGN_PLANNER] Generated design guidelines:")
 
+        # Prepare canonicalized guidelines for logging and persistence
+        guidelines_dict = design_guidelines.model_dump()
+        _canonicalize_section_blueprints(guidelines_dict)
+        print(encode(guidelines_dict))
+
         # Log to job system
         log_job_event(
             state.job_id,
             node="design_planner",
             message="Design planner generated comprehensive design guidelines.",
             event_type="node_completed",
-            data=design_guidelines.model_dump(),
+            data=guidelines_dict,
         )
-
-        # Store structured guidelines in state
-        # We'll add a new field to BuilderState to hold this
-        guidelines_dict = design_guidelines.model_dump()
-        print(encode(guidelines_dict))
 
         # Persist design guidelines to the landing page record
         try:
