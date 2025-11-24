@@ -53,7 +53,17 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         print("\n\n[DEPLOYMENT_FIXER] 🔧 Starting deployment error analysis...")
 
         session_id = state.session_id
+        job_id = getattr(state, "job_id", None)
         deployment_error = state.deployment_error or "No error details available"
+
+        if job_id:
+            log_job_event(
+                job_id,
+                node="deployment_fixer",
+                message="Analyzing deployment failure...",
+                event_type="node_started",
+                data={"session_id": session_id, "error_excerpt": deployment_error[:200]},
+            )
 
         print(f"[DEPLOYMENT_FIXER] Session: {session_id}")
         print(f"[DEPLOYMENT_FIXER] Error:\n{deployment_error[:200]}...")
@@ -83,10 +93,20 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         print(f"\n\n[DEPLOYMENT_FIXER] Response: {response}")
 
         # Check if there are tool calls
-        if getattr(response, "tool_calls", None):
+        tool_calls = getattr(response, "tool_calls", None)
+        if tool_calls:
+            num_calls = len(tool_calls)
             print(
-                f"[DEPLOYMENT_FIXER] Making {len(response.tool_calls)} fix(es) to resolve deployment error"
+                f"[DEPLOYMENT_FIXER] Making {num_calls} fix(es) to resolve deployment error"
             )
+            if job_id:
+                log_job_event(
+                    job_id,
+                    node="deployment_fixer",
+                    message=f"Applying {num_calls} automated fix{'es' if num_calls != 1 else ''} for deployment failure.",
+                    event_type="node",
+                    data={"tool_calls": num_calls},
+                )
             return {
                 "messages": [response],
                 "deployment_fixer_run": True,
@@ -114,12 +134,13 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
 
         print(f"[DEPLOYMENT_FIXER] {output}")
 
-        log_job_event(
-            state.job_id,
-            node="deployment_fixer",
-            message=output,
-            event_type="node_completed",
-        )
+        if job_id:
+            log_job_event(
+                job_id,
+                node="deployment_fixer",
+                message=output,
+                event_type="node_completed",
+            )
 
         return {
             "messages": [response],
@@ -127,6 +148,14 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         }
     except Exception as e:
         print(f"[DEPLOYMENT_FIXER] Error: {e}")
+        if job_id:
+            log_job_event(
+                job_id,
+                node="deployment_fixer",
+                message="Deployment fixer encountered an exception.",
+                event_type="error",
+                data={"error": str(e)},
+            )
         return {
             "messages": [response] if response is not None else state.messages,
             "deployment_fixer_run": True,

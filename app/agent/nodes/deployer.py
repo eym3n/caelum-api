@@ -65,13 +65,15 @@ def deployer(state: BuilderState) -> BuilderState:
     message so the coder can fix the issues.
     """
 
-    log_job_event(
-        state.job_id,
-        node="deployer",
-        message="Deploying landing page...",
-        event_type="node_started",
-    )
-
+    job_id = getattr(state, "job_id", None)
+    if job_id:
+        log_job_event(
+            job_id,
+            node="deployer",
+            message="Deploying landing page...",
+            event_type="node_started",
+            data={"session_id": state.session_id},
+        )
     session_id = state.session_id
 
     print(f"🚀 [DEPLOYER] Starting deployment for session: {session_id}")
@@ -107,6 +109,15 @@ def deployer(state: BuilderState) -> BuilderState:
             if updated_lp:
                 print(f"✅ [DEPLOYER] Landing page status updated to 'generated'")
 
+            if job_id:
+                log_job_event(
+                    job_id,
+                    node="deployer",
+                    message="Deployment succeeded.",
+                    event_type="node_completed",
+                    data={"deployment_url": deployment_url},
+                )
+
             return {
                 "deployment_failed": False,
                 "deployment_error": "",
@@ -127,6 +138,15 @@ def deployer(state: BuilderState) -> BuilderState:
             if updated_lp:
                 print(f"❌ [DEPLOYER] Landing page status updated to 'failed'")
 
+            if job_id:
+                log_job_event(
+                    job_id,
+                    node="deployer",
+                    message="Deployment failed.",
+                    event_type="error",
+                    data={"error": error_msg},
+                )
+
             return {
                 "deployment_failed": True,
                 "deployment_error": error_msg,
@@ -143,6 +163,15 @@ def deployer(state: BuilderState) -> BuilderState:
             session_id=session_id, status=LandingPageStatus.FAILED
         )
 
+        if job_id:
+            log_job_event(
+                job_id,
+                node="deployer",
+                message="Deployment timed out.",
+                event_type="error",
+                data={"error": error_msg},
+            )
+
         return {
             "deployment_failed": True,
             "deployment_error": error_msg,
@@ -157,6 +186,15 @@ def deployer(state: BuilderState) -> BuilderState:
         update_landing_page_status(
             session_id=session_id, status=LandingPageStatus.FAILED
         )
+
+        if job_id:
+            log_job_event(
+                job_id,
+                node="deployer",
+                message="Deployment crashed with an exception.",
+                event_type="error",
+                data={"error": error_msg},
+            )
 
         return {
             "deployment_failed": True,
