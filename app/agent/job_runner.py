@@ -19,9 +19,12 @@ DEFAULT_NODE_MESSAGES = {
     "router": "Planning next steps..",
     "design_planner": "Generated design blueprint",
     "design_blueprint_pdf": "Documented design blueprint into PDF",
-    "coder": "Implemented landing page",
+    "generate_section": "Generated section components",
+    "codegen": "Assembled page and layout",
+    "linting": "Ran lint checks",
     "deployer": "Deployed landing page",
     "deployment_fixer": "Fixed deployment errors",
+    "fix_errors": "Resolved lint failures",
     "clarify": "Clarified the request",
 }
 
@@ -30,8 +33,10 @@ SUPPRESS_DEFAULT_NODE_LOGS = {
     "design_planner",
     "designer",
     "design_blueprint_pdf",
-    "coder",
+    "generate_section",
+    "codegen",
     "deployment_fixer",
+    "fix_errors",
     "clarify",
 }
 
@@ -148,11 +153,11 @@ def _extract_message_from_update(
     if node.endswith("_tools") and tool_name:
         return ""
 
-    # Highest priority: explicit clarify/coder outputs
+    # Highest priority: explicit clarify/code generation outputs
     if "clarify_response" in update:
         return str(update["clarify_response"]) or ""
-    if "coder_output" in update:
-        return str(update["coder_output"]) or ""
+    if "codegen_summary" in update:
+        return str(update["codegen_summary"]) or ""
 
     # Fallback: last message content if present (truncate to keep logs light)
     if "messages" in update:
@@ -316,8 +321,14 @@ def run_chat_job(job_id: str, session_id: str, message: str) -> None:
                 if should_skip_default:
                     continue
 
-                # Track last message from coder or deployment_fixer for final event
-                if node in ("coder", "deployment_fixer", "deployer", "clarify"):
+                # Track last message from core implementation nodes for final event
+                if node in (
+                    "codegen",
+                    "deployment_fixer",
+                    "fix_errors",
+                    "deployer",
+                    "clarify",
+                ):
                     last_meaningful_message = msg
 
                 # NOTE: we deliberately avoid storing the raw `update` object in MongoDB,
@@ -467,8 +478,8 @@ def run_init_job(
                 if should_skip_default:
                     continue
 
-                # Track last message from coder or deployment_fixer for final event
-                if node in ("coder", "deployment_fixer"):
+                # Track last message from implementation/error-fix nodes for final event
+                if node in ("codegen", "deployment_fixer", "fix_errors"):
                     last_meaningful_message = msg
 
                 log_job_event(

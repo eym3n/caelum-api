@@ -27,25 +27,34 @@ router = APIRouter(tags=["landing-pages"])
 
 
 def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
-    business_data = landing_page.business_data or {}
-    design_guidelines = business_data.get("design_guidelines") or {}
-    sections = design_guidelines.get("sections") or []
-    if not isinstance(sections, list):
-        return []
-
     session_dir = get_session_dir(landing_page.session_id)
+    stored_sections = landing_page.sections or []
+
+    if stored_sections:
+        section_entries = stored_sections
+    else:
+        business_data = landing_page.business_data or {}
+        design_guidelines = business_data.get("design_guidelines") or {}
+        raw_sections = design_guidelines.get("sections") or []
+        if not isinstance(raw_sections, list):
+            raw_sections = []
+        section_entries = [
+            {
+                "id": section.get("section_id"),
+                "name": section.get("section_name"),
+                "filename": section.get("section_file_name_tsx")
+                or section.get("section_file_name"),
+            }
+            for section in raw_sections
+            if isinstance(section, dict)
+        ]
+
     payload: List[dict[str, Any]] = []
 
-    for section in sections:
-        if not isinstance(section, dict):
-            continue
-        section_id = section.get("section_id")
-        section_name = section.get("section_name")
-        filename = (
-            section.get("section_file_name_tsx")
-            or section.get("section_file_name")
-            or ""
-        )
+    for entry in section_entries:
+        section_id = entry.get("id")
+        section_name = entry.get("name")
+        filename = entry.get("filename") or ""
 
         file_content = None
         if filename:

@@ -7,7 +7,10 @@ from app.agent.nodes.design_blueprint_pdf import design_blueprint_pdf
 from app.agent.state import BuilderState
 from app.agent.nodes.router import router
 from app.agent.nodes.clarify import clarify
-from app.agent.nodes.coder import coder
+from app.agent.nodes.generate_section import generate_section
+from app.agent.nodes.codegen import codegen
+from app.agent.nodes.linting import linting
+from app.agent.nodes.fix_errors import fix_errors
 from app.agent.nodes.deployer import deployer
 from app.agent.nodes.deployment_fixer import deployment_fixer
 from app.agent.tools.files import (
@@ -43,11 +46,11 @@ graph = StateGraph(BuilderState)
 
 def edge_after_router(
     state: BuilderState,
-) -> Literal["design_planner", "coder", "clarify", "deployer", "__end__"]:
+) -> Literal["design_planner", "generate_section", "clarify", "deployer", "__end__"]:
     if state.user_intent == "design":
         return "design_planner"
     if state.user_intent == "code":
-        return "coder"
+        return "generate_section"
     if state.user_intent == "clarify":
         return "clarify"
     if state.user_intent == "deploy":
@@ -55,14 +58,9 @@ def edge_after_router(
     return "__end__"
 
 
-def edge_after_design_planner(state: BuilderState) -> Literal["coder"]:
-    """After design_planner generates the blueprint, immediately proceed to coder."""
-    return "coder"
-
-
-def edge_after_architect(state: BuilderState) -> Literal["planner"]:
-    """After architect completes, always proceed directly to planner to avoid loops."""
-    return "planner"
+def edge_after_design_planner(state: BuilderState) -> Literal["generate_section"]:
+    """After design_planner generates the blueprint, proceed to section generation."""
+    return "generate_section"
 
 
 file_tools = [
@@ -87,24 +85,11 @@ command_tools = [
     lint_project,
 ]
 
-# Coder has access to both file and command tools (batch operations only)
-coder_tools_node = ToolNode(file_tools + command_tools)
 # Clarify only needs file reading (batch reads)
 clarify_tools_node = ToolNode([batch_read_files, list_files])
 # Deployment fixer has access to both file and command tools (batch operations only)
 deployment_fixer_tools_node = ToolNode(file_tools + command_tools)
-
-
-def edge_after_coder(
-    state: BuilderState,
-) -> Literal["deployer", "coder"]:
-    coder_run = state.coder_run
-    if coder_run:
-        print("🔄 Coder made tool calls, proceeding to deployment.")
-        return "__end__"
-    else:
-        print("🔄 Coder made no tool calls, routing back to coder.")
-        return "coder"
+fix_errors_tools_node = ToolNode(file_tools + command_tools)
 
 
 def edge_after_deployer(
@@ -131,42 +116,39 @@ def edge_after_deployment_fixer(
         return "deployment_fixer"
 
 
-def noop(state: BuilderState) -> BuilderState:
-    print("⏭️ No operation node reached.")
-    return {}
+def edge_after_linting(state: BuilderState) -> Literal["fix_errors", "deployer"]:
+    if state.lint_failed:
+        print("❌ Lint failed, routing to fix_errors.")
+        return "fix_errors"
+    print("✅ Lint passed, proceeding to deployment.")
+    return "deployer"
 
 
 graph.add_node("router", router)
 graph.add_node("design_planner", design_planner)
 graph.add_node("clarify", clarify)
-graph.add_node("coder", coder)
+graph.add_node("generate_section", generate_section)
+graph.add_node("codegen", codegen)
+graph.add_node("linting", linting)
 graph.add_node("design_blueprint_pdf", design_blueprint_pdf)
-graph.add_node("coder_tools", coder_tools_node)
-graph.add_node("check", noop)
 graph.add_node("deployer", deployer)
 graph.add_node("deployment_fixer", deployment_fixer)
+graph.add_node("fix_errors", fix_errors)
 graph.add_node("deployment_fixer_tools", deployment_fixer_tools_node)
+graph.add_node("fix_errors_tools", fix_errors_tools_node)
 graph.add_node("clarify_tools", clarify_tools_node)
 
 graph.add_edge(START, "router")
 graph.add_conditional_edges("router", edge_after_router)
 
-# Design planner hands off to coder and documentation
-graph.add_edge("design_planner", "coder")
+# Design planner hands off to section generation and documentation
+graph.add_edge("design_planner", "generate_section")
 graph.add_edge("design_planner", "design_blueprint_pdf")
 graph.add_edge("design_blueprint_pdf", END)
 
-
-graph.add_conditional_edges(
-    "coder",
-    tools_condition,
-    {
-        "tools": "coder_tools",
-        "__end__": "check",
-    },
-)
-graph.add_edge("coder_tools", "coder")
-graph.add_conditional_edges("check", edge_after_coder)
+graph.add_edge("generate_section", "codegen")
+graph.add_edge("codegen", "linting")
+graph.add_conditional_edges("linting", edge_after_linting)
 graph.add_conditional_edges("deployer", edge_after_deployer)
 
 # Deployment fixer workflow
@@ -179,6 +161,16 @@ graph.add_conditional_edges(
     },
 )
 graph.add_edge("deployment_fixer_tools", "deployment_fixer")
+
+graph.add_conditional_edges(
+    "fix_errors",
+    tools_condition,
+    {
+        "tools": "fix_errors_tools",
+        "__end__": "linting",
+    },
+)
+graph.add_edge("fix_errors_tools", "fix_errors")
 
 graph.add_conditional_edges(
     "clarify", tools_condition, {"tools": "clarify_tools", "__end__": END}

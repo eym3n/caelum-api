@@ -50,7 +50,7 @@ class SectionBlueprint(BaseModel):
         description="Explicit developer-focused instructions (component structure, Tailwind strategies, data handling).",
     )
     section_file_name_tsx: str = Field(
-        default="src/app/components/sections/<PascalCase>Section.tsx",
+        default="src/components/sections/<PascalCase>Section.tsx",
         description="The name of the file to create for this section.",
     )
     ordering_index: str = Field(

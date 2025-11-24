@@ -439,9 +439,9 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                     if "clarify_response" in update:
                         text_to_send = update["clarify_response"]
 
-                    # Check for coder output
-                    elif "coder_output" in update:
-                        text_to_send = update["coder_output"]
+                    # Check for codegen summary
+                    elif "codegen_summary" in update:
+                        text_to_send = update["codegen_summary"]
 
                     # Check for messages (coder, tools, etc)
                     elif "messages" in update:
@@ -457,7 +457,8 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         if (
                             node
                             in (
-                                "coder_tools",
+                                "fix_errors_tools",
+                                "deployment_fixer_tools",
                                 "clarify_tools",
                                 "planner_tools",
                                 "architect_tools",
@@ -571,7 +572,8 @@ async def chat_stream(req: ChatRequest, session_id: str = Depends(get_session_id
                         # Clean up node names for better frontend display
                         display_node = node
                         if node in (
-                            "coder_tools",
+                            "fix_errors_tools",
+                            "deployment_fixer_tools",
                             "clarify_tools",
                             "planner_tools",
                             "architect_tools",

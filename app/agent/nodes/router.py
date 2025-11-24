@@ -64,7 +64,6 @@ def router(state: BuilderState) -> BuilderState:
 
         return {
             "user_intent": "design",
-            "coder_run": False,
             "is_followup": False,
         }
 
@@ -83,6 +82,5 @@ def router(state: BuilderState) -> BuilderState:
     next_node = router_response.next_node
     return {
         "user_intent": next_node,
-        "coder_run": False,
         "is_followup": router_response.is_followup,
     }

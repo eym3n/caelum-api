@@ -253,7 +253,7 @@ Use these inspiration libraries as mix-and-match seeds (do not copy verbatim):
 ═══════════════════════════════════════════════════════════════════════════════
 🧱 STRUCTURE, CODE & TAILWIND CONSTRAINTS
 ═══════════════════════════════════════════════════════════════════════════════
-- Remind coder to stick to the Next.js App Router, functional components, and per-section `.tsx` files under `src/app/components/sections`. One file per section; no shared helpers or contexts.
+- Remind coder to stick to the Next.js App Router, functional components, and per-section `.tsx` files under `src/components/sections`. One file per section; no shared helpers or contexts.
 - Reinforce Tailwind v4 rules: no `@apply` with custom utilities, no theme tokens beyond allowed base, rely on `tailwind-merge` for class composition, use `@utility` for custom helpers only when unavoidable, keep gradients/colors inline via `style`.
 - Primitives live in `ui/primitives` (buttons, cards, inputs). Buttons must expose primary/secondary/outline/ghost variants with consistent radii; inputs rely on react-hook-form + zod; class-variance-authority and @radix-ui/react-slot govern extensibility.
 - Coder must inline hero/background gradients, use raw CSS variables only when defined in documentation, and avoid global overrides. Mention `'use client'` and no React context.
@@ -318,7 +318,7 @@ Populate every field:
 - `component_principles` – reiterate “single component, self-contained styling, no globals.” Mention how to treat `globals.css` (basic reset only).
 - `mobile_nav_strategy` – explicit instructions for the mobile navigation (hamburger menu, slide-over animation, backdrop, etc.). Call out mobile link colors, panel backgrounds, and overlay treatments that preserve contrast over hero imagery/light surfaces.
 - `data_signals` – synthesize campaign + experiment analytics into five paragraphs (`performance_overview`, `audience_behavior`, `design_opportunities`, `risks_and_mitigations`, `experiment_directives`) referencing exact metrics and dataset IDs. Highlight how those numbers alter section priorities and form/CTA treatments.
-- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/app/components/sections/<PascalCase>Section.tsx`). Each blueprint must emphasize unique layout structure (no repeats), background treatment, layering stack, assigned scroll effect (if any), CTA hierarchy, and payload-compliant data usage.
+- `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/components/sections/<PascalCase>Section.tsx`). Each blueprint must emphasize unique layout structure (no repeats), background treatment, layering stack, assigned scroll effect (if any), CTA hierarchy, and payload-compliant data usage.
 - `page_title` / `page_description` – metadata.
 - `accessibility_notes` – contrast, focus, reduced motion instructions. Be specific about light-theme readability: nav links over translucent backgrounds, hero/body copy on pale surfaces, form labels/placeholders, and CTA legibility. Call for overlays or palette adjustments wherever contrast might dip below WCAG AA.
 - `coder_instructions` – final marching orders (remind coder to follow per-section notes, avoid shared tokens/modules, rely on Tailwind + inline styles inside each component).
