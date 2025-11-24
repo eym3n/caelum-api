@@ -58,9 +58,7 @@ def edge_after_router(
     if state.user_intent == "design":
         return "design_planner"
     if state.user_intent == "code":
-        if state.is_followup:
-            return "followup_codegen"
-        return "generate_section"
+        return "followup_codegen"
     if state.user_intent == "clarify":
         return "clarify"
     if state.user_intent == "deploy":
