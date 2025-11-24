@@ -79,7 +79,7 @@ def coder(state: BuilderState) -> BuilderState:
     )
 
     _coder_llm_ = ChatGoogleGenerativeAI(
-        model="models/gemini-3-pro-preview", thinking_budget=128
+        model="models/gemini-3-pro-preview", thinking_budget=128, thinking_level="low"
     ).bind_tools(
         tools,
         parallel_tool_calls=True,
