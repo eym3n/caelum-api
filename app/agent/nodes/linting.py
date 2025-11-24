@@ -4,7 +4,9 @@ import subprocess
 from pathlib import Path
 
 from app.agent.state import BuilderState
+from app.models.landing_page import LandingPageStatus
 from app.utils.jobs import log_job_event
+from app.utils.landing_pages import update_landing_page_status
 
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -49,11 +51,22 @@ def linting(state: BuilderState) -> BuilderState:
             data={"output": output},
         )
     else:
+        updated_lp = None
+        try:
+            updated_lp = update_landing_page_status(
+                session_id=session_id, status=LandingPageStatus.GENERATED
+            )
+        except Exception as update_exc:  # pragma: no cover - defensive logging
+            print(
+                f"[LINTING] Warning: failed to mark landing page as generated for session {session_id}: {update_exc}"
+            )
+
         log_job_event(
             state.job_id,
             node="linting",
             message="Linting passed with no errors.",
             event_type="node_completed",
+            data={"status_updated": bool(updated_lp)},
         )
 
     return {
