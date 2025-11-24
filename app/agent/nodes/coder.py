@@ -13,6 +13,7 @@ from app.agent.prompts.coder import (
     CODER_DESIGN_BOOSTER,
     CODER_SYSTEM_PROMPT,
     FOLLOWUP_CODER_SYSTEM_PROMPT,
+    SUMMARIZE_NEXT_STEPS_SYSTEM_PROMPT,
 )
 from app.agent.state import BuilderState
 
@@ -44,6 +45,16 @@ tools = [
     # Command tools
     lint_project,
 ]
+
+
+def summarize_next_steps(state: BuilderState) -> str:
+    SYS = SystemMessage(content=SUMMARIZE_NEXT_STEPS_SYSTEM_PROMPT)
+    messages = [SYS, *state.messages]
+    _summarize_next_steps_llm_ = ChatGoogleGenerativeAI(
+        model="gemini-2.5-flash-preview-09-2025",
+    ).invoke(messages)
+
+    return _summarize_next_steps_llm_.content
 
 
 def coder(state: BuilderState) -> BuilderState:
@@ -104,14 +115,24 @@ def coder(state: BuilderState) -> BuilderState:
 
     files = "\n".join(list_files_internal(state.session_id))
 
-    SYS = SystemMessage(
-        content=_coder_prompt
-        + design_context_section
-        + project_spec
-        + CODER_DESIGN_BOOSTER
-        + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
-    )
-    messages = [SYS, *state.messages]
+    if not state.coder_run:
+        SYS = SystemMessage(
+            content=_coder_prompt
+            + design_context_section
+            + project_spec
+            + CODER_DESIGN_BOOSTER
+            + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
+        )
+        messages = [SYS, *state.messages]
+
+    else:
+        SYS = (
+            summarize_next_steps(state)
+            + design_context_section
+            + project_spec
+            + f"\n\n**********The following files exist in the codebase:\n{files}\n**********"
+        )
+        messages = [SYS]
 
     coder_response = _coder_llm_.invoke(messages)
 
