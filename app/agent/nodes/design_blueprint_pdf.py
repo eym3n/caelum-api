@@ -100,6 +100,24 @@ def design_blueprint_pdf(state: BuilderState) -> BuilderState:
         "### Design Planner Blueprint\n"
         f"{guidelines_payload}"
     )
+    data_sections: list[str] = []
+    if state.data_insights:
+        data_sections.append(
+            "### Data Signals (JSON)\n" + encode(state.data_insights)
+        )
+    if state.campaign_data_digest:
+        data_sections.append(
+            "### Campaign Performance Digest\n" + state.campaign_data_digest.strip()
+        )
+    if state.experiment_data_digest:
+        data_sections.append(
+            "### Experiment Insights Digest\n" + state.experiment_data_digest.strip()
+        )
+    if state.data_warnings:
+        warning_block = "\n".join(f"- {warning}" for warning in state.data_warnings)
+        data_sections.append("### Data Quality Warnings\n" + warning_block)
+    if data_sections:
+        context_block = context_block + "\n\n" + "\n\n".join(data_sections)
     human = HumanMessage(content=context_block)
 
     try:

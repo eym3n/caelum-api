@@ -126,6 +126,16 @@ Use these inspiration libraries as mix-and-match seeds (do not copy verbatim):
 - Mention special behaviors (glass borders, subtle glows, icon micro-interactions) so the coder can reproduce them inside each section component.
 
 ═══════════════════════════════════════════════════════════════════════════════
+📊 DATA-DRIVEN STRATEGY (CRITICAL)
+═══════════════════════════════════════════════════════════════════════════════
+- The init payload now includes `data.dataInsights` containing parsed campaign metrics and experiment outcomes (hero form placement test). You **must** reference this structured data plus the digest paragraphs appended to the prompt.
+- Extract concrete numbers (conversion rate %, bounce rate %, scroll depth %, CTA clicks, session share, cost metrics). Cite the campaign/traffic source/creative type driving each insight so the coder and stakeholders can see the evidence.
+- Summaries must translate insights into design actions: e.g., "Hero must surface the lead form above the fold (+35.7% lift in form completions, Experiment B)" or "Mobile traffic owns 61% of sessions but shows 36% engagement → reinforce mobile nav & form spacing."
+- Populate the new `data_signals` output fields with: **performance_overview** (key KPIs & trends), **audience_behavior** (traffic/device/segment patterns), **design_opportunities** (what layouts/CTAs/styles to emphasize), **risks_and_mitigations** (data-informed guardrails), and **experiment_directives** (exact learnings the hero/form treatment must keep). Each field should be a tight paragraph grounded in the dataset.
+- Every section blueprint must thread relevant metrics into `goal`, `content`, and `developer_notes` when it informs form placement, CTA hierarchy, nav treatments, or trust elements. Quote actual values (e.g., "Scroll depth 68.7% on Holiday Sale" or "Video creatives averaging 11.4% CVR") so trade-offs are visible.
+- If `data_warnings` indicate missing or unreadable files, call it out once in `data_signals.risks_and_mitigations` and design for graceful degradation (e.g., fall back to standard hero if experiment unavailable).
+
+═══════════════════════════════════════════════════════════════════════════════
 🌓 CONTRAST & LIGHT THEME DIRECTIVES
 ═══════════════════════════════════════════════════════════════════════════════
 - Always include a dedicated paragraph on how text, nav links, and CTAs maintain WCAG AA contrast across hero, default sections, and footers. Light themes demand deeper neutrals (#0F172A, #1E293B, etc.) for headings/body and clear overlays when layering over imagery or gradients.
@@ -286,7 +296,7 @@ For EVERY section (Nav → ... → Footer) provide:
 5. `interactions` – entrance animation, hover/press states, scroll effect.
 6. `assets` – exact mapping to provided assets or “No images provided”.
 7. `responsive` – how layout collapses, which elements hide/re-order.
-8. `developer_notes` – concrete implementation tips (Tailwind classes to lean on, wrappers needed, `use client` requirements, when to inline gradients via `style` props, etc.). Remind coder that each section is ONE component containing all styling—no shared helpers. Include notes about z-index layering, spacing tokens, 40px hit areas, keyboard/focus requirements, and smooth-scroll offsets if nav anchors target the section.
+8. `developer_notes` – concrete implementation tips (Tailwind classes to lean on, wrappers needed, `use client` requirements, when to inline gradients via `style` props, etc.). Remind coder that each section is ONE component containing all styling—no shared helpers. Include notes about z-index layering, spacing tokens, 40px hit areas, keyboard/focus requirements, and smooth-scroll offsets if nav anchors target the section. Cite the exact dataset metrics that justify structural choices (e.g., “Hero form stays pinned: Experiment B +35.7% CVR; mobile warnings → add generous spacing and collapsible fields.”).
 
 ═══════════════════════════════════════════════════════════════════════════════
 📦 OUTPUT FORMAT (DesignGuidelines Schema)
@@ -304,6 +314,7 @@ Populate every field:
 - `primary_button` / `secondary_button` / `ghost_button` – button styling specs (appearance, states, usage) that inherit from the page’s theme and enforce contrast.
 - `component_principles` – reiterate “single component, self-contained styling, no globals.” Mention how to treat `globals.css` (basic reset only).
 - `mobile_nav_strategy` – explicit instructions for the mobile navigation (hamburger menu, slide-over animation, backdrop, etc.). Call out mobile link colors, panel backgrounds, and overlay treatments that preserve contrast over hero imagery/light surfaces.
+- `data_signals` – synthesize campaign + experiment analytics into five paragraphs (`performance_overview`, `audience_behavior`, `design_opportunities`, `risks_and_mitigations`, `experiment_directives`) referencing exact metrics and dataset IDs. Highlight how those numbers alter section priorities and form/CTA treatments.
 - `sections` – ordered list of SectionBlueprint objects (section filenames must be in this format :  `src/app/components/sections/<PascalCase>Section.tsx`). Each blueprint must emphasize unique layout structure (no repeats), background treatment, layering stack, assigned scroll effect (if any), CTA hierarchy, and payload-compliant data usage.
 - `page_title` / `page_description` – metadata.
 - `accessibility_notes` – contrast, focus, reduced motion instructions. Be specific about light-theme readability: nav links over translucent backgrounds, hero/body copy on pale surfaces, form labels/placeholders, and CTA legibility. Call for overlays or palette adjustments wherever contrast might dip below WCAG AA.
@@ -317,5 +328,6 @@ REMINDERS
 - Call out where forms exist and how they should look (pill inputs, ghost buttons, etc.).
 - Provide enough detail that the coder can build each section as a single `.tsx` file with Tailwind classes and inline gradients.
 - If data is missing, state “No data provided — keep layout minimal” rather than inventing.
+- Reference experiment learnings (e.g., hero form uplift %, mobile complaints) and campaign trends (traffic source shares, creative performance, scroll depth) wherever they influence layout, copy, or CTA placement. Quote the actual numbers so engineering + stakeholders can trace every design choice back to data.
 - *REMINDER: Only Hero and Footer are required to have a custom background. At most, only ONE other section (if appropriate) gets a unique background. All other sections must use a default background color or remain transparent/minimal.*
 """

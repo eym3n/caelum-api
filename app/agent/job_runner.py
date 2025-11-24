@@ -372,6 +372,7 @@ def run_init_job(
     session_id: str,
     init_payload: dict[str, Any],
     init_payload_text: str,
+    state_overrides: dict[str, Any] | None = None,
 ) -> None:
     """
     Execute an init job in the background.
@@ -384,14 +385,18 @@ def run_init_job(
         last_meaningful_message = ""
         combined = "INITIAL CREATION PAYLOAD\n" + init_payload_text
 
+        initial_state: dict[str, Any] = {
+            "messages": [HumanMessage(content=combined)],
+            "init_payload": init_payload,
+            "init_payload_text": init_payload_text,
+            "session_id": session_id,
+            "job_id": job_id,
+        }
+        if state_overrides:
+            initial_state.update(state_overrides)
+
         for event in agent.stream(
-            {
-                "messages": [HumanMessage(content=combined)],
-                "init_payload": init_payload,
-                "init_payload_text": init_payload_text,
-                "session_id": session_id,
-                "job_id": job_id,
-            },
+            initial_state,
             config={
                 "configurable": {"thread_id": session_id, "session_id": session_id},
                 "recursion_limit": 30,

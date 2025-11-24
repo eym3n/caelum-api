@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, UploadFile, File, HTTPException
 from pydantic import BaseModel
-from app.agent.utils.storage_utils import upload_image_to_gs
+from app.agent.utils.storage_utils import upload_image_to_gs, upload_csv_to_gs
 import uuid
 from pathlib import Path
+from typing import Any
 
 from app.deps import get_session_id
 
@@ -35,6 +36,36 @@ async def test_write_file(request: TestWriteFileRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/upload-csv")
+async def upload_csv(
+    file: UploadFile = File(...),
+    session_id: str = Depends(get_session_id),
+) -> dict[str, Any]:
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Filename missing.")
+
+    original_name = file.filename.lower()
+    if not original_name.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are supported.")
+
+    file_bytes = await file.read()
+    if not file_bytes:
+        raise HTTPException(status_code=400, detail="Uploaded CSV is empty.")
+
+    unique_name = f"{uuid.uuid4()}.csv"
+    destination_path = f"datasets/{session_id}/{unique_name}"
+
+    csv_url = upload_csv_to_gs(file_bytes, destination_path)
+    if csv_url is None:
+        raise HTTPException(status_code=500, detail="Failed to upload CSV to storage.")
+
+    return {
+        "url": csv_url,
+        "path": destination_path,
+        "original_filename": file.filename,
+    }
 
 
 @router.get("/list-directory")

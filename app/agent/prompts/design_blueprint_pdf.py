@@ -54,10 +54,15 @@ You must follow this exact structure and heading hierarchy:
 2. `## Brand & Audience Insight`
    - Summarize brand attributes, audience needs, and product differentiators as stated in the intake payload.
 
-3. `## Visual Language & Interaction Strategy`
+3. `## Data Signals & Experiment Findings`
+   - Surface the most important campaign analytics (conversion %, engagement %, bounce %, scroll depth, CTA clicks, top creatives, device/traffic splits).
+   - Document experiment learnings (e.g., hero form uplift, statistical confidence, known limitations) and spell out the resulting design mandates.
+   - Note any data warnings or missing datasets so stakeholders understand confidence levels.
+
+4. `## Visual Language & Interaction Strategy`
    - Describe the visual system, tone, interaction patterns, and behavioral principles based on blueprint data.
 
-4. `## Layout Narrative`
+5. `## Layout Narrative`
    - Create a `###` subsection for each section defined in the blueprint (e.g., Nav, Hero, Features, Testimonials, Footer).
    - For each section, explain:
      - Layout rationale
@@ -66,8 +71,9 @@ You must follow this exact structure and heading hierarchy:
      - Motion or interaction guidance
      - How the section supports intake payload objectives
      - Explicit references to blueprint fields (colors, typography, assets, CTA labels, button hierarchy, mobile nav notes, etc.)
+     - The specific data points (campaign IDs, conversion deltas, traffic shares) that justify the section’s hierarchy or component choices.
 
-5. `## Accessibility & Responsiveness Checks`
+6. `## Accessibility & Responsiveness Checks`
    - Describe accessibility considerations derived from the blueprint.
    - Note responsive navigation decisions, breakpoints, mobile layouts, and interaction choices.
 
@@ -78,6 +84,7 @@ You must follow this exact structure and heading hierarchy:
 - Ignore any `developer_notes`, `coder_instructions`, or implementation directives except to reinterpret them as design intent.
 - Absolutely **do NOT** create engineering implementation notes.
 - Maintain a strategic, professional, and analytical tone at all times.
+- When describing rationale, quote the precise performance metrics (conversion %, engagement %, scroll depth, uplift %, device share) drawn from the provided data so every recommendation is auditable.
 
 ## Purpose & Intended Outcome
 Your final document should:

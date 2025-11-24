@@ -1,0 +1,26 @@
+Experiment Name,Lead Gen Form Position Test
+Experiment ID,EXP-2024-FORM-002
+Owner,Conversion Optimization Team
+Hypothesis,Placing the lead generation form prominently in the hero section (above the fold) instead of middle/bottom of page will increase form completion rates by capturing user attention immediately and reducing scroll-to-convert friction
+Start Date,8/20/2024
+End Date,9/19/2024
+Audience Targeted,Organic and paid traffic visitors to product landing pages
+Traffic Allocation,50/50
+Sample Size - Control (A),15672
+Sample Size - Variant (B),15834
+Control Description (A),Lead generation form positioned in middle section of page after value proposition and features content - requires scrolling to reach
+Variant Description (B),Lead generation form prominently displayed in hero section alongside headline and key value proposition - immediately visible without scrolling
+Primary Metric Measured,Form Completion Rate
+Secondary Metrics Measured,"Form Views, Form Starts, Time to Form Interaction, Bounce Rate, Page Scroll Depth"
+Control Result - Primary Metric,5.83%
+Variant Result - Primary Metric,7.91%
+Delta (Absolute %),2.08%
+Uplift (Relative %),35.70%
+Statistical Significance Achieved,Yes
+P-Value,0.0018
+Winning Variant,B (Hero Form)
+Decision Taken,Roll out hero form placement to all product landing pages and test on additional page types
+Key Insights and Interpretation,"Hero form placement significantly outperformed middle placement with 35.7% relative improvement. Users engaged with form 67% faster when placed in hero section. Interestingly, bounce rate decreased by 8% suggesting hero form created better first impression and user intent alignment. Form abandonment rate also improved by 23%."
+Projected Business Impact,Projected monthly form completions to increase from 4200 to 5700 (+35.7%).
+Limitations & Notes,Test primarily focused on B2B SaaS landing pages - may not apply to all industries or page types. Hero form reduced space for compelling copy which may impact brand awareness metrics. Some mobile users found hero form too prominent on smaller screens.
+Future Recommendations,Test different hero form designs (inline vs overlay). Experiment with progressive form fields in hero. Test hybrid approach with teaser form in hero and full form below. Consider personalized form placement based on traffic source.

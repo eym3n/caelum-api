@@ -37,6 +37,25 @@ def design_planner(state: BuilderState) -> BuilderState:
     # Build context from init payload
     init_payload_text = state.init_payload_text or "No initialization payload provided."
 
+    data_context_parts: list[str] = []
+    if state.campaign_data_digest:
+        data_context_parts.append(
+            "### Campaign Performance Digest\n" + state.campaign_data_digest.strip()
+        )
+    if state.experiment_data_digest:
+        data_context_parts.append(
+            "### Experiment Insights Digest\n" + state.experiment_data_digest.strip()
+        )
+    if state.data_insights:
+        data_context_parts.append(
+            "### Structured Data Signals (JSON)\n" + encode(state.data_insights)
+        )
+    if state.data_warnings:
+        warning_block = "\n".join(f"- {warning}" for warning in state.data_warnings)
+        data_context_parts.append("### Data Quality Warnings\n" + warning_block)
+    if data_context_parts:
+        init_payload_text = init_payload_text + "\n\n" + "\n\n".join(data_context_parts)
+
     # Inject inspiration into prompt
     hero_insp_str = "\n".join([f"- {item}" for item in HERO_CONCEPTS])
     features_insp_str = "\n".join([f"- {item}" for item in FEATURES_LAYOUT_OPTIONS])

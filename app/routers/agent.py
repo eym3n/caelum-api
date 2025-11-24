@@ -13,18 +13,24 @@ from app.models.user import User
 from app.models.landing_page import LandingPageCreate, LandingPageStatus
 from app.utils.landing_pages import create_landing_page, get_landing_page_by_session_id
 from app.models.job import Job, JobCreate, JobType, JobStatus
-from app.utils.jobs import create_job, append_job_event, update_job_status
+from app.utils.jobs import (
+    create_job,
+    append_job_event,
+    update_job_status,
+    log_job_event,
+)
 from app.agent.job_runner import run_chat_job, run_init_job
 from langchain_core.messages import HumanMessage
 from app.agent.graph import agent
 from app.agent.tools.files import get_session_dir, clear_session_dir
 from pathlib import Path
 from toon import encode
+from app.utils.data_analysis import prepare_data_enrichment
 import os
 import json
 import subprocess
 import re
-from typing import Sequence
+from typing import Any, Dict, Sequence
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 # Repository root (backend code lives here)
@@ -169,6 +175,11 @@ class AssetsSection(BaseModel):
     sectionAssets: dict | None = None  # maps section names to image URL arrays
 
 
+class DataSection(BaseModel):
+    campaignDataUrl: str | None = None
+    experimentDataUrl: str | None = None
+
+
 class InitPayload(BaseModel):
     campaign: CampaignSection | None = None
     audience: AudienceSection | None = None
@@ -180,6 +191,8 @@ class InitPayload(BaseModel):
     media: MediaSection | None = None
     advanced: AdvancedSection | None = None
     assets: AssetsSection | None = None
+    data: DataSection | None = None
+    dataInsights: Dict[str, Any] | None = None
 
 
 class InitRequest(BaseModel):
@@ -692,11 +705,35 @@ async def get_file(filename: str, session_id: str = Depends(get_session_id)):
 # ==============================================
 
 
-def _flatten_init_payload(payload: InitPayload) -> str:
-    payload = payload.model_dump(exclude_none=True)
-    data = encode(payload)
-    print(f"[INIT] Flattened payload: {data}")
-    return data
+def _prepare_init_payload(
+    payload: InitPayload,
+    *,
+    session_id: str | None = None,
+) -> tuple[Dict[str, Any], str, Dict[str, Any], list[str]]:
+    base_payload = payload.model_dump(exclude_none=True)
+    (
+        enriched_payload,
+        insight_narrative,
+        state_overrides,
+        warnings,
+    ) = prepare_data_enrichment(base_payload, session_id=session_id)
+
+    flattened = encode(enriched_payload)
+    appended_sections: list[str] = []
+
+    if insight_narrative:
+        appended_sections.append("### DATA INSIGHTS\n" + insight_narrative.strip())
+    if warnings:
+        warning_block = "\n".join(f"- {warning}" for warning in warnings)
+        appended_sections.append("### DATA WARNINGS\n" + warning_block)
+
+    if appended_sections:
+        flattened = flattened + "\n\n" + "\n\n".join(appended_sections)
+
+    print(f"[INIT] Flattened payload (with data insights): {flattened}")
+    state_overrides = {**state_overrides, "data_warnings": warnings}
+
+    return enriched_payload, flattened, state_overrides, warnings
 
 
 class InitJobResponse(BaseModel):
@@ -843,6 +880,13 @@ async def init_job(
     app_ready = not is_first_message
     landing_page_id: str | None = None
 
+    (
+        enriched_payload_dict,
+        payload_text,
+        state_overrides,
+        data_warnings,
+    ) = _prepare_init_payload(req_payload, session_id=session_id)
+
     if is_first_message:
         clear_session_dir(session_id)
         print(f"[INIT] Copying static project template for session {session_id}")
@@ -854,10 +898,8 @@ async def init_job(
         )
         existing_lp = get_landing_page_by_session_id(session_id)
         if not existing_lp:
-            # Convert InitPayload to dict for storage
-            business_data_dict = req_payload.model_dump(exclude_none=True)
             landing_page_data = LandingPageCreate(
-                session_id=session_id, business_data=business_data_dict
+                session_id=session_id, business_data=enriched_payload_dict
             )
             created_lp = create_landing_page(current_user.id, landing_page_data)
             if created_lp:
@@ -871,8 +913,6 @@ async def init_job(
 
     # No dev server management in static mode
 
-    payload_text = _flatten_init_payload(req_payload)
-
     # Create a job record for this init execution
     job = create_job(
         JobCreate(
@@ -881,7 +921,7 @@ async def init_job(
             user_id=current_user.id,
             title="Init request",
             description="Asynchronous init graph execution",
-            initial_payload=req_payload.model_dump(),
+            initial_payload=enriched_payload_dict,
         )
     )
     if not job:
@@ -894,9 +934,22 @@ async def init_job(
         run_init_job,
         job.id,
         session_id,
-        req_payload.model_dump(),
+        enriched_payload_dict,
         payload_text,
+        state_overrides,
     )
+
+    if job and (state_overrides.get("data_insights") or data_warnings):
+        log_job_event(
+            job.id,
+            node="data_enrichment",
+            message="Processed uploaded performance datasets.",
+            event_type="node",
+            data={
+                "data_insights_present": bool(state_overrides.get("data_insights")),
+                "warnings": data_warnings,
+            },
+        )
 
     return InitJobResponse(
         job_id=job.id,
