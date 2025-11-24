@@ -74,7 +74,7 @@ async def _generate_single_section(
         or "Unnamed Section"
     )
     print(f"[GENERATE_SECTION] Launching worker for section: {section_name}")
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="mediumn")
+    model = ChatOpenAI(model="gpt-5", reasoning_effort="medium")
     structured_llm = model.with_structured_output(SectionGenerationOutput)
     last_exc: Exception | None = None
     for attempt in range(1, 4):
