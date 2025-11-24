@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openai import ChatOpenAI
 
 from app.agent.state import BuilderState
 from app.agent.tools.files import (
@@ -38,9 +39,9 @@ def fix_errors(state: BuilderState) -> BuilderState:
         lint_project,
     ]
 
-    llm = ChatGoogleGenerativeAI(
-        model="models/gemini-3-pro-preview", temperature=0.1
-    ).bind_tools(tools, parallel_tool_calls=True)
+    llm = ChatOpenAI(model="gpt-5", reasoning_effort="medium").bind_tools(
+        tools, parallel_tool_calls=True
+    )
 
     system = SystemMessage(
         content=FIX_ERRORS_PROMPT.format(
@@ -50,6 +51,8 @@ def fix_errors(state: BuilderState) -> BuilderState:
     human = HumanMessage(
         content="Follow the lint output above. Read relevant files, apply fixes, and rerun lint. Summarize the resolved issues when done."
     )
+
+    messages = [system, human, *state.messages]
 
     response = llm.invoke([system, human])
 
