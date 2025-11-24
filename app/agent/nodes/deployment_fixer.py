@@ -62,7 +62,10 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
                 node="deployment_fixer",
                 message="Analyzing deployment failure...",
                 event_type="node_started",
-                data={"session_id": session_id, "error_excerpt": deployment_error[:200]},
+                data={
+                    "session_id": session_id,
+                    "error_excerpt": deployment_error[:200],
+                },
             )
 
         print(f"[DEPLOYMENT_FIXER] Session: {session_id}")
