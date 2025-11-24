@@ -31,7 +31,14 @@ def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
     stored_sections = landing_page.sections or []
 
     if stored_sections:
-        section_entries = stored_sections
+        section_entries = [
+            section.model_dump()
+            if hasattr(section, "model_dump")
+            else dict(section)
+            if isinstance(section, dict)
+            else section
+            for section in stored_sections
+        ]
     else:
         business_data = landing_page.business_data or {}
         design_guidelines = business_data.get("design_guidelines") or {}
@@ -42,6 +49,7 @@ def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
             {
                 "id": section.get("section_id"),
                 "name": section.get("section_name"),
+                "component_name": section.get("component_name"),
                 "filename": section.get("section_file_name_tsx")
                 or section.get("section_file_name"),
             }
@@ -52,6 +60,11 @@ def _build_sections_payload(landing_page) -> List[dict[str, Any]]:
     payload: List[dict[str, Any]] = []
 
     for entry in section_entries:
+        if hasattr(entry, "model_dump"):
+            entry = entry.model_dump()
+        elif not isinstance(entry, dict):
+            entry = dict(entry)
+
         section_id = entry.get("id")
         section_name = entry.get("name")
         component_name = entry.get("component_name")

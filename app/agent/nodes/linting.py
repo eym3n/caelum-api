@@ -36,6 +36,10 @@ def linting(state: BuilderState) -> BuilderState:
     output = (process.stdout or "") + (process.stderr or "")
     lint_failed = process.returncode != 0
 
+    print("[LINTING] ---------------- LINT OUTPUT START ----------------")
+    print(output or "(no output)")
+    print("[LINTING] ----------------- LINT OUTPUT END -----------------")
+
     if lint_failed:
         log_job_event(
             state.job_id,
