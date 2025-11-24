@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import re
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -36,6 +37,82 @@ class SectionGenerationOutput(BaseModel):
     )
 
 
+EXAMPLES_BASE_DIR = Path(__file__).resolve().parent.parent / "examples"
+SECTION_EXAMPLES_DIR = EXAMPLES_BASE_DIR / "components" / "sections"
+_SECTION_EXAMPLES_CACHE: Dict[str, Dict[str, str]] | None = None
+
+
+def _normalize_section_key(value: str | None) -> str:
+    if not value:
+        return ""
+    return re.sub(r"[^a-z0-9]", "", value.lower())
+
+
+def _load_section_examples() -> Dict[str, Dict[str, str]]:
+    global _SECTION_EXAMPLES_CACHE
+    if _SECTION_EXAMPLES_CACHE is not None:
+        return _SECTION_EXAMPLES_CACHE
+
+    examples: Dict[str, Dict[str, str]] = {}
+    if SECTION_EXAMPLES_DIR.exists():
+        for file_path in SECTION_EXAMPLES_DIR.glob("*.tsx"):
+            key = _normalize_section_key(file_path.stem)
+            if not key:
+                continue
+            try:
+                examples[key] = {
+                    "relative_path": str(file_path.relative_to(EXAMPLES_BASE_DIR)),
+                    "code": file_path.read_text(encoding="utf-8"),
+                }
+            except Exception as exc:  # pragma: no cover - logging only
+                print(
+                    f"[GENERATE_SECTION] Warning: failed to load example {file_path}: {exc}"
+                )
+
+    _SECTION_EXAMPLES_CACHE = examples
+    return examples
+
+
+def _resolve_section_example(
+    section_blueprint: Dict[str, Any],
+) -> Dict[str, str] | None:
+    examples = _load_section_examples()
+    candidate_values: List[str] = []
+
+    raw_filename = section_blueprint.get(
+        "section_file_name_tsx"
+    ) or section_blueprint.get("section_file_name")
+    if isinstance(raw_filename, str):
+        candidate_values.append(Path(raw_filename).stem)
+
+    section_name = section_blueprint.get("section_name")
+    section_id = section_blueprint.get("section_id")
+    for value in (section_name, section_id):
+        if not isinstance(value, str):
+            continue
+        candidate_values.append(value)
+        parts = re.split(r"[\s_\-]+", value.strip())
+        if parts:
+            pascal = "".join(part.capitalize() for part in parts if part)
+            if pascal:
+                candidate_values.append(pascal)
+
+    normalized_candidates = [
+        _normalize_section_key(candidate) for candidate in candidate_values if candidate
+    ]
+
+    for candidate in normalized_candidates:
+        if candidate in examples:
+            return examples[candidate]
+
+    for candidate in normalized_candidates:
+        for key, example in examples.items():
+            if candidate and (candidate in key or key in candidate):
+                return example
+
+    return None
+
+
 def _build_section_prompt(
     design_guidelines: Dict[str, Any],
     section_blueprint: Dict[str, Any],
@@ -44,6 +121,7 @@ def _build_section_prompt(
     guideline_text = encode(design_guidelines)
     blueprint_text = encode(section_blueprint)
     payload_text = encode(init_payload)
+    example_entry = _resolve_section_example(section_blueprint)
 
     human_content = (
         "You must implement the section described below using the project’s stack and guardrails."
@@ -52,9 +130,26 @@ def _build_section_prompt(
         "### Section Blueprint (JSON encoded)\n"
         f"{blueprint_text}\n\n"
         "### Initialization Payload (JSON encoded)\n"
-        f"{payload_text}\n\n"
-        "Return only the JSON object matching the schema."
+        f"{payload_text}\n"
     )
+
+    if example_entry:
+        example_payload = encode(
+            {
+                "reference_filename": example_entry["relative_path"],
+                "reference_code": example_entry["code"],
+            }
+        )
+        human_content += (
+            "\n### Section Reference Example (JSON encoded)\n" f"{example_payload}\n"
+        )
+    else:
+        human_content += (
+            "\n### Section Reference Example\n"
+            "No direct example available; follow the guardrails and business context precisely.\n"
+        )
+
+    human_content += "\nReturn only the JSON object matching the schema."
 
     return [
         SystemMessage(content=SECTION_GENERATOR_PROMPT.strip()),
@@ -73,6 +168,19 @@ async def _generate_single_section(
         or section_blueprint.get("section_id")
         or "Unnamed Section"
     )
+    try:
+        system_prompt = getattr(messages[0], "content", "")
+        human_prompt = getattr(messages[1], "content", "")
+        print(
+            f"[GENERATE_SECTION] Prompt for {section_name}:\n"
+            f"--- SYSTEM ---\n{system_prompt}\n"
+            f"--- HUMAN ---\n{human_prompt}\n"
+            f"--- END PROMPT ({section_name}) ---"
+        )
+    except Exception as prompt_exc:  # pragma: no cover - logging only
+        print(
+            f"[GENERATE_SECTION] Warning: failed to print prompt for {section_name}: {prompt_exc}"
+        )
     print(f"[GENERATE_SECTION] Launching worker for section: {section_name}")
     model = ChatOpenAI(model="gpt-5", reasoning_effort="high")
     structured_llm = model.with_structured_output(SectionGenerationOutput)
