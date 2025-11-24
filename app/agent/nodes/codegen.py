@@ -281,14 +281,17 @@ def codegen(state: BuilderState) -> BuilderState:
         )
 
         async def run_workers() -> Tuple[PageCodeOutput, LayoutCodeOutput]:
-            return await asyncio.gather(
-                _generate_page_code(
-                    design_guidelines, generated_sections, init_payload
-                ),
+            page_task = asyncio.create_task(
+                _generate_page_code(design_guidelines, generated_sections, init_payload)
+            )
+            await asyncio.sleep(1)
+            layout_task = asyncio.create_task(
                 _generate_layout_code(
                     design_guidelines, generated_sections, init_payload
-                ),
+                )
             )
+            page_result, layout_result = await asyncio.gather(page_task, layout_task)
+            return page_result, layout_result
 
         def execute_workers() -> Tuple[PageCodeOutput, LayoutCodeOutput]:
             try:

@@ -122,6 +122,7 @@ def _write_section_file(session_dir: Path, result: SectionGenerationOutput) -> N
     if not content.endswith("\n"):
         content += "\n"
     file_path.write_text(content, encoding="utf-8")
+    result.code = content
 
 
 def _write_sections_index(
@@ -177,11 +178,18 @@ def generate_section(state: BuilderState) -> BuilderState:
     session_dir = get_session_dir(state.session_id)
 
     async def run_workers() -> List[SectionGenerationOutput]:
-        tasks = [
-            _generate_single_section(section, design_guidelines, init_payload)
-            for section in sections
-            if isinstance(section, dict)
-        ]
+        tasks: List[asyncio.Task[SectionGenerationOutput]] = []
+        for section in sections:
+            if not isinstance(section, dict):
+                continue
+            if tasks:
+                await asyncio.sleep(1)
+            task = asyncio.create_task(
+                _generate_single_section(section, design_guidelines, init_payload)
+            )
+            tasks.append(task)
+        if not tasks:
+            return []
         return await asyncio.gather(*tasks)
 
     try:
@@ -237,6 +245,7 @@ def generate_section(state: BuilderState) -> BuilderState:
                     "id": blueprint.get("section_id"),
                     "name": blueprint.get("section_name"),
                     "filename": match.filename,
+                    "file_content": match.code,
                 }
             )
 
