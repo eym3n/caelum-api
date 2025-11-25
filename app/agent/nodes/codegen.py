@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Type
+import re
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -38,6 +39,8 @@ EXAMPLES_BASE_DIR = Path(__file__).resolve().parent.parent / "examples"
 PAGE_EXAMPLE_PATH = EXAMPLES_BASE_DIR / "app" / "page.tsx"
 LAYOUT_EXAMPLE_PATH = EXAMPLES_BASE_DIR / "app" / "layout.tsx"
 _GENAI_CLIENT: genai.Client | None = None
+_PAGE_EXPORT_PATTERN = re.compile(r"export\s+default\s+function\s+Page\b")
+_LAYOUT_EXPORT_PATTERN = re.compile(r"export\s+default\s+function\s+RootLayout\b")
 
 
 def _read_example_file(path: Path, label: str) -> str:
@@ -92,6 +95,14 @@ async def _invoke_gemini_structured(
         return schema.model_validate_json(raw_text)
 
     return await asyncio.to_thread(_call)
+
+
+def _validate_default_export(code: str, pattern: re.Pattern[str], label: str) -> None:
+    if not code or not pattern.search(code):
+        raise ValueError(
+            f"{label} code is missing a valid default export. "
+            "Expected a named default function export."
+        )
 
 
 def _resolve_component_order(
@@ -322,9 +333,9 @@ async def _generate_page_code(
     init_payload: Dict[str, Any],
 ) -> PageCodeOutput:
     messages = _build_page_messages(design_guidelines, generated_sections, init_payload)
-    fallback_model = ChatOpenAI(model="gpt-5", reasoning_effort="low").with_structured_output(
-        PageCodeOutput
-    )
+    fallback_model = ChatOpenAI(
+        model="gpt-5", reasoning_effort="low"
+    ).with_structured_output(PageCodeOutput)
 
     last_exc: Exception | None = None
 
@@ -333,13 +344,12 @@ async def _generate_page_code(
             result = await _invoke_gemini_structured(
                 messages, PageCodeOutput, f"page generation (attempt {attempt})"
             )
+            _validate_default_export(result.code, _PAGE_EXPORT_PATTERN, "Page")
             print(f"[CODEGEN] (Gemini) Page worker succeeded on attempt {attempt}")
             return result  # type: ignore[return-value]
         except Exception as exc:
             last_exc = exc
-            print(
-                f"[CODEGEN] (Gemini) Page worker attempt {attempt} failed: {exc}"
-            )
+            print(f"[CODEGEN] (Gemini) Page worker attempt {attempt} failed: {exc}")
 
     print("[CODEGEN] Switching page worker to GPT-5 fallback after Gemini retries.")
 
@@ -348,16 +358,13 @@ async def _generate_page_code(
             result = await fallback_model.ainvoke(messages)
             print(f"[CODEGEN] (GPT-5) Page worker succeeded on attempt {attempt - 3}")
             if result is None:
-                print(
-                    "[CODEGEN] (GPT-5) Page worker returned None; retrying..."
-                )
+                print("[CODEGEN] (GPT-5) Page worker returned None; retrying...")
                 continue
+            _validate_default_export(result.code, _PAGE_EXPORT_PATTERN, "Page")
             return result
         except Exception as exc:
             last_exc = exc
-            print(
-                f"[CODEGEN] (GPT-5) Page worker attempt {attempt - 3} failed: {exc}"
-            )
+            print(f"[CODEGEN] (GPT-5) Page worker attempt {attempt - 3} failed: {exc}")
 
     raise RuntimeError(
         "Page code generation failed after Gemini and GPT-5 attempts."
@@ -372,9 +379,9 @@ async def _generate_layout_code(
     messages = _build_layout_messages(
         design_guidelines, generated_sections, init_payload
     )
-    fallback_model = ChatOpenAI(model="gpt-5", reasoning_effort="low").with_structured_output(
-        LayoutCodeOutput
-    )
+    fallback_model = ChatOpenAI(
+        model="gpt-5", reasoning_effort="low"
+    ).with_structured_output(LayoutCodeOutput)
 
     last_exc: Exception | None = None
 
@@ -383,13 +390,12 @@ async def _generate_layout_code(
             result = await _invoke_gemini_structured(
                 messages, LayoutCodeOutput, f"layout generation (attempt {attempt})"
             )
+            _validate_default_export(result.code, _LAYOUT_EXPORT_PATTERN, "Layout")
             print(f"[CODEGEN] (Gemini) Layout worker succeeded on attempt {attempt}")
             return result  # type: ignore[return-value]
         except Exception as exc:
             last_exc = exc
-            print(
-                f"[CODEGEN] (Gemini) Layout worker attempt {attempt} failed: {exc}"
-            )
+            print(f"[CODEGEN] (Gemini) Layout worker attempt {attempt} failed: {exc}")
 
     print("[CODEGEN] Switching layout worker to GPT-5 fallback after Gemini retries.")
 
@@ -398,11 +404,10 @@ async def _generate_layout_code(
             result = await fallback_model.ainvoke(messages)
             print(f"[CODEGEN] (GPT-5) Layout worker succeeded on attempt {attempt - 3}")
             if result is None:
-                print(
-                    "[CODEGEN] (GPT-5) Layout worker returned None; retrying..."
-                )
+                print("[CODEGEN] (GPT-5) Layout worker returned None; retrying...")
                 continue
 
+            _validate_default_export(result.code, _LAYOUT_EXPORT_PATTERN, "Layout")
             return result
 
         except Exception as exc:

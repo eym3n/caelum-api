@@ -435,55 +435,96 @@ def generate_section(state: BuilderState) -> BuilderState:
 
     sanitized_results: List[SectionGenerationOutput] = results
 
-    for result in sanitized_results:
-        _write_section_file(session_dir, result)
-        print(f"[GENERATE_SECTION] Wrote section file: {result.filename}")
-
-    _write_sections_index(session_dir, sanitized_results)
-    print("[GENERATE_SECTION] Updated sections/index.ts with new exports.")
-
     def _normalize_filename(value: str | None) -> str:
         return value.lstrip("./") if value else ""
 
-    section_payload = []
-    seen_payload: set[str] = set()
-    for blueprint in sections:
-        if not isinstance(blueprint, dict):
-            continue
+    result_by_filename: Dict[str, SectionGenerationOutput] = {
+        _normalize_filename(result.filename): result for result in sanitized_results
+    }
+    result_by_component: Dict[str, SectionGenerationOutput] = {
+        result.component_name: result
+        for result in sanitized_results
+        if result.component_name
+    }
+
+    blueprints: List[Dict[str, Any]] = [
+        section for section in sections if isinstance(section, dict)
+    ]
+    ordered_results: List[SectionGenerationOutput] = []
+    section_payload: List[Dict[str, Any]] = []
+    missing_sections: List[str] = []
+
+    for blueprint in blueprints:
         raw_filename = blueprint.get("section_file_name_tsx") or blueprint.get(
             "section_file_name"
         )
-        blueprint_filename = _normalize_filename(
-            _sanitize_section_filename(raw_filename)
+        blueprint_component = blueprint.get("component_name")
+        sanitized_blueprint_filename = _sanitize_section_filename(
+            raw_filename
+            or f"src/components/sections/{blueprint_component or 'Section'}.tsx"
         )
-        if blueprint_filename in seen_payload:
-            continue
-        match = next(
-            (
-                r
-                for r in sanitized_results
-                if _normalize_filename(r.filename) == blueprint_filename
-            ),
-            None,
+        normalized_blueprint_filename = _normalize_filename(
+            sanitized_blueprint_filename
         )
+
+        match = result_by_filename.get(normalized_blueprint_filename)
+        if not match and blueprint_component:
+            match = result_by_component.get(blueprint_component)
+
         if match:
-            seen_payload.add(blueprint_filename)
-            expected_component = blueprint.get("component_name")
-            if isinstance(expected_component, str) and expected_component:
-                if match.component_name != expected_component:
-                    print(
-                        f"[GENERATE_SECTION] Aligning component name from {match.component_name} to blueprint value {expected_component}"
-                    )
-                    match.component_name = expected_component
+            match.filename = sanitized_blueprint_filename
+            if blueprint_component:
+                match.component_name = blueprint_component
+                result_by_component[blueprint_component] = match
+
+            result_by_filename[normalized_blueprint_filename] = match
+
+            if match not in ordered_results:
+                ordered_results.append(match)
+
             section_payload.append(
                 {
                     "id": blueprint.get("section_id"),
                     "name": blueprint.get("section_name"),
-                    "component_name": expected_component or match.component_name,
+                    "component_name": match.component_name,
                     "filename": match.filename,
                     "file_content": match.code,
                 }
             )
+        else:
+            missing_label = (
+                blueprint_component
+                or blueprint.get("section_name")
+                or sanitized_blueprint_filename
+            )
+            missing_sections.append(str(missing_label))
+
+    if missing_sections:
+        error_message = (
+            "Section generation failed: missing or mismatched sections → "
+            + ", ".join(missing_sections)
+        )
+        print(f"[GENERATE_SECTION] ERROR: {error_message}")
+        if state.job_id:
+            log_job_event(
+                state.job_id,
+                node="generate_section",
+                message=error_message,
+                event_type="error",
+                data={"missing_sections": missing_sections},
+            )
+        raise RuntimeError(error_message)
+
+    for result in sanitized_results:
+        if result not in ordered_results:
+            ordered_results.append(result)
+
+    for result in ordered_results:
+        _write_section_file(session_dir, result)
+        print(f"[GENERATE_SECTION] Wrote section file: {result.filename}")
+
+    _write_sections_index(session_dir, ordered_results)
+    print("[GENERATE_SECTION] Updated sections/index.ts with new exports.")
 
     try:
         landing_page_doc = get_landing_page_by_session_id(state.session_id)
@@ -500,18 +541,18 @@ def generate_section(state: BuilderState) -> BuilderState:
             f"[GENERATE_SECTION] Warning: failed to persist sections for session {state.session_id}: {persist_exc}"
         )
 
-    summary = f"Generated {len(sanitized_results)} section file(s)."
+    summary = f"Generated {len(ordered_results)} section file(s)."
     log_job_event(
         state.job_id,
         node="generate_section",
         message=summary,
         event_type="node_completed",
         data={
-            "sections": [r.filename for r in results],
+            "sections": [r.filename for r in ordered_results],
         },
     )
 
     return {
-        "generated_sections": [r.dict() for r in sanitized_results],
+        "generated_sections": [r.dict() for r in ordered_results],
         "sections_generated": True,
     }
