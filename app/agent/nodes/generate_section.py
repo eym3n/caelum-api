@@ -467,7 +467,9 @@ def generate_section(state: BuilderState) -> BuilderState:
             if tasks:
                 await asyncio.sleep(1)
             task = asyncio.create_task(
-                _generate_single_section(section, design_guidelines, init_payload, job_id)
+                _generate_single_section(
+                    section, design_guidelines, init_payload, job_id
+                )
             )
             tasks.append(task)
         if not tasks:
