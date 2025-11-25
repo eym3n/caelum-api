@@ -5,6 +5,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Shield, MessageCircle } from 'lucide-react';
 import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 
 interface BenefitItem {
   title: string;

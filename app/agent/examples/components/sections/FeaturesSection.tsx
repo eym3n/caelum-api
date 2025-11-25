@@ -5,6 +5,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import clsx from 'clsx';
+import { cn } from '@/lib/utils';
 
 interface FeatureItem {
   title: string;

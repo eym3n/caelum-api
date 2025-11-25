@@ -3,6 +3,7 @@
 import * as FEAAS from "@sitecore-feaas/clientside/react";
 import React from 'react';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 interface FooterLink {
   label: string;

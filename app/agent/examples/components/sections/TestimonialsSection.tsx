@@ -3,6 +3,7 @@
 import * as FEAAS from "@sitecore-feaas/clientside/react";
 import React from 'react';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface TestimonialItem {
   quote: string;
