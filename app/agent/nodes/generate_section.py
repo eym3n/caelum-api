@@ -499,12 +499,17 @@ def generate_section(state: BuilderState) -> BuilderState:
                     break
 
         if match:
+            result_by_key[_normalize_key(blueprint_component)] = match
+            result_by_key[_normalize_key(blueprint.get("section_name"))] = match
+            result_by_key[_normalize_key(blueprint.get("section_id"))] = match
+            result_by_key[_normalize_key(sanitized_blueprint_filename)] = match
             match.filename = sanitized_blueprint_filename
             if blueprint_component:
                 match.component_name = blueprint_component
                 result_by_component[blueprint_component] = match
 
             result_by_filename[normalized_blueprint_filename] = match
+            result_by_filename[_normalize_filename(match.filename)] = match
 
             if match not in ordered_results:
                 ordered_results.append(match)
