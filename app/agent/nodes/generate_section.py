@@ -325,7 +325,9 @@ def _write_sections_index(
     sections_dir = session_dir / "src" / "components" / "sections"
     sections_dir.mkdir(parents=True, exist_ok=True)
 
-    export_lines = []
+    export_lines: List[str] = []
+    seen_exports: set[tuple[str, str]] = set()
+
     for result in results:
         filename = Path(result.filename)
         if "sections" in filename.parts:
@@ -337,6 +339,10 @@ def _write_sections_index(
         else:
             relative = filename
         module_path = relative.with_suffix("")
+        key = (result.component_name, module_path.as_posix())
+        if key in seen_exports:
+            continue
+        seen_exports.add(key)
         export_lines.append(
             f'export {{ {result.component_name} }} from "./{module_path.as_posix()}";'
         )
@@ -416,6 +422,7 @@ def generate_section(state: BuilderState) -> BuilderState:
         return value.lstrip("./") if value else ""
 
     section_payload = []
+    seen_payload: set[str] = set()
     for blueprint in sections:
         if not isinstance(blueprint, dict):
             continue
@@ -425,6 +432,8 @@ def generate_section(state: BuilderState) -> BuilderState:
         blueprint_filename = _normalize_filename(
             _sanitize_section_filename(raw_filename)
         )
+        if blueprint_filename in seen_payload:
+            continue
         match = next(
             (
                 r
@@ -434,6 +443,7 @@ def generate_section(state: BuilderState) -> BuilderState:
             None,
         )
         if match:
+            seen_payload.add(blueprint_filename)
             expected_component = blueprint.get("component_name")
             if isinstance(expected_component, str) and expected_component:
                 if match.component_name != expected_component:
