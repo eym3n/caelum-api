@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Type
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_openai import ChatOpenAI
@@ -13,6 +13,7 @@ from app.agent.state import BuilderState
 from app.agent.tools.files import get_session_dir
 from app.utils.jobs import log_job_event
 from toon import encode
+from google import genai
 
 
 class PageCodeOutput(BaseModel):
@@ -36,6 +37,7 @@ def _normalize_filename(value: str | None) -> str:
 EXAMPLES_BASE_DIR = Path(__file__).resolve().parent.parent / "examples"
 PAGE_EXAMPLE_PATH = EXAMPLES_BASE_DIR / "app" / "page.tsx"
 LAYOUT_EXAMPLE_PATH = EXAMPLES_BASE_DIR / "app" / "layout.tsx"
+_GENAI_CLIENT: genai.Client | None = None
 
 
 def _read_example_file(path: Path, label: str) -> str:
@@ -44,6 +46,52 @@ def _read_example_file(path: Path, label: str) -> str:
     except Exception as exc:  # pragma: no cover - logging only
         print(f"[CODEGEN] Warning: failed to read {label} example {path}: {exc}")
         return ""
+
+
+def _get_genai_client() -> genai.Client:
+    global _GENAI_CLIENT
+    if _GENAI_CLIENT is None:
+        _GENAI_CLIENT = genai.Client()
+    return _GENAI_CLIENT
+
+
+def _messages_to_prompt(messages: List) -> str:
+    parts: List[str] = []
+    for message in messages:
+        content = getattr(message, "content", "")
+        if isinstance(content, str):
+            parts.append(content.strip())
+        elif isinstance(content, list):
+            parts.append("\n".join(str(item) for item in content))
+        else:
+            parts.append(str(content))
+    return "\n\n".join(part for part in parts if part).strip()
+
+
+async def _invoke_gemini_structured(
+    messages: List, schema: Type[BaseModel], label: str
+) -> BaseModel:
+    prompt = _messages_to_prompt(messages)
+    if not prompt:
+        raise ValueError(f"Gemini prompt for {label} was empty.")
+
+    client = _get_genai_client()
+
+    def _call() -> BaseModel:
+        response = client.models.generate_content(
+            model="gemini-3-pro-preview",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_json_schema": schema.model_json_schema(),
+            },
+        )
+        raw_text = getattr(response, "text", "") or ""
+        if not raw_text.strip():
+            raise ValueError(f"Gemini returned empty response text for {label}.")
+        return schema.model_validate_json(raw_text)
+
+    return await asyncio.to_thread(_call)
 
 
 def _resolve_component_order(
@@ -274,25 +322,46 @@ async def _generate_page_code(
     init_payload: Dict[str, Any],
 ) -> PageCodeOutput:
     messages = _build_page_messages(design_guidelines, generated_sections, init_payload)
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="low")
-    structured_llm = model.with_structured_output(PageCodeOutput)
+    fallback_model = ChatOpenAI(model="gpt-5", reasoning_effort="low").with_structured_output(
+        PageCodeOutput
+    )
 
     last_exc: Exception | None = None
-    for attempt in range(1, 10):
+
+    for attempt in range(1, 4):
         try:
-            result = await structured_llm.ainvoke(messages)
-            print(f"[CODEGEN] Page worker completed attempt {attempt}")
+            result = await _invoke_gemini_structured(
+                messages, PageCodeOutput, f"page generation (attempt {attempt})"
+            )
+            print(f"[CODEGEN] (Gemini) Page worker succeeded on attempt {attempt}")
+            return result  # type: ignore[return-value]
+        except Exception as exc:
+            last_exc = exc
+            print(
+                f"[CODEGEN] (Gemini) Page worker attempt {attempt} failed: {exc}"
+            )
+
+    print("[CODEGEN] Switching page worker to GPT-5 fallback after Gemini retries.")
+
+    for attempt in range(4, 7):
+        try:
+            result = await fallback_model.ainvoke(messages)
+            print(f"[CODEGEN] (GPT-5) Page worker succeeded on attempt {attempt - 3}")
             if result is None:
                 print(
-                    f"[CODEGEN] Page worker result is None for {attempt}, retrying..."
+                    "[CODEGEN] (GPT-5) Page worker returned None; retrying..."
                 )
                 continue
-
             return result
-        except Exception as exc:  # pragma: no cover - logging
+        except Exception as exc:
             last_exc = exc
-            print(f"[CODEGEN] Page worker attempt {attempt} failed: {exc}")
-    raise RuntimeError("Page code generation failed after 3 attempts.") from last_exc
+            print(
+                f"[CODEGEN] (GPT-5) Page worker attempt {attempt - 3} failed: {exc}"
+            )
+
+    raise RuntimeError(
+        "Page code generation failed after Gemini and GPT-5 attempts."
+    ) from last_exc
 
 
 async def _generate_layout_code(
@@ -303,26 +372,47 @@ async def _generate_layout_code(
     messages = _build_layout_messages(
         design_guidelines, generated_sections, init_payload
     )
-    model = ChatOpenAI(model="gpt-5", reasoning_effort="low")
-    structured_llm = model.with_structured_output(LayoutCodeOutput)
+    fallback_model = ChatOpenAI(model="gpt-5", reasoning_effort="low").with_structured_output(
+        LayoutCodeOutput
+    )
 
     last_exc: Exception | None = None
-    for attempt in range(1, 10):
+
+    for attempt in range(1, 4):
         try:
-            result = await structured_llm.ainvoke(messages)
-            print(f"[CODEGEN] Layout worker completed attempt {attempt}")
+            result = await _invoke_gemini_structured(
+                messages, LayoutCodeOutput, f"layout generation (attempt {attempt})"
+            )
+            print(f"[CODEGEN] (Gemini) Layout worker succeeded on attempt {attempt}")
+            return result  # type: ignore[return-value]
+        except Exception as exc:
+            last_exc = exc
+            print(
+                f"[CODEGEN] (Gemini) Layout worker attempt {attempt} failed: {exc}"
+            )
+
+    print("[CODEGEN] Switching layout worker to GPT-5 fallback after Gemini retries.")
+
+    for attempt in range(4, 7):
+        try:
+            result = await fallback_model.ainvoke(messages)
+            print(f"[CODEGEN] (GPT-5) Layout worker succeeded on attempt {attempt - 3}")
             if result is None:
                 print(
-                    f"[CODEGEN] Layout worker result is None for {attempt}, retrying..."
+                    "[CODEGEN] (GPT-5) Layout worker returned None; retrying..."
                 )
                 continue
 
             return result
 
-        except Exception as exc:  # pragma: no cover - logging
+        except Exception as exc:
             last_exc = exc
-            print(f"[CODEGEN] Layout worker attempt {attempt} failed: {exc}")
-    raise RuntimeError("Layout code generation failed after 3 attempts.") from last_exc
+            print(
+                f"[CODEGEN] (GPT-5) Layout worker attempt {attempt - 3} failed: {exc}"
+            )
+    raise RuntimeError(
+        "Layout code generation failed after Gemini and GPT-5 attempts."
+    ) from last_exc
 
 
 def codegen(state: BuilderState) -> BuilderState:

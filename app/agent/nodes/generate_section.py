@@ -6,7 +6,6 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field
 
@@ -20,6 +19,7 @@ from app.utils.landing_pages import (
 from app.models.landing_page import LandingPageUpdate
 from app.agent.prompts.generate_section import SECTION_GENERATOR_PROMPT
 from toon import encode
+from google import genai
 
 
 class SectionGenerationOutput(BaseModel):
@@ -40,6 +40,7 @@ class SectionGenerationOutput(BaseModel):
 EXAMPLES_BASE_DIR = Path(__file__).resolve().parent.parent / "examples"
 SECTION_EXAMPLES_DIR = EXAMPLES_BASE_DIR / "components" / "sections"
 _SECTION_EXAMPLES_CACHE: Dict[str, Dict[str, str]] | None = None
+_GENAI_CLIENT: genai.Client | None = None
 
 
 def _normalize_section_key(value: str | None) -> str:
@@ -71,6 +72,13 @@ def _load_section_examples() -> Dict[str, Dict[str, str]]:
 
     _SECTION_EXAMPLES_CACHE = examples
     return examples
+
+
+def _get_genai_client() -> genai.Client:
+    global _GENAI_CLIENT
+    if _GENAI_CLIENT is None:
+        _GENAI_CLIENT = genai.Client()
+    return _GENAI_CLIENT
 
 
 def _resolve_section_example(
@@ -162,6 +170,44 @@ def _build_section_prompt(
     ]
 
 
+def _messages_to_prompt(messages: List) -> str:
+    chunks: List[str] = []
+    for message in messages:
+        content = getattr(message, "content", "")
+        if isinstance(content, str):
+            chunks.append(content.strip())
+        elif isinstance(content, list):
+            chunks.append("\n".join(str(item) for item in content))
+        else:
+            chunks.append(str(content))
+    prompt = "\n\n".join(chunk for chunk in chunks if chunk)
+    return prompt.strip()
+
+
+async def _invoke_gemini_structured(messages: List) -> SectionGenerationOutput:
+    prompt = _messages_to_prompt(messages)
+    if not prompt:
+        raise ValueError("Gemini prompt was empty.")
+
+    client = _get_genai_client()
+
+    def _call() -> SectionGenerationOutput:
+        response = client.models.generate_content(
+            model="gemini-3-pro-preview",
+            contents=prompt,
+            config={
+                "response_mime_type": "application/json",
+                "response_json_schema": SectionGenerationOutput.model_json_schema(),
+            },
+        )
+        raw_text = getattr(response, "text", "") or ""
+        if not raw_text.strip():
+            raise ValueError("Gemini returned empty response text.")
+        return SectionGenerationOutput.model_validate_json(raw_text)
+
+    return await asyncio.to_thread(_call)
+
+
 async def _generate_single_section(
     section_blueprint: Dict[str, Any],
     design_guidelines: Dict[str, Any],
@@ -188,9 +234,6 @@ async def _generate_single_section(
         )
     print(f"[GENERATE_SECTION] Launching worker for section: {section_name}")
 
-    primary_model = ChatGoogleGenerativeAI(
-        model="models/gemini-3-pro-preview", thinking_budget=128
-    ).with_structured_output(SectionGenerationOutput)
     fallback_model = ChatOpenAI(
         model="gpt-5", reasoning_effort="low"
     ).with_structured_output(SectionGenerationOutput)
@@ -200,7 +243,7 @@ async def _generate_single_section(
     # Primary attempts with Gemini
     for attempt in range(1, 4):
         try:
-            result = await primary_model.ainvoke(messages)
+            result = await _invoke_gemini_structured(messages)
             print(
                 f"[GENERATE_SECTION] (Gemini) Worker completed for: {section_name} (attempt {attempt})"
             )

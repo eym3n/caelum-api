@@ -33,4 +33,5 @@ dependencies = [
     "markdown-it-py>=4.0.0",
     "arabic-reshaper>=3.0.0",
     "python-bidi>=0.4.2",
+    "google-genai>=1.52.0",
 ]
