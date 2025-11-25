@@ -127,6 +127,10 @@ class BuilderState(BaseModel):
         default=False,
         description="Indicates whether the deployment fixer has made changes.",
     )
+    deployment_fixer_read_only_attempts: Annotated[int, replace] = Field(
+        default=0,
+        description="Counts consecutive read-only deployment_fixer passes to prevent infinite loops.",
+    )
 
     # 🚀 Initialization Payload
     init_payload: Annotated[Dict[str, Any], replace] = Field(

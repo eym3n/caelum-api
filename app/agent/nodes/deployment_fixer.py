@@ -36,8 +36,6 @@ tools = [
     batch_update_lines,
     # Utility
     list_files,
-    # Command tools
-    lint_project,
 ]
 
 
@@ -55,6 +53,7 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         session_id = state.session_id
         job_id = getattr(state, "job_id", None)
         deployment_error = state.deployment_error or "No error details available"
+        read_only_attempts = state.deployment_fixer_read_only_attempts
 
         if job_id:
             log_job_event(
@@ -65,10 +64,12 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
                 data={
                     "session_id": session_id,
                     "error_excerpt": deployment_error[:200],
+                    "read_only_attempts": read_only_attempts,
                 },
             )
 
         print(f"[DEPLOYMENT_FIXER] Session: {session_id}")
+        print(f"[DEPLOYMENT_FIXER] Read-only attempts so far: {read_only_attempts}")
         print(f"[DEPLOYMENT_FIXER] Error:\n{deployment_error[:200]}...")
 
         # Get list of files
@@ -78,6 +79,15 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         prompt_with_context = DEPLOYMENT_FIXER_PROMPT.format(
             deployment_error=deployment_error, files_list=files
         )
+
+        # Add escalation warning if agent keeps reading without fixing
+        if read_only_attempts >= 2:
+            prompt_with_context += (
+                "\n\n🚨 CRITICAL WARNING: You have read files multiple times without applying any fixes. "
+                "This is NOT acceptable. Your NEXT action MUST be to use batch_update_files, batch_update_lines, "
+                "or batch_create_files to actually fix the deployment error. Reading more files is FORBIDDEN until "
+                "you make a concrete code change. If you do not apply a fix NOW, the deployment will remain broken."
+            )
 
         # Use GPT-5 with minimal reasoning for fast, focused fixes
         _deployment_fixer_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(
@@ -100,17 +110,47 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
             print(
                 f"[DEPLOYMENT_FIXER] Making {num_calls} fix(es) to resolve deployment error"
             )
+
+            # Check if agent is only reading files (no write operations)
+            write_tools = {
+                "batch_create_files",
+                "batch_update_files",
+                "batch_delete_files",
+                "batch_update_lines",
+            }
+            read_tools = {"batch_read_files", "list_files"}
+
+            tool_names = {tc.get("name") for tc in tool_calls}
+            has_write = bool(tool_names & write_tools)
+            only_read = bool(tool_names & read_tools) and not has_write
+
+            new_read_only_count = read_only_attempts + 1 if only_read else 0
+
+            if only_read:
+                print(
+                    f"[DEPLOYMENT_FIXER] WARNING: Agent is only reading files (attempt {new_read_only_count}). No fixes applied yet."
+                )
+            else:
+                print(
+                    f"[DEPLOYMENT_FIXER] Agent is applying actual fixes. Resetting read-only counter."
+                )
+
             if job_id:
                 log_job_event(
                     job_id,
                     node="deployment_fixer",
                     message=f"Applying {num_calls} automated fix{'es' if num_calls != 1 else ''} for deployment failure.",
                     event_type="node",
-                    data={"tool_calls": num_calls},
+                    data={
+                        "tool_calls": num_calls,
+                        "has_write_operations": has_write,
+                        "read_only_attempts": new_read_only_count,
+                    },
                 )
             return {
                 "messages": [response],
                 "deployment_fixer_run": True,
+                "deployment_fixer_read_only_attempts": new_read_only_count,
                 # Keep deployment error info for context but mark as being fixed
                 "deployment_failed": True,  # Still failed, but fixing
             }
