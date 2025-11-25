@@ -313,6 +313,30 @@ def _write_section_file(session_dir: Path, result: SectionGenerationOutput) -> N
     stripped = content.lstrip()
     if not (stripped.startswith("'use client'") or stripped.startswith('"use client"')):
         content = "'use client';\n\n" + content
+
+    component_name = result.component_name
+    if component_name:
+        has_named_export = False
+        named_export_patterns = [
+            rf"export\s+const\s+{component_name}\b",
+            rf"export\s+function\s+{component_name}\b",
+            rf"export\s+class\s+{component_name}\b",
+            rf"export\s+\{{\s*{component_name}\b",
+        ]
+        for pattern in named_export_patterns:
+            if re.search(pattern, content):
+                has_named_export = True
+                break
+        if not has_named_export and re.search(
+            rf"(function|const|class)\s+{component_name}\b", content
+        ):
+            content = content.rstrip() + f"\n\nexport {{ {component_name} }};\n"
+            has_named_export = True
+        if not has_named_export:
+            raise RuntimeError(
+                f"Generated section code for {component_name} is missing a named export."
+            )
+
     if not content.endswith("\n"):
         content += "\n"
     file_path.write_text(content, encoding="utf-8")
