@@ -468,6 +468,7 @@ def generate_section(state: BuilderState) -> BuilderState:
     ordered_results: List[SectionGenerationOutput] = []
     section_payload: List[Dict[str, Any]] = []
     missing_sections: List[str] = []
+    unmatched_results: List[SectionGenerationOutput] = sanitized_results.copy()
 
     for blueprint in blueprints:
         raw_filename = blueprint.get("section_file_name_tsx") or blueprint.get(
@@ -511,6 +512,9 @@ def generate_section(state: BuilderState) -> BuilderState:
             result_by_filename[normalized_blueprint_filename] = match
             result_by_filename[_normalize_filename(match.filename)] = match
 
+            if match in unmatched_results:
+                unmatched_results.remove(match)
+
             if match not in ordered_results:
                 ordered_results.append(match)
 
@@ -524,12 +528,51 @@ def generate_section(state: BuilderState) -> BuilderState:
                 }
             )
         else:
-            missing_label = (
-                blueprint_component
-                or blueprint.get("section_name")
-                or sanitized_blueprint_filename
-            )
-            missing_sections.append(str(missing_label))
+            fallback_result = None
+            if unmatched_results:
+                fallback_result = unmatched_results.pop(0)
+                fallback_result.filename = sanitized_blueprint_filename
+                if blueprint_component:
+                    fallback_result.component_name = blueprint_component
+                elif blueprint.get("section_name"):
+                    fallback_result.component_name = re.sub(
+                        r"\s+", "", str(blueprint.get("section_name")).title()
+                    )
+
+                result_by_filename[normalized_blueprint_filename] = fallback_result
+                result_by_filename[_normalize_filename(fallback_result.filename)] = (
+                    fallback_result
+                )
+                if fallback_result.component_name:
+                    result_by_component[fallback_result.component_name] = (
+                        fallback_result
+                    )
+                    result_by_key[_normalize_key(fallback_result.component_name)] = (
+                        fallback_result
+                    )
+                result_by_key[_normalize_key(sanitized_blueprint_filename)] = (
+                    fallback_result
+                )
+
+                ordered_results.append(fallback_result)
+                section_payload.append(
+                    {
+                        "id": blueprint.get("section_id"),
+                        "name": blueprint.get("section_name"),
+                        "component_name": fallback_result.component_name,
+                        "filename": fallback_result.filename,
+                        "file_content": fallback_result.code,
+                    }
+                )
+                match = fallback_result
+
+            if not match:
+                missing_label = (
+                    blueprint_component
+                    or blueprint.get("section_name")
+                    or sanitized_blueprint_filename
+                )
+                missing_sections.append(str(missing_label))
 
     if missing_sections:
         error_message = (
