@@ -1,8 +1,8 @@
 import re
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List
 
 from langchain_core.messages import SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.state import BuilderState
 from app.agent.models.design_guidelines import DesignGuidelines
 from app.utils.jobs import log_job_event
@@ -20,12 +20,13 @@ from app.utils.landing_pages import (
     update_landing_page,
 )
 from app.models.landing_page import LandingPageUpdate
-from google import genai
+
+
+_design_planner_llm_ = ChatGoogleGenerativeAI(model="gemini-2.5-flash-preview-09-2025")
 
 _CANONICAL_REGISTRY: Dict[str, Dict[str, str]] = {
     entry["section_id"]: entry for entry in CANONICAL_SECTION_LIBRARY
 }
-_GENAI_CLIENT: genai.Client | None = None
 
 
 def _normalize_key(value: str | None) -> str:
@@ -50,48 +51,6 @@ for entry in CANONICAL_SECTION_LIBRARY:
         if not key:
             continue
         _CANONICAL_ALIAS_MAP[key] = canonical_id
-
-
-def _get_genai_client() -> genai.Client:
-    global _GENAI_CLIENT
-    if _GENAI_CLIENT is None:
-        _GENAI_CLIENT = genai.Client()
-    return _GENAI_CLIENT
-
-
-def _messages_to_prompt(messages: List) -> str:
-    parts: List[str] = []
-    for message in messages:
-        content = getattr(message, "content", "")
-        if isinstance(content, str):
-            parts.append(content.strip())
-        elif isinstance(content, list):
-            parts.append("\n".join(str(item) for item in content))
-        else:
-            parts.append(str(content))
-    return "\n\n".join(part for part in parts if part).strip()
-
-
-def _invoke_gemini_structured(
-    messages: List, schema: Type[DesignGuidelines], label: str
-) -> DesignGuidelines:
-    prompt = _messages_to_prompt(messages)
-    if not prompt:
-        raise ValueError(f"Gemini prompt for {label} was empty.")
-
-    client = _get_genai_client()
-    response = client.models.generate_content(
-        model="gemini-3-pro-preview",
-        contents=prompt,
-        config={
-            "response_mime_type": "application/json",
-            "response_json_schema": schema.model_json_schema(),
-        },
-    )
-    raw_text = getattr(response, "text", "") or ""
-    if not raw_text.strip():
-        raise ValueError(f"Gemini returned empty response text for {label}.")
-    return schema.model_validate_json(raw_text)
 
 
 def _to_pascal_case(value: str | None) -> str:
@@ -236,53 +195,13 @@ def design_planner(state: BuilderState) -> BuilderState:
     messages = [system_message, *state.messages]
 
     try:
-        print("[DESIGN_PLANNER] Invoking Gemini for structured guidelines...")
-        design_guidelines: DesignGuidelines | None = None
-        last_exc: Exception | None = None
-
-        for attempt in range(1, 4):
-            try:
-                design_guidelines = _invoke_gemini_structured(
-                    messages, DesignGuidelines, f"design planner attempt {attempt}"
-                )
-                print(
-                    f"[DESIGN_PLANNER] Gemini succeeded generating guidelines (attempt {attempt})."
-                )
-                break
-            except Exception as exc:
-                last_exc = exc
-                print(
-                    f"[DESIGN_PLANNER] Gemini attempt {attempt} failed generating guidelines: {exc}"
-                )
-
-        if design_guidelines is None:
-            print("[DESIGN_PLANNER] Switching to GPT-5 fallback after Gemini retries.")
-            fallback_llm = ChatOpenAI(
-                model="gpt-5", reasoning_effort="low"
-            ).with_structured_output(DesignGuidelines)
-            for attempt in range(4, 7):
-                try:
-                    candidate = fallback_llm.invoke(messages)
-                    if candidate is None:
-                        print(
-                            f"[DESIGN_PLANNER] GPT-5 attempt {attempt - 3} returned None; retrying..."
-                        )
-                        continue
-                    design_guidelines = candidate
-                    print(
-                        f"[DESIGN_PLANNER] GPT-5 succeeded generating guidelines (attempt {attempt - 3})."
-                    )
-                    break
-                except Exception as exc:
-                    last_exc = exc
-                    print(
-                        f"[DESIGN_PLANNER] GPT-5 attempt {attempt - 3} failed generating guidelines: {exc}"
-                    )
-
-        if design_guidelines is None:
-            raise RuntimeError(
-                "Design planner failed after Gemini and GPT-5 attempts."
-            ) from last_exc
+        # Generate structured design guidelines
+        print("[DESIGN_PLANNER] Invoking LLM with structured output...")
+        design_guidelines: DesignGuidelines = (
+            _design_planner_llm_.with_structured_output(DesignGuidelines).invoke(
+                messages
+            )
+        )
 
         print(f"✅ [DESIGN_PLANNER] Generated design guidelines:")
 
