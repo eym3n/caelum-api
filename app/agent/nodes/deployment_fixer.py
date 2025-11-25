@@ -111,9 +111,7 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         )
 
         # Create LLM with appropriate tool binding
-        _deployment_fixer_llm_ = ChatGoogleGenerativeAI(
-            model="models/gemini-3-pro-preview", thinking_budget=256
-        ).bind_tools(
+        _deployment_fixer_llm_ = ChatOpenAI(model="gpt-5").bind_tools(
             tools,
             tool_choice=tool_choice,
             parallel_tool_calls=True,
