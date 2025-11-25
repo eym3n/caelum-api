@@ -212,6 +212,7 @@ async def _generate_single_section(
     section_blueprint: Dict[str, Any],
     design_guidelines: Dict[str, Any],
     init_payload: Dict[str, Any],
+    job_id: str | None = None,
 ) -> SectionGenerationOutput:
     messages = _build_section_prompt(design_guidelines, section_blueprint, init_payload)
     section_name = (
@@ -271,6 +272,21 @@ async def _generate_single_section(
                 )
                 continue
             _validate_export(result)
+            # Log successful section generation
+            if job_id:
+                log_job_event(
+                    job_id,
+                    node="generate_section",
+                    message=f"Generated {section_name}",
+                    event_type="node",
+                    data={
+                        "section_name": section_name,
+                        "component_name": component_name,
+                        "filename": result.filename,
+                        "model": "gemini-3-pro-preview",
+                        "attempt": attempt,
+                    },
+                )
             return result
         except Exception as exc:  # pragma: no cover - logging
             last_exc = exc
@@ -296,6 +312,21 @@ async def _generate_single_section(
                 )
                 continue
             _validate_export(result)
+            # Log successful section generation
+            if job_id:
+                log_job_event(
+                    job_id,
+                    node="generate_section",
+                    message=f"Generated {section_name}",
+                    event_type="node",
+                    data={
+                        "section_name": section_name,
+                        "component_name": component_name,
+                        "filename": result.filename,
+                        "model": "gpt-5",
+                        "attempt": attempt - 3,
+                    },
+                )
             return result
         except Exception as exc:  # pragma: no cover - logging
             last_exc = exc
@@ -426,6 +457,8 @@ def generate_section(state: BuilderState) -> BuilderState:
 
     session_dir = get_session_dir(state.session_id)
 
+    job_id = state.job_id
+
     async def run_workers() -> List[SectionGenerationOutput]:
         tasks: List[asyncio.Task[SectionGenerationOutput]] = []
         for section in sections:
@@ -434,7 +467,7 @@ def generate_section(state: BuilderState) -> BuilderState:
             if tasks:
                 await asyncio.sleep(1)
             task = asyncio.create_task(
-                _generate_single_section(section, design_guidelines, init_payload)
+                _generate_single_section(section, design_guidelines, init_payload, job_id)
             )
             tasks.append(task)
         if not tasks:
