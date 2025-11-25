@@ -131,6 +131,10 @@ class BuilderState(BaseModel):
         default=0,
         description="Counts consecutive read-only deployment_fixer passes to prevent infinite loops.",
     )
+    deployment_fixer_pass: Annotated[int, replace] = Field(
+        default=0,
+        description="Tracks the deployment fixer workflow phase: 0=read, 1=write, 2+=auto.",
+    )
 
     # 🚀 Initialization Payload
     init_payload: Annotated[Dict[str, Any], replace] = Field(

@@ -152,6 +152,7 @@ def deployer(state: BuilderState) -> BuilderState:
                 "deployment_error": error_msg,
                 "found_error": True,
                 "deployment_fixer_run": False,
+                "deployment_fixer_pass": 0,  # Reset pass counter for new error
             }
 
     except subprocess.TimeoutExpired:
@@ -177,6 +178,7 @@ def deployer(state: BuilderState) -> BuilderState:
             "deployment_error": error_msg,
             "found_error": True,
             "deployment_fixer_run": False,
+            "deployment_fixer_pass": 0,  # Reset pass counter for new error
         }
     except Exception as e:
         error_msg = f"Deployment exception: {str(e)}"
@@ -201,4 +203,5 @@ def deployer(state: BuilderState) -> BuilderState:
             "deployment_error": error_msg,
             "found_error": True,
             "deployment_fixer_run": False,
+            "deployment_fixer_pass": 0,  # Reset pass counter for new error
         }

@@ -3,102 +3,123 @@
 from __future__ import annotations
 from langchain_core.messages import SystemMessage
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_openai import ChatOpenAI
-from app.agent.prompts.deployment_fixer import DEPLOYMENT_FIXER_PROMPT
+from app.agent.prompts.deployment_fixer import (
+    DEPLOYMENT_FIXER_PROMPT_PASS_0,
+    DEPLOYMENT_FIXER_PROMPT_PASS_1,
+    DEPLOYMENT_FIXER_PROMPT_PASS_2,
+)
 from app.agent.state import BuilderState
 
 from app.agent.tools.files import (
-    # Batch operations (ONLY USE THESE)
     batch_read_files,
     batch_create_files,
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
-    # Utility
     list_files,
     list_files_internal,
 )
 
-from app.agent.tools.commands import (
-    lint_project,
-)
 from app.utils.jobs import log_job_event
 
 load_dotenv()
 
-tools = [
-    # Batch file operations (ONLY USE THESE FOR FILES)
+# Tool sets for each pass
+READ_TOOLS = [batch_read_files, list_files]
+WRITE_TOOLS = [
+    batch_update_lines,
+    batch_update_files,
+    batch_create_files,
+    batch_delete_files,
+]
+ALL_TOOLS = [
     batch_read_files,
     batch_create_files,
     batch_update_files,
     batch_delete_files,
     batch_update_lines,
-    # Utility
     list_files,
 ]
 
 
 def deployment_fixer(state: BuilderState) -> BuilderState:
     """
-    Specialized node for fixing deployment errors.
+    Specialized node for fixing deployment errors with a forced 3-pass workflow:
 
-    Focuses exclusively on analyzing deployment failures and making
-    targeted fixes to resolve the issues.
+    Pass 0: Force batch_read_files to read the error files
+    Pass 1: Force batch_update_lines to apply fixes
+    Pass 2+: Auto mode - agent decides what to do
     """
-    response = None  # ensure defined for exception handling
+    response = None
     try:
         print("\n\n[DEPLOYMENT_FIXER] 🔧 Starting deployment error analysis...")
 
         session_id = state.session_id
         job_id = getattr(state, "job_id", None)
         deployment_error = state.deployment_error or "No error details available"
-        read_only_attempts = state.deployment_fixer_read_only_attempts
+        current_pass = state.deployment_fixer_pass
+
+        print(f"[DEPLOYMENT_FIXER] Session: {session_id}")
+        print(f"[DEPLOYMENT_FIXER] Current pass: {current_pass}")
+        print(f"[DEPLOYMENT_FIXER] Error:\n{deployment_error[:500]}...")
 
         if job_id:
             log_job_event(
                 job_id,
                 node="deployment_fixer",
-                message="Analyzing deployment failure...",
+                message=f"Deployment fixer pass {current_pass}",
                 event_type="node_started",
                 data={
                     "session_id": session_id,
                     "error_excerpt": deployment_error[:200],
-                    "read_only_attempts": read_only_attempts,
+                    "pass": current_pass,
                 },
             )
-
-        print(f"[DEPLOYMENT_FIXER] Session: {session_id}")
-        print(f"[DEPLOYMENT_FIXER] Read-only attempts so far: {read_only_attempts}")
-        print(f"[DEPLOYMENT_FIXER] Error:\n{deployment_error[:200]}...")
 
         # Get list of files
         files = "\n".join(list_files_internal(session_id))
 
-        # Build specialized prompt with error context
-        prompt_with_context = DEPLOYMENT_FIXER_PROMPT.format(
+        # Select prompt, tools, and tool_choice based on pass
+        if current_pass == 0:
+            # Pass 0: Force reading files
+            prompt_template = DEPLOYMENT_FIXER_PROMPT_PASS_0
+            tools = READ_TOOLS
+            tool_choice = "batch_read_files"
+            print(
+                "[DEPLOYMENT_FIXER] PASS 0: Forcing batch_read_files to read error files"
+            )
+        elif current_pass == 1:
+            # Pass 1: Force writing fixes
+            prompt_template = DEPLOYMENT_FIXER_PROMPT_PASS_1
+            tools = WRITE_TOOLS
+            tool_choice = "batch_update_lines"
+            print(
+                "[DEPLOYMENT_FIXER] PASS 1: Forcing batch_update_lines to apply fixes"
+            )
+        else:
+            # Pass 2+: Auto mode
+            prompt_template = DEPLOYMENT_FIXER_PROMPT_PASS_2
+            tools = ALL_TOOLS
+            tool_choice = "auto"
+            print(f"[DEPLOYMENT_FIXER] PASS {current_pass}: Auto mode - agent decides")
+
+        # Build prompt with context
+        prompt_with_context = prompt_template.format(
             deployment_error=deployment_error, files_list=files
         )
 
-        # Add escalation warning if agent keeps reading without fixing
-        if read_only_attempts >= 2:
-            prompt_with_context += (
-                "\n\n🚨 CRITICAL WARNING: You have read files multiple times without applying any fixes. "
-                "This is NOT acceptable. Your NEXT action MUST be to use batch_update_files, batch_update_lines, "
-                "or batch_create_files to actually fix the deployment error. Reading more files is FORBIDDEN until "
-                "you make a concrete code change. If you do not apply a fix NOW, the deployment will remain broken."
-            )
-
-        # Use GPT-5 with minimal reasoning for fast, focused fixes
+        # Create LLM with appropriate tool binding
         _deployment_fixer_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(
             tools,
+            tool_choice=tool_choice,
             parallel_tool_calls=True,
         )
 
         SYS = SystemMessage(content=prompt_with_context)
         messages = [SYS, *state.messages]
 
-        print("[DEPLOYMENT_FIXER] Analyzing deployment error and determining fixes...")
+        print(f"[DEPLOYMENT_FIXER] Invoking LLM with tool_choice={tool_choice}...")
         response = _deployment_fixer_llm_.invoke(messages)
 
         print(f"\n\n[DEPLOYMENT_FIXER] Response: {response}")
@@ -107,55 +128,33 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         tool_calls = getattr(response, "tool_calls", None)
         if tool_calls:
             num_calls = len(tool_calls)
-            print(
-                f"[DEPLOYMENT_FIXER] Making {num_calls} fix(es) to resolve deployment error"
-            )
-
-            # Check if agent is only reading files (no write operations)
-            write_tools = {
-                "batch_create_files",
-                "batch_update_files",
-                "batch_delete_files",
-                "batch_update_lines",
-            }
-            read_tools = {"batch_read_files", "list_files"}
-
-            tool_names = {tc.get("name") for tc in tool_calls}
-            has_write = bool(tool_names & write_tools)
-            only_read = bool(tool_names & read_tools) and not has_write
-
-            new_read_only_count = read_only_attempts + 1 if only_read else 0
-
-            if only_read:
-                print(
-                    f"[DEPLOYMENT_FIXER] WARNING: Agent is only reading files (attempt {new_read_only_count}). No fixes applied yet."
-                )
-            else:
-                print(
-                    f"[DEPLOYMENT_FIXER] Agent is applying actual fixes. Resetting read-only counter."
-                )
+            tool_names = [tc.get("name") for tc in tool_calls]
+            print(f"[DEPLOYMENT_FIXER] Tool calls: {tool_names}")
 
             if job_id:
                 log_job_event(
                     job_id,
                     node="deployment_fixer",
-                    message=f"Applying {num_calls} automated fix{'es' if num_calls != 1 else ''} for deployment failure.",
+                    message=f"Pass {current_pass}: Executing {tool_names}",
                     event_type="node",
                     data={
                         "tool_calls": num_calls,
-                        "has_write_operations": has_write,
-                        "read_only_attempts": new_read_only_count,
+                        "tools": tool_names,
+                        "pass": current_pass,
                     },
                 )
+
+            # Increment pass counter for next iteration
+            next_pass = current_pass + 1
+
             return {
                 "messages": [response],
                 "deployment_fixer_run": True,
-                "deployment_fixer_read_only_attempts": new_read_only_count,
-                # Keep deployment error info for context but mark as being fixed
-                "deployment_failed": True,  # Still failed, but fixing
+                "deployment_fixer_pass": next_pass,
+                "deployment_failed": True,  # Still in fixing mode
             }
 
-        # If no tool calls, extract explanation
+        # No tool calls - this shouldn't happen with tool_choice="batch_*" but handle it
         output = ""
         if isinstance(response.content, str):
             output = response.content.strip()
@@ -183,9 +182,13 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
                 event_type="node_completed",
             )
 
+        # If we're still in pass 0 or 1 and got no tool calls, force increment to try again
+        next_pass = current_pass + 1 if current_pass < 2 else current_pass
+
         return {
             "messages": [response],
             "deployment_fixer_run": True,
+            "deployment_fixer_pass": next_pass,
         }
     except Exception as e:
         print(f"[DEPLOYMENT_FIXER] Error: {e}")
