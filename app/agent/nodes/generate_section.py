@@ -438,6 +438,11 @@ def generate_section(state: BuilderState) -> BuilderState:
     def _normalize_filename(value: str | None) -> str:
         return value.lstrip("./") if value else ""
 
+    def _normalize_key(value: str | None) -> str:
+        if not value:
+            return ""
+        return re.sub(r"[^a-z0-9]", "", value.lower())
+
     result_by_filename: Dict[str, SectionGenerationOutput] = {
         _normalize_filename(result.filename): result for result in sanitized_results
     }
@@ -446,6 +451,16 @@ def generate_section(state: BuilderState) -> BuilderState:
         for result in sanitized_results
         if result.component_name
     }
+    result_by_key: Dict[str, SectionGenerationOutput] = {}
+    for result in sanitized_results:
+        candidates = [
+            result.component_name,
+            Path(result.filename).stem,
+        ]
+        for candidate in candidates:
+            key = _normalize_key(candidate)
+            if key:
+                result_by_key.setdefault(key, result)
 
     blueprints: List[Dict[str, Any]] = [
         section for section in sections if isinstance(section, dict)
@@ -470,6 +485,18 @@ def generate_section(state: BuilderState) -> BuilderState:
         match = result_by_filename.get(normalized_blueprint_filename)
         if not match and blueprint_component:
             match = result_by_component.get(blueprint_component)
+        if not match:
+            candidate_keys = [
+                blueprint_component,
+                Path(sanitized_blueprint_filename).stem,
+                blueprint.get("section_name"),
+                blueprint.get("section_id"),
+            ]
+            for candidate in candidate_keys:
+                normalized_candidate = _normalize_key(candidate)
+                if normalized_candidate and normalized_candidate in result_by_key:
+                    match = result_by_key[normalized_candidate]
+                    break
 
         if match:
             match.filename = sanitized_blueprint_filename
