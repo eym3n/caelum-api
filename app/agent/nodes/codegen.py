@@ -366,9 +366,16 @@ async def _generate_page_code(
             last_exc = exc
             print(f"[CODEGEN] (GPT-5) Page worker attempt {attempt - 3} failed: {exc}")
 
-    raise RuntimeError(
-        "Page code generation failed after Gemini and GPT-5 attempts."
-    ) from last_exc
+    fallback_payload = _deterministic_codegen(design_guidelines, generated_sections)
+    print(
+        "[CODEGEN] Falling back to deterministic page.tsx assembly after structured generation failures."
+    )
+    return PageCodeOutput(
+        code=fallback_payload["page_code"],
+        summary=(
+            "Deterministic page.tsx fallback (auto-generated ordering) due to codegen errors."
+        ),
+    )
 
 
 async def _generate_layout_code(
@@ -415,9 +422,16 @@ async def _generate_layout_code(
             print(
                 f"[CODEGEN] (GPT-5) Layout worker attempt {attempt - 3} failed: {exc}"
             )
-    raise RuntimeError(
-        "Layout code generation failed after Gemini and GPT-5 attempts."
-    ) from last_exc
+    fallback_payload = _deterministic_codegen(design_guidelines, generated_sections)
+    print(
+        "[CODEGEN] Falling back to deterministic layout.tsx assembly after structured generation failures."
+    )
+    return LayoutCodeOutput(
+        code=fallback_payload["layout_code"],
+        summary=(
+            "Deterministic layout.tsx fallback (auto-generated metadata) due to codegen errors."
+        ),
+    )
 
 
 def codegen(state: BuilderState) -> BuilderState:
