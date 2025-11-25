@@ -4,6 +4,7 @@ from __future__ import annotations
 from langchain_core.messages import SystemMessage
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from app.agent.prompts.deployment_fixer import (
     DEPLOYMENT_FIXER_PROMPT_PASS_0,
     DEPLOYMENT_FIXER_PROMPT_PASS_1,
@@ -68,7 +69,7 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
             log_job_event(
                 job_id,
                 node="deployment_fixer",
-                message=f"Deployment fixer pass {current_pass}",
+                message=f"Fixing deployment error",
                 event_type="node_started",
                 data={
                     "session_id": session_id,
@@ -110,7 +111,9 @@ def deployment_fixer(state: BuilderState) -> BuilderState:
         )
 
         # Create LLM with appropriate tool binding
-        _deployment_fixer_llm_ = ChatOpenAI(model="gpt-4.1").bind_tools(
+        _deployment_fixer_llm_ = ChatGoogleGenerativeAI(
+            model="models/gemini-3-pro-preview", thinking_budget=256
+        ).bind_tools(
             tools,
             tool_choice=tool_choice,
             parallel_tool_calls=True,
